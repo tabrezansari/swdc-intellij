@@ -13,13 +13,9 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.apache.http.client.methods.HttpPost;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.TimeZone;
-import java.util.stream.Stream;
 
 public class SoftwareCoEventManager {
 
@@ -54,10 +50,6 @@ public class SoftwareCoEventManager {
         }
         updateFileInfoValue(fileInfo,"open", 1);
         log.info("Code Time: file opened: " + fileName);
-
-        // update the line count since we're here
-        int lines = getLineCount(fileName);
-        updateFileInfoValue(fileInfo, "lines", lines);
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {
@@ -72,23 +64,6 @@ public class SoftwareCoEventManager {
         }
         updateFileInfoValue(fileInfo,"close", 1);
         log.info("Code Time: file closed: " + fileName);
-    }
-
-    protected int getLineCount(String fileName) {
-        Path path = Paths.get(fileName);
-        try {
-            Stream<String> stream = Files.lines(path);
-            int count = (int) stream.count();
-            stream.close();
-            return count;
-
-        } catch (Exception e) {
-            log.error("Code Time: unable to get the line count for file " + fileName);
-            return 0;
-        } catch (Throwable e) {
-            log.error("Code Time: unable to get the line count for file " + fileName);
-            return 0;
-        }
     }
 
     /**
@@ -280,6 +255,15 @@ public class SoftwareCoEventManager {
                 if (!resp.isOk()) {
                     sessionMgr.storePayload(payload);
                 }
+
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(5000);
+                        sessionMgr.fetchDailyKpmSessionInfo();
+                    } catch (Exception e) {
+                        System.err.println(e);
+                    }
+                }).start();
 
                 keystrokeMgr.resetData();
             } else if (wrapper != null && wrapper.getKeystrokeCount() != null) {

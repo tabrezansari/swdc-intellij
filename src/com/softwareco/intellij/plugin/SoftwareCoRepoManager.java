@@ -79,6 +79,8 @@ public class SoftwareCoRepoManager {
             if (latestCommit != null && latestCommit.has("timestamp")) {
                 long unixTs = latestCommit.get("timestamp").getAsLong();
                 sinceOption = "--since=" + unixTs;
+            } else {
+                sinceOption = "--max-count=100";
             }
 
             String authorOption = "--author=" + email;

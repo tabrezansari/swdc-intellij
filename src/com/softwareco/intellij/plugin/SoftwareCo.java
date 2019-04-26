@@ -108,7 +108,7 @@ public class SoftwareCo implements ApplicationComponent {
         // add the kpm status scheduler
         final Runnable kpmStatusRunner = () -> sessionMgr.fetchDailyKpmSessionInfo();
         asyncManager.scheduleService(
-                kpmStatusRunner, "kpmStatusRunner", 15, 60);
+                kpmStatusRunner, "kpmStatusRunner", 15, 60 * 5);
 
         final Runnable hourlyRunner = () -> this.processHourlyJobs();
         asyncManager.scheduleService(
