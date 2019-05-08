@@ -155,6 +155,10 @@ public class SoftwareCoUtils {
         appAvailable = isOnlineStatus;
     }
 
+    public static boolean isAppAvailable() {
+        return appAvailable;
+    }
+
     public static SoftwareResponse makeApiCall(String api, String httpMethodName, String payload) {
         return makeApiCall(api, httpMethodName, payload, null);
     }

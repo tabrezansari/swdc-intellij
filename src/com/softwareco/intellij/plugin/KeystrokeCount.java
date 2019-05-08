@@ -80,7 +80,7 @@ public class KeystrokeCount {
         fileInfoData.addProperty("lines", 0);
         fileInfoData.addProperty("linesAdded", 0);
         fileInfoData.addProperty("linesRemoved", 0);
-        fileInfoData.addProperty("syntax", 0);
+        fileInfoData.addProperty("syntax", "");
         source.add(fileName, fileInfoData);
 
         return fileInfoData;

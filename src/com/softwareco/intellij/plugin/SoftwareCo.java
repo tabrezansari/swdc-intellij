@@ -48,7 +48,8 @@ public class SoftwareCo implements ApplicationComponent {
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
-        if (!sessionFileExists) {
+        boolean jwtExists = SoftwareCoSessionManager.jwtExists();
+        if (!sessionFileExists || !jwtExists) {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {

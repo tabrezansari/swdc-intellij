@@ -108,6 +108,18 @@ public class SoftwareCoEventManager {
                                 wrapper.setCurrentTextLength(currLen);
 
                                 JsonObject fileInfo = keystrokeCount.getSourceByFileName(fileName);
+                                String syntax = fileInfo.get("syntax").getAsString();
+                                if (syntax == null || syntax.equals("")) {
+                                    // get the grammar
+                                    try {
+                                        String fileType = file.getFileType().getName();
+                                        if (fileType != null && !fileType.equals("")) {
+                                            fileInfo.addProperty("syntax", fileType);
+                                        }
+                                    } catch (Exception e) {
+                                        //
+                                    }
+                                }
                                 if (documentEvent.getOldLength() > 0) {
                                     //it's a delete
                                     updateFileInfoValue(fileInfo, "delete", 1);

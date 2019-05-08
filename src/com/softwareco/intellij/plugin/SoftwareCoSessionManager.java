@@ -28,6 +28,7 @@ public class SoftwareCoSessionManager {
     private static SoftwareCoSessionManager instance = null;
     public static final Logger log = Logger.getInstance("SoftwareCoSessionManager");
     private static Map<String, String> sessionMap = new HashMap<>();
+    private static long lastAppAvailableCheck = 0;
 
     public static SoftwareCoSessionManager getInstance() {
         if (instance == null) {
@@ -42,6 +43,11 @@ public class SoftwareCoSessionManager {
         // check if it exists
         File f = new File(file);
         return f.exists();
+    }
+
+    public static boolean jwtExists() {
+        String jwt = getItem("jwt");
+        return (jwt != null && !jwt.equals("")) ? true : false;
     }
 
     public static String getCodeTimeDashboardFile() {
@@ -91,11 +97,15 @@ public class SoftwareCoSessionManager {
         return file;
     }
 
-    public static boolean isServerOnline() {
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
-        boolean isOk = resp.isOk();
-        SoftwareCoUtils.updateServerStatus(isOk);
-        return isOk;
+    public synchronized static boolean isServerOnline() {
+        long nowInSec = Math.round(System.currentTimeMillis() / 1000);
+        boolean pastThreshold = (nowInSec - lastAppAvailableCheck > 60) ? true : false;
+        if (pastThreshold) {
+            SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
+            SoftwareCoUtils.updateServerStatus(resp.isOk());
+            lastAppAvailableCheck = nowInSec;
+        }
+        return SoftwareCoUtils.isAppAvailable();
     }
 
     public void storePayload(String payload) {
