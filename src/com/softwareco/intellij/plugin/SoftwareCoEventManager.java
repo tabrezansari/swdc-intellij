@@ -13,9 +13,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.apache.http.client.methods.HttpPost;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 
 public class SoftwareCoEventManager {
 
@@ -38,6 +42,22 @@ public class SoftwareCoEventManager {
         this.appIsReady = appIsReady;
     }
 
+    protected int getLineCount(String fileName) {
+        try {
+            Path path = Paths.get(fileName);
+            Stream<String> stream = Files.lines(path);
+            int count = (int) stream.count();
+            try {
+                stream.close();
+            } catch (Exception e) {
+                //
+            }
+            return count;
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public void handleFileOpenedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
@@ -49,6 +69,8 @@ public class SoftwareCoEventManager {
             return;
         }
         updateFileInfoValue(fileInfo,"open", 1);
+        int documentLineCount = getLineCount(fileName);
+        updateFileInfoValue(fileInfo, "lines", documentLineCount);
         log.info("Code Time: file opened: " + fileName);
     }
 
@@ -93,6 +115,7 @@ public class SoftwareCoEventManager {
                             projectFilepath = project.getBasePath();
 
                             keystrokeMgr.addKeystrokeWrapperIfNoneExists(project);
+
                             initializeKeystrokeObjectGraph(fileName, projectName, projectFilepath);
 
                             KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
@@ -136,12 +159,17 @@ public class SoftwareCoEventManager {
                                 int incrementedCount = Integer.parseInt(keystrokeCount.getKeystrokes()) + 1;
                                 keystrokeCount.setKeystrokes(String.valueOf(incrementedCount));
 
-                                String newFrag = documentEvent.getNewFragment().toString();
-                                if (newFrag.matches("^\n.*") || newFrag.matches("^\n\r.*")) {
-                                    // it's a new line
-                                    updateFileInfoValue(fileInfo, "linesAdded", 1);
-                                }
                                 int documentLineCount = document.getLineCount();
+                                int savedLines = fileInfo.get("lines").getAsInt();
+                                if (savedLines > 0) {
+                                    int diff = documentLineCount - savedLines;
+                                    if (diff < 0) {
+                                        updateFileInfoValue(fileInfo, "linesRemoved", Math.abs(diff));
+                                    } else if (diff > 0) {
+                                        updateFileInfoValue(fileInfo, "linesAdded", diff);
+                                    }
+                                }
+
                                 updateFileInfoValue(fileInfo, "lines", documentLineCount);
                             }
                         }
@@ -261,6 +289,7 @@ public class SoftwareCoEventManager {
                 // opposite for grtr than gmt
                 wrapper.getKeystrokeCount().setLocal_start(startInSeconds + offset);
                 wrapper.getKeystrokeCount().setTimezone(TimeZone.getDefault().getID());
+
                 final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
 
                 SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/data", HttpPost.METHOD_NAME, payload);

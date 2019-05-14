@@ -206,7 +206,7 @@ public class SoftwareCoUtils {
                             String mimeType = contentType.getMimeType();
                             String jsonStr = getStringRepresentation(entity);
                             softwareResponse.setJsonStr(jsonStr);
-                            LOG.log(Level.INFO, "Code Time: API response {0}", jsonStr);
+                            // LOG.log(Level.INFO, "Code Time: API response {0}", jsonStr);
                             if (jsonStr != null && mimeType.indexOf("text/plain") == -1) {
                                 Object jsonEl = null;
                                 try {
