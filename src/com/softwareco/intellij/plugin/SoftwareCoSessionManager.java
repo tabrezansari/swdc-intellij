@@ -99,7 +99,8 @@ public class SoftwareCoSessionManager {
 
     public synchronized static boolean isServerOnline() {
         long nowInSec = Math.round(System.currentTimeMillis() / 1000);
-        boolean pastThreshold = (nowInSec - lastAppAvailableCheck > 60) ? true : false;
+        // 5 min threshold
+        boolean pastThreshold = (nowInSec - lastAppAvailableCheck > (60 * 5)) ? true : false;
         if (pastThreshold) {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
             SoftwareCoUtils.updateServerStatus(resp.isOk());
@@ -275,10 +276,6 @@ public class SoftwareCoSessionManager {
         JsonObject jsonObj = SoftwareCoUtils.makeApiCall(sessionsApi, HttpGet.METHOD_NAME, null).getJsonObj();
         if (jsonObj != null) {
 
-            long currentSessionMinutes = 0;
-            if (jsonObj.has("currentSessionMinutes")) {
-                currentSessionMinutes = jsonObj.get("currentSessionMinutes").getAsLong();
-            }
             long currentDayMinutes = 0;
             if (jsonObj.has("currentDayMinutes")) {
                 currentDayMinutes = jsonObj.get("currentDayMinutes").getAsLong();
@@ -287,7 +284,7 @@ public class SoftwareCoSessionManager {
             if (jsonObj.has("averageDailyMinutes")) {
                 averageDailyMinutes = jsonObj.get("averageDailyMinutes").getAsLong();
             }
-            String sessionTimeStr = SoftwareCoUtils.humanizeMinutes(currentSessionMinutes);
+
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
             String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
 
@@ -302,6 +299,9 @@ public class SoftwareCoSessionManager {
             if (SoftwareCoUtils.isCodeTimeMetricsFileOpen()) {
                 SoftwareCoUtils.fetchCodeTimeMetricsContent();
             }
+        } else {
+            SoftwareCoUtils.setStatusLineMessage(
+                    "Code Time", "Click to see more from Code Time");
         }
     }
 

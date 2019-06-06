@@ -78,7 +78,8 @@ public class SoftwareCoUtils {
     private static String lastMsg = "";
     private static String lastTooltip = "";
 
-    private static String NO_DATA = "CODE TIME\n\nNo data available\n";
+    private static String SERVICE_NOT_AVAIL =
+            "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
     static {
         // initialize the HttpClient
@@ -673,7 +674,7 @@ public class SoftwareCoUtils {
         String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux();
         String dashboardContent = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
         if (dashboardContent == null || dashboardContent.trim().isEmpty()) {
-            dashboardContent = NO_DATA;
+            dashboardContent = SERVICE_NOT_AVAIL;
         }
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         File f = new File(codeTimeFile);

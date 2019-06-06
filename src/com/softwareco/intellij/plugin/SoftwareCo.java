@@ -121,7 +121,7 @@ public class SoftwareCo implements ApplicationComponent {
 
         final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
         asyncManager.scheduleService(
-                userStatusRunner, "userStatusRunner", 60, 90);
+                userStatusRunner, "userStatusRunner", 60, 60 * 3);
 
         eventMgr.setAppIsReady(true);
 
