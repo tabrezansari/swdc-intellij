@@ -14,7 +14,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.Messages;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import org.apache.log4j.Level;
@@ -53,7 +52,7 @@ public class SoftwareCo implements ApplicationComponent {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
-                    showOfflinePrompt();
+                    SoftwareCoUtils.showOfflinePrompt(true);
                 }
                 new Thread(() -> {
                     try {
@@ -69,7 +68,7 @@ public class SoftwareCo implements ApplicationComponent {
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {
-                        showOfflinePrompt();
+                        SoftwareCoUtils.showOfflinePrompt(true);
                     }
                     new Thread(() -> {
                         try {
@@ -243,17 +242,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static void setLoggingLevel() {
         log.setLevel(Level.INFO);
-    }
-
-    protected void showOfflinePrompt() {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            public void run() {
-                String infoMsg = "Our service is temporarily unavailable. We will try to reconnect again " +
-                        "in 10 minutes. Your status bar will not update at this time.";
-                // ask to download the PM
-                Messages.showInfoMessage(infoMsg, "Code Time");
-            }
-        });
     }
 
 }

@@ -19,7 +19,10 @@ public class SoftwareLoginAction extends AnAction {
     @Override
     public void update(AnActionEvent event) {
         SoftwareCoUtils.UserStatus userStatus = SoftwareCoUtils.getUserStatus();
-        event.getPresentation().setVisible(!userStatus.loggedIn);
+        boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
+        // only show the login menu item if the server is online
+        // and they're not logged on
+        event.getPresentation().setVisible(!userStatus.loggedIn && serverOnline);
         event.getPresentation().setEnabled(true);
     }
 }

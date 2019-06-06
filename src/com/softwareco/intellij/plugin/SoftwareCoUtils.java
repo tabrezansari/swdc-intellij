@@ -16,6 +16,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -690,6 +691,9 @@ public class SoftwareCoUtils {
     }
 
     public static void launchCodeTimeMetricsDashboard() {
+        if (!SoftwareCoSessionManager.isServerOnline()) {
+            SoftwareCoUtils.showOfflinePrompt(false);
+        }
         Project p = getOpenProject();
         if (p == null) {
             return;
@@ -900,6 +904,19 @@ public class SoftwareCoUtils {
                 LOG.log(Level.WARNING, "Code Time: unable to send heartbeat ping");
             }
         }
+    }
+
+    public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
+        final String reconnectMsg = (isTenMinuteReconnect) ? "in ten minutes. " : "soon. ";
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                String infoMsg = "Our service is temporarily unavailable. " +
+                        "We will try to reconnect again " + reconnectMsg +
+                        "Your status bar will not update at this time.";
+                // ask to download the PM
+                Messages.showInfoMessage(infoMsg, "Code Time");
+            }
+        });
     }
 
 }

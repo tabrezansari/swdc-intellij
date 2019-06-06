@@ -306,7 +306,11 @@ public class SoftwareCoSessionManager {
     }
 
     public void statusBarClickHandler() {
-        SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+        if (SoftwareCoSessionManager.isServerOnline()) {
+            SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+        } else {
+            SoftwareCoUtils.showOfflinePrompt(false);
+        }
     }
 
     protected static void lazilyFetchUserStatus(int retryCount) {
