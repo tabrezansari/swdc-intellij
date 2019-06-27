@@ -25,6 +25,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -38,6 +39,7 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -77,6 +79,12 @@ public class SoftwareCoUtils {
     private static boolean showStatusText = true;
     private static String lastMsg = "";
     private static String lastTooltip = "";
+
+    private static long lastDashboardFetchTime = 0;
+
+    private static int DASHBOARD_LABEL_WIDTH = 25;
+    private static int DASHBOARD_VALUE_WIDTH = 25;
+    private static int MARKER_WIDTH = 4;
 
     private static String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
@@ -300,16 +308,6 @@ public class SoftwareCoUtils {
         br.close();
 
         return sb.toString();
-    }
-
-    public static Date atStartOfDay(Date date) {
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
     }
 
     public static void toggleStatusBar() {
@@ -647,48 +645,71 @@ public class SoftwareCoUtils {
         BrowserUtil.browse("http://api.software.com/music/top40");
     }
 
-    public static boolean isCodeTimeMetricsFileOpen() {
-        Project p = SoftwareCoUtils.getOpenProject();
-        if (p == null) {
-            return false;
-        }
-
-        // check if the file is already open, otherwise skip fetching it
-        try {
-            String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
-            File f = new File(codeTimeFile);
-            VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(f);
-            boolean metricsFileOpen = FileEditorManager.getInstance(p).isFileOpen(vFile);
-            return metricsFileOpen;
-        } catch (Exception e) {
-            //
-        }
-        return false;
-    }
-
-    public static void fetchCodeTimeMetricsContent() {
-        Project p = getOpenProject();
-        if (p == null) {
-            return;
-        }
-        String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux();
-        String dashboardContent = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
-        if (dashboardContent == null || dashboardContent.trim().isEmpty()) {
-            dashboardContent = SERVICE_NOT_AVAIL;
-        }
-        String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
-        File f = new File(codeTimeFile);
-
+    public static void fetchCodeTimeMetricsDashboard(JsonObject summary) {
+        String summaryInfoFile = SoftwareCoSessionManager.getSummaryInfoFile(true);
+        String dashboardFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
+        long nowInSec = Math.round(System.currentTimeMillis() / 1000);
+        long diff = nowInSec - lastDashboardFetchTime;
         Writer writer = null;
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(f), StandardCharsets.UTF_8));
-            writer.write(dashboardContent);
-        } catch (IOException ex) {
-            // Report
-        } finally {
-            try {writer.close();} catch (Exception ex) {/*ignore*/}
+
+        if (lastDashboardFetchTime == 0 || diff >= DateUtils.MILLIS_PER_DAY) {
+            lastDashboardFetchTime = nowInSec;
+            String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
+            String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
+            if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
+                dashboardSummary = SERVICE_NOT_AVAIL;
+            }
+
+            // write the summary content
+            try {
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(summaryInfoFile), StandardCharsets.UTF_8));
+                writer.write(dashboardSummary);
+            } catch (IOException ex) {
+                // Report
+            } finally {
+                try {writer.close();} catch (Exception ex) {/*ignore*/}
+            }
         }
+
+        // concat summary info with the dashboard file
+        String dashboardContent = "";
+        SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
+        SimpleDateFormat formatDay = new SimpleDateFormat("EEE, MMM d");
+        String lastUpdatedStr = formatDayTime.format(new Date());
+        dashboardContent += "Code Time          (Last updated on " + lastUpdatedStr + ")";
+        dashboardContent += "\n\n";
+        String todayStr = formatDay.format(new Date());
+        dashboardContent += getSectionHeader("Today (" + todayStr + ")");
+
+
+        if (summary != null) {
+            long currentDayMinutes = 0;
+            if (summary.has("currentDayMinutes")) {
+                currentDayMinutes = summary.get("currentDayMinutes").getAsLong();
+            }
+            long averageDailyMinutes = 0;
+            if (summary.has("averageDailyMinutes")) {
+                averageDailyMinutes = summary.get("averageDailyMinutes").getAsLong();
+            }
+
+            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
+            String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
+
+            dashboardContent += getDashboardRow("Hours coded today", currentDayTimeStr);
+            dashboardContent += getDashboardRow("90-day avg", averageDailyMinutesTimeStr);
+            dashboardContent += "\n";
+        }
+
+        // append the summary content
+        String summaryInfoContent = SoftwareCoOfflineManager.getInstance().getSessionSummaryInfoFileContent();
+        if (summaryInfoContent != null) {
+            dashboardContent += summaryInfoContent;
+        }
+
+        // write the dashboard content to the dashboard file
+        SoftwareCoOfflineManager.getInstance().saveFileContent(dashboardContent, dashboardFile);
+
     }
 
     public static void launchCodeTimeMetricsDashboard() {
@@ -700,7 +721,9 @@ public class SoftwareCoUtils {
             return;
         }
 
-        fetchCodeTimeMetricsContent();
+        SoftwareCoSessionManager.getInstance().fetchDailyKpmSessionInfo();
+        JsonObject sessionSummary = SoftwareCoOfflineManager.getInstance().getSessionSummaryFileAsJson();
+        fetchCodeTimeMetricsDashboard(sessionSummary);
 
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         File f = new File(codeTimeFile);
@@ -918,6 +941,45 @@ public class SoftwareCoUtils {
                 Messages.showInfoMessage(infoMsg, "Code Time");
             }
         });
+    }
+
+    public static String getDashboardRow(String label, String value) {
+        String content = getDashboardLabel(label) + " : " + getDashboardValue(value) + "\n";
+        return content;
+    }
+
+    public static String getSectionHeader(String label) {
+        String content = label + "\n";
+        // add 3 to account for the " : " between the columns
+        int dashLen = DASHBOARD_LABEL_WIDTH + DASHBOARD_VALUE_WIDTH + 15;
+        for (int i = 0; i < dashLen; i++) {
+            content += "-";
+        }
+        content += "\n";
+        return content;
+    }
+
+    public static String getDashboardLabel(String label) {
+        return getDashboardDataDisplay(DASHBOARD_LABEL_WIDTH, label);
+    }
+
+    public static String getDashboardValue(String value) {
+        String valueContent = getDashboardDataDisplay(DASHBOARD_VALUE_WIDTH, value);
+        String paddedContent = "";
+        for (int i = 0; i < 11; i++) {
+            paddedContent += " ";
+        }
+        paddedContent += valueContent;
+        return paddedContent;
+    }
+
+    public static String getDashboardDataDisplay(int widthLen, String data) {
+        int len = data.length();
+        String content = "";
+        for (int i = 0; i < len; i++) {
+            content += " ";
+        }
+        return content + "" + data;
     }
 
 }

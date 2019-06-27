@@ -60,7 +60,7 @@ public class SoftwareCoSessionManager {
         return dashboardFile;
     }
 
-    private static String getSoftwareDir(boolean autoCreate) {
+    public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
         if (SoftwareCoUtils.isWindows()) {
             softwareDataDir += "\\.software";
@@ -76,6 +76,16 @@ public class SoftwareCoSessionManager {
 
         return softwareDataDir;
     }
+
+    public static String getSummaryInfoFile(boolean autoCreate) {
+        String file = getSoftwareDir(autoCreate);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\SummaryInfo.json";
+        } else {
+            file += "/SummaryInfo.json";
+        }
+        return file;
+    };
 
     public static String getSoftwareSessionFile(boolean autoCreate) {
         String file = getSoftwareDir(autoCreate);
@@ -163,6 +173,16 @@ public class SoftwareCoSessionManager {
                     if (resp.isOk() || resp.isDeactivated()) {
                         // delete the file
                         deleteFile(dataStoreFile);
+                        SoftwareCoOfflineManager.getInstance().clearSessionSummaryData();
+                        // fetch kpm metrics
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(10000);
+                                fetchDailyKpmSessionInfo();
+                            } catch (Exception e) {
+                                System.err.println(e);
+                            }
+                        }).start();
                     }
                 } else {
                     log.info("Code Time: No offline data to send");
@@ -270,39 +290,25 @@ public class SoftwareCoSessionManager {
     }
 
     public void fetchDailyKpmSessionInfo() {
-        String sessionsApi = "/sessions?summary=true";
+        SoftwareCoOfflineManager offlineMgr = SoftwareCoOfflineManager.getInstance();
+        JsonObject sessionSummary = offlineMgr.getSessionSummaryFileAsJson();
+        long currentDayMinutes = sessionSummary != null
+                ? sessionSummary.get("currentDayMinutes").getAsLong() : 0;
+        if (currentDayMinutes == 0) {
+            String sessionsApi = "/sessions/summary";
 
-        // make an async call to get the kpm info
-        JsonObject jsonObj = SoftwareCoUtils.makeApiCall(sessionsApi, HttpGet.METHOD_NAME, null).getJsonObj();
-        if (jsonObj != null) {
+            // make an async call to get the kpm info
+            sessionSummary = SoftwareCoUtils.makeApiCall(sessionsApi, HttpGet.METHOD_NAME, null).getJsonObj();
+            if (sessionSummary != null) {
 
-            long currentDayMinutes = 0;
-            if (jsonObj.has("currentDayMinutes")) {
-                currentDayMinutes = jsonObj.get("currentDayMinutes").getAsLong();
+                offlineMgr.saveSessionSummaryToDisk(sessionSummary);
+
+            } else {
+                SoftwareCoUtils.setStatusLineMessage(
+                        "Code Time", "Click to see more from Code Time");
             }
-            long averageDailyMinutes = 0;
-            if (jsonObj.has("averageDailyMinutes")) {
-                averageDailyMinutes = jsonObj.get("averageDailyMinutes").getAsLong();
-            }
-
-            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
-            String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
-
-            String inFlowIcon = currentDayMinutes > averageDailyMinutes ? "rocket.png" : null;
-            String msg = currentDayTimeStr;
-            if (averageDailyMinutes > 0) {
-                msg += " | " + averageDailyMinutesTimeStr;
-            }
-
-            SoftwareCoUtils.setStatusLineMessage(inFlowIcon, msg, "Code time today vs. your daily average. Click to see more from Code Time");
-
-            if (SoftwareCoUtils.isCodeTimeMetricsFileOpen()) {
-                SoftwareCoUtils.fetchCodeTimeMetricsContent();
-            }
-        } else {
-            SoftwareCoUtils.setStatusLineMessage(
-                    "Code Time", "Click to see more from Code Time");
         }
+        offlineMgr.updateStatusBarWithSummaryData(sessionSummary);
     }
 
     public void statusBarClickHandler() {

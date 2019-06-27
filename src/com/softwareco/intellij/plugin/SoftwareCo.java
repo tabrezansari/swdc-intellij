@@ -112,7 +112,7 @@ public class SoftwareCo implements ApplicationComponent {
 
         final Runnable hourlyRunner = () -> this.processHourlyJobs();
         asyncManager.scheduleService(
-                hourlyRunner, "musicTrackRunner", 45, 60 * 60);
+                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
 
         // run the music manager task every 15 seconds
         final Runnable musicTrackRunner = () -> musicMgr.processMusicTrackInfo();
@@ -123,17 +123,41 @@ public class SoftwareCo implements ApplicationComponent {
         asyncManager.scheduleService(
                 userStatusRunner, "userStatusRunner", 60, 60 * 3);
 
+        // every 30 minutes
+        final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
+        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
+
         eventMgr.setAppIsReady(true);
 
+        initializeUserInfoWhenProjectsReady(initializedUser);
+
+    }
+
+    private void initializeUserInfoWhenProjectsReady(boolean initializedUser) {
+        Project p = SoftwareCoUtils.getOpenProject();
+        if (p == null) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(2000);
+                    initializeUserInfoWhenProjectsReady(initializedUser);
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }).start();
+        } else {
+            initializeUserInfo(initializedUser);
+        }
+    }
+
+    private void sendOfflineDataRunner() {
         new Thread(() -> {
+
             try {
-                Thread.sleep(5000);
-                initializeUserInfo(initializedUser);
+                SoftwareCoSessionManager.getInstance().sendOfflineData();
             } catch (Exception e) {
                 System.err.println(e);
             }
         }).start();
-
     }
 
     private void processHourlyJobs() {
@@ -172,7 +196,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         new Thread(() -> {
             try {
-                Thread.sleep(1000 * 10);
                 sessionMgr.fetchDailyKpmSessionInfo();
             }
             catch (Exception e){

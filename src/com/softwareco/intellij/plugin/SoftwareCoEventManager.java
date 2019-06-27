@@ -11,7 +11,6 @@ import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.apache.http.client.methods.HttpPost;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -276,9 +275,6 @@ public class SoftwareCoEventManager {
     public void processKeystrokes(KeystrokeManager.KeystrokeCountWrapper wrapper) {
         if (appIsReady) {
 
-            // send any offline data if we have any
-            sessionMgr.sendOfflineData();
-
             if (wrapper != null && wrapper.getKeystrokeCount() != null && wrapper.getKeystrokeCount().hasData()) {
                 // ZonedDateTime will get us the true seconds away from GMT
                 // it'll be negative for zones before GMT and postive for zones after
@@ -292,14 +288,12 @@ public class SoftwareCoEventManager {
 
                 final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
 
-                SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/data", HttpPost.METHOD_NAME, payload);
-                if (!resp.isOk()) {
-                    sessionMgr.storePayload(payload);
-                }
+                // store to send later
+                sessionMgr.storePayload(payload);
 
                 new Thread(() -> {
                     try {
-                        Thread.sleep(5000);
+                        Thread.sleep(10000);
                         sessionMgr.fetchDailyKpmSessionInfo();
                     } catch (Exception e) {
                         System.err.println(e);
