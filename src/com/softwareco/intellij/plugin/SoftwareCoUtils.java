@@ -101,6 +101,10 @@ public class SoftwareCoUtils {
         httpClient = HttpClientBuilder.create().build();
     }
 
+    public static boolean isLoggedIn() {
+        return loggedInCacheState;
+    }
+
     public static class UserStatus {
         public boolean loggedIn;
     }

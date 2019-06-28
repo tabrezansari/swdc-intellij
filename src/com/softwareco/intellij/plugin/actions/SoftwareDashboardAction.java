@@ -18,8 +18,11 @@ public class SoftwareDashboardAction extends AnAction {
 
     @Override
     public void update(AnActionEvent event) {
-        SoftwareCoUtils.UserStatus userStatus = SoftwareCoUtils.getUserStatus();
-        event.getPresentation().setVisible(userStatus.loggedIn);
+        boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
+        boolean hasJwt = SoftwareCoSessionManager.jwtExists();
+        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isLoggedIn())
+                ? false : true;
+        event.getPresentation().setVisible(isLoggedIn);
         event.getPresentation().setEnabled(true);
     }
 }
