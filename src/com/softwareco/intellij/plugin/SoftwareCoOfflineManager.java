@@ -54,9 +54,9 @@ public class SoftwareCoOfflineManager {
     public String getSessionSummaryFile() {
         String file = SoftwareCoSessionManager.getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
-            file += "\\sessionSummary.txt";
+            file += "\\sessionSummary.json";
         } else {
-            file += "/sessionSummary.txt";
+            file += "/sessionSummary.json";
         }
         return file;
     }

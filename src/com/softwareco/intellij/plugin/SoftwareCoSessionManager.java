@@ -80,9 +80,9 @@ public class SoftwareCoSessionManager {
     public static String getSummaryInfoFile(boolean autoCreate) {
         String file = getSoftwareDir(autoCreate);
         if (SoftwareCoUtils.isWindows()) {
-            file += "\\SummaryInfo.json";
+            file += "\\SummaryInfo.txt";
         } else {
-            file += "/SummaryInfo.json";
+            file += "/SummaryInfo.txt";
         }
         return file;
     };

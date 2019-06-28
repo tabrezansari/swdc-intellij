@@ -652,7 +652,8 @@ public class SoftwareCoUtils {
         long diff = nowInSec - lastDashboardFetchTime;
         Writer writer = null;
 
-        if (lastDashboardFetchTime == 0 || diff >= DateUtils.MILLIS_PER_DAY) {
+        File f = new File(summaryInfoFile);
+        if (!f.exists() || lastDashboardFetchTime == 0 || diff >= DateUtils.MILLIS_PER_DAY) {
             lastDashboardFetchTime = nowInSec;
             String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
             String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
@@ -974,7 +975,7 @@ public class SoftwareCoUtils {
     }
 
     public static String getDashboardDataDisplay(int widthLen, String data) {
-        int len = data.length();
+        int len = widthLen - data.length();
         String content = "";
         for (int i = 0; i < len; i++) {
             content += " ";
