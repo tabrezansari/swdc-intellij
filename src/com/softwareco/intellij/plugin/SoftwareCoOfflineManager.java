@@ -34,8 +34,17 @@ public class SoftwareCoOfflineManager {
         public int liveshareMinutes;
     }
 
+    public void setSessionSummaryData(int minutes, int keystrokes, int averageDailyMinutes) {
+        sessionSummaryData = new SessionSummaryData();
+        sessionSummaryData.currentDayKeystrokes = keystrokes;
+        sessionSummaryData.currentDayMinutes = minutes;
+        sessionSummaryData.averageDailyMinutes = averageDailyMinutes;
+        saveSessionSummaryToDisk();
+    }
+
     public void clearSessionSummaryData() {
         sessionSummaryData = new SessionSummaryData();
+        saveSessionSummaryToDisk();
     }
 
     public void setSessionSummaryLiveshareMinutes(int minutes) {
@@ -45,10 +54,7 @@ public class SoftwareCoOfflineManager {
     public void incrementSessionSummaryData(int minutes, int keystrokes) {
         sessionSummaryData.currentDayMinutes += minutes;
         sessionSummaryData.currentDayKeystrokes += keystrokes;
-    }
-
-    public SessionSummaryData getSessionSummaryData() {
-        return sessionSummaryData;
+        saveSessionSummaryToDisk();
     }
 
     public String getSessionSummaryFile() {
@@ -86,10 +92,10 @@ public class SoftwareCoOfflineManager {
         SoftwareCoUtils.fetchCodeTimeMetricsDashboard(sessionSummary);
     }
 
-    public void saveSessionSummaryToDisk(JsonObject sessionSummaryJson) {
+    public void saveSessionSummaryToDisk() {
         File f = new File(getSessionSummaryFile());
 
-        final String summaryDataJson = sessionSummaryJson.toString();
+        final String summaryDataJson = SoftwareCo.gson.toJson(sessionSummaryData);
 
         Writer writer = null;
         try {

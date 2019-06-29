@@ -288,6 +288,11 @@ public class SoftwareCoEventManager {
 
                 final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
 
+                final JsonObject payloadJsonObj = SoftwareCo.jsonParser.parse(payload).getAsJsonObject();
+
+                int keystrokes = Integer.parseInt(wrapper.getKeystrokeCount().getKeystrokes());
+                SoftwareCoOfflineManager.getInstance().incrementSessionSummaryData(1, keystrokes);
+
                 // store to send later
                 sessionMgr.storePayload(payload);
 

@@ -173,16 +173,6 @@ public class SoftwareCoSessionManager {
                     if (resp.isOk() || resp.isDeactivated()) {
                         // delete the file
                         deleteFile(dataStoreFile);
-                        SoftwareCoOfflineManager.getInstance().clearSessionSummaryData();
-                        // fetch kpm metrics
-                        new Thread(() -> {
-                            try {
-                                Thread.sleep(10000);
-                                fetchDailyKpmSessionInfo();
-                            } catch (Exception e) {
-                                System.err.println(e);
-                            }
-                        }).start();
                     }
                 } else {
                     log.info("Code Time: No offline data to send");
@@ -191,6 +181,17 @@ public class SoftwareCoSessionManager {
                 log.info("Code Time: Error trying to read and send offline data.", e);
             }
         }
+
+        SoftwareCoOfflineManager.getInstance().clearSessionSummaryData();
+        // fetch kpm metrics
+        new Thread(() -> {
+            try {
+                Thread.sleep(10000);
+                fetchDailyKpmSessionInfo();
+            } catch (Exception e) {
+                System.err.println(e);
+            }
+        }).start();
     }
 
     public static void setItem(String key, String val) {
@@ -292,8 +293,8 @@ public class SoftwareCoSessionManager {
     public void fetchDailyKpmSessionInfo() {
         SoftwareCoOfflineManager offlineMgr = SoftwareCoOfflineManager.getInstance();
         JsonObject sessionSummary = offlineMgr.getSessionSummaryFileAsJson();
-        long currentDayMinutes = sessionSummary != null
-                ? sessionSummary.get("currentDayMinutes").getAsLong() : 0;
+        int currentDayMinutes = sessionSummary != null
+                ? sessionSummary.get("currentDayMinutes").getAsInt() : 0;
         if (currentDayMinutes == 0) {
             String sessionsApi = "/sessions/summary";
 
@@ -301,7 +302,20 @@ public class SoftwareCoSessionManager {
             sessionSummary = SoftwareCoUtils.makeApiCall(sessionsApi, HttpGet.METHOD_NAME, null).getJsonObj();
             if (sessionSummary != null) {
 
-                offlineMgr.saveSessionSummaryToDisk(sessionSummary);
+                if (sessionSummary.has("currentDayMinutes")) {
+                    currentDayMinutes = sessionSummary.get("currentDayMinutes").getAsInt();
+                }
+                int currentDayKeystrokes = 0;
+                if (sessionSummary.has("currentDayKeystrokes")) {
+                    currentDayKeystrokes = sessionSummary.get("currentDayKeystrokes").getAsInt();
+                }
+
+                int averageDailyMinutes = 0;
+                if (sessionSummary.has("averageDailyMinutes")) {
+                    averageDailyMinutes = sessionSummary.get("averageDailyMinutes").getAsInt();
+                }
+
+                offlineMgr.setSessionSummaryData(currentDayMinutes, currentDayKeystrokes, averageDailyMinutes);
 
             } else {
                 SoftwareCoUtils.setStatusLineMessage(
