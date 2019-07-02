@@ -288,8 +288,6 @@ public class SoftwareCoEventManager {
 
                 final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
 
-                final JsonObject payloadJsonObj = SoftwareCo.jsonParser.parse(payload).getAsJsonObject();
-
                 int keystrokes = Integer.parseInt(wrapper.getKeystrokeCount().getKeystrokes());
                 SoftwareCoOfflineManager.getInstance().incrementSessionSummaryData(1, keystrokes);
 
@@ -305,10 +303,9 @@ public class SoftwareCoEventManager {
                     }
                 }).start();
 
-                keystrokeMgr.resetData();
-            } else if (wrapper != null && wrapper.getKeystrokeCount() != null) {
-                keystrokeMgr.resetData();
             }
+
+            keystrokeMgr.resetData();
 
         }
     }

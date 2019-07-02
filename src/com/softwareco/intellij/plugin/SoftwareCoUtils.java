@@ -892,12 +892,17 @@ public class SoftwareCoUtils {
     }
 
     public static synchronized UserStatus getUserStatus() {
+        UserStatus currentUserStatus = new UserStatus();
+        if (loggedInCacheState) {
+            currentUserStatus.loggedIn = loggedInCacheState;
+            return currentUserStatus;
+        }
 
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
 
         boolean loggedIn = isLoggedOn(serverIsOnline);
 
-        UserStatus currentUserStatus = new UserStatus();
+
         currentUserStatus.loggedIn = loggedIn;
 
         if (loggedInCacheState != loggedIn) {
