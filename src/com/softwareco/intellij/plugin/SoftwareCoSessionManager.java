@@ -4,6 +4,7 @@
  */
 package com.softwareco.intellij.plugin;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
@@ -167,13 +168,37 @@ public class SoftwareCoSessionManager {
                     String payloads = sb.toString();
                     payloads = payloads.substring(0, payloads.lastIndexOf(","));
                     payloads = "[" + payloads + "]";
-                    final String batchPayload = payloads;
 
-                    SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, batchPayload);
-                    if (resp.isOk() || resp.isDeactivated()) {
-                        // delete the file
-                        deleteFile(dataStoreFile);
+                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+
+                    // delete the file
+                    this.deleteFile(dataStoreFile);
+
+                    JsonArray batch = new JsonArray();
+                    // go through the array about 50 at a time
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        batch.add(jsonArray.get(i));
+                        if (i > 0 && i % 50 == 0) {
+                            String payloadData = SoftwareCo.gson.toJson(batch);
+                            SoftwareResponse resp =
+                                    SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                            if (!resp.isOk()) {
+                                // add these back to the offline file
+                                log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                            }
+                            batch = new JsonArray();
+                        }
                     }
+                    if (batch.size() > 0) {
+                        String payloadData = SoftwareCo.gson.toJson(batch);
+                        SoftwareResponse resp =
+                                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                        if (!resp.isOk()) {
+                            // add these back to the offline file
+                            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                        }
+                    }
+
                 } else {
                     log.info("Code Time: No offline data to send");
                 }

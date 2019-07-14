@@ -3,7 +3,6 @@ package com.softwareco.intellij.plugin;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -15,14 +14,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.ZonedDateTime;
-import java.util.Date;
-import java.util.TimeZone;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
+
 
 public class SoftwareCoEventManager {
 
-    public static final Logger log = Logger.getInstance("SoftwareCoEventManager");
+    public static final Logger LOG = Logger.getLogger("SoftwareCoEventManager");
 
     private static SoftwareCoEventManager instance = null;
 
@@ -70,7 +68,7 @@ public class SoftwareCoEventManager {
         updateFileInfoValue(fileInfo,"open", 1);
         int documentLineCount = getLineCount(fileName);
         updateFileInfoValue(fileInfo, "lines", documentLineCount);
-        log.info("Code Time: file opened: " + fileName);
+        LOG.info("Code Time: file opened: " + fileName);
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {
@@ -84,7 +82,7 @@ public class SoftwareCoEventManager {
             return;
         }
         updateFileInfoValue(fileInfo,"close", 1);
-        log.info("Code Time: file closed: " + fileName);
+        LOG.info("Code Time: file closed: " + fileName);
     }
 
     /**
@@ -145,6 +143,7 @@ public class SoftwareCoEventManager {
                                 if (documentEvent.getOldLength() > 0) {
                                     //it's a delete
                                     updateFileInfoValue(fileInfo, "delete", 1);
+                                    LOG.info("Code Time: delete incremented");
                                 } else {
                                     // it's an add
                                     if (documentEvent.getNewLength() > 1) {
@@ -152,6 +151,7 @@ public class SoftwareCoEventManager {
                                         updateFileInfoValue(fileInfo, "paste", 1);
                                     } else {
                                         updateFileInfoValue(fileInfo, "add", 1);
+                                        LOG.info("Code Time: add incremented");
                                     }
                                 }
 
@@ -164,8 +164,10 @@ public class SoftwareCoEventManager {
                                     int diff = documentLineCount - savedLines;
                                     if (diff < 0) {
                                         updateFileInfoValue(fileInfo, "linesRemoved", Math.abs(diff));
+                                        LOG.info("Code Time: lines removed incremented");
                                     } else if (diff > 0) {
                                         updateFileInfoValue(fileInfo, "linesAdded", diff);
+                                        LOG.info("Code Time: lines added incremented");
                                     }
                                 }
 
@@ -200,7 +202,7 @@ public class SoftwareCoEventManager {
 
     public void initializeKeystrokeObjectGraph(String fileName, String projectName, String projectFilepath) {
         // initialize it in case it's not initialized yet
-        initializeKeystrokeCount(projectName, projectFilepath);
+        initializeKeystrokeCount(projectName, fileName, projectFilepath);
 
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
 
@@ -209,7 +211,7 @@ public class SoftwareCoEventManager {
         updateKeystrokeProject(projectName, fileName, keystrokeCount);
     }
 
-    private void initializeKeystrokeCount(String projectName, String projectFilepath) {
+    private void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if ( keystrokeCount == null || keystrokeCount.getProject() == null ) {
             createKeystrokeCountWrapper(projectName, projectFilepath);
@@ -221,6 +223,11 @@ public class SoftwareCoEventManager {
             processKpmRunner.run();
 
             createKeystrokeCountWrapper(projectName, projectFilepath);
+        } else {
+            //
+            // update the end time for files that don't match the incoming fileName
+            //
+            keystrokeCount.endPreviousModifiedFiles(fileName);
         }
     }
 
@@ -276,15 +283,11 @@ public class SoftwareCoEventManager {
         if (appIsReady) {
 
             if (wrapper != null && wrapper.getKeystrokeCount() != null && wrapper.getKeystrokeCount().hasData()) {
-                // ZonedDateTime will get us the true seconds away from GMT
-                // it'll be negative for zones before GMT and postive for zones after
-                Integer offset  = ZonedDateTime.now().getOffset().getTotalSeconds();
-                long startInSeconds = (int) (new Date().getTime() / 1000);
-                wrapper.getKeystrokeCount().setStart(startInSeconds);
-                // add to the start in seconds since it's a negative for less than gmt and the
-                // opposite for grtr than gmt
-                wrapper.getKeystrokeCount().setLocal_start(startInSeconds + offset);
-                wrapper.getKeystrokeCount().setTimezone(TimeZone.getDefault().getID());
+
+                // end the file end times
+                wrapper.getKeystrokeCount().endUnendedFiles();
+
+                SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
 
                 final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
 

@@ -4,9 +4,13 @@
  */
 package com.softwareco.intellij.plugin;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.extensions.PluginId;
+
+import java.util.Map;
+import java.util.Set;
 
 public class KeystrokeCount {
 
@@ -58,15 +62,18 @@ public class KeystrokeCount {
         if (this.project != null) {
             this.project.resetData();
         }
-        this.start = 0L;
-        this.local_start = 0L;
-        this.timezone = "";
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        this.start = timesData.start;
+        this.local_start = timesData.local_start;
+        this.timezone = timesData.timezone;
     }
 
     public JsonObject getSourceByFileName(String fileName) {
         if (source.has(fileName)) {
             return source.get(fileName).getAsJsonObject();
         }
+
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
 
         // create one and return the one just created
         JsonObject fileInfoData = new JsonObject();
@@ -81,6 +88,10 @@ public class KeystrokeCount {
         fileInfoData.addProperty("linesAdded", 0);
         fileInfoData.addProperty("linesRemoved", 0);
         fileInfoData.addProperty("syntax", "");
+        fileInfoData.addProperty("start", timesData.start);
+        fileInfoData.addProperty("end", 0);
+        fileInfoData.addProperty("local_start", timesData.local_start);
+        fileInfoData.addProperty("local_end", 0);
         source.add(fileName, fileInfoData);
 
         return fileInfoData;
@@ -88,6 +99,44 @@ public class KeystrokeCount {
 
     public String getSource() {
         return SoftwareCo.gson.toJson(source);
+    }
+
+    public void endPreviousModifiedFiles(String currentFileName) {
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
+        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
+            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
+
+            // if the file info data element doesn't equal the current file name, set the end timestamp
+            if (!fileInfoData.getKey().equals(currentFileName)) {
+                long endVal = fileinfoDataJsonObj.get("end").getAsLong();
+                if (endVal == 0) {
+                    // set the end time for this file
+                    fileinfoDataJsonObj.addProperty("end", timesData.now);
+                    fileinfoDataJsonObj.addProperty("local_end", timesData.now + timesData.offset);
+                }
+            } else {
+                // it does match it, zero out the end timestamp
+                fileinfoDataJsonObj.addProperty("end", 0);
+                fileinfoDataJsonObj.addProperty("local_end", 0);
+
+            }
+        }
+    }
+
+    public void endUnendedFiles() {
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
+        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
+            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
+            long endVal = fileinfoDataJsonObj.get("end").getAsLong();
+            // end the ones that don't have an end time
+            if (endVal == 0) {
+                // set the end time for this file
+                fileinfoDataJsonObj.addProperty("end", timesData.now);
+                fileinfoDataJsonObj.addProperty("local_end", timesData.now + timesData.offset);
+            }
+        }
     }
 
     public boolean hasData() {

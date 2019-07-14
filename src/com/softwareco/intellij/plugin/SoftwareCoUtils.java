@@ -40,6 +40,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -951,6 +952,19 @@ public class SoftwareCoUtils {
                 Messages.showInfoMessage(infoMsg, "Code Time");
             }
         });
+    }
+
+    public static class TimesData {
+        public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
+        public long now = Math.round(System.currentTimeMillis() / 1000);
+        public long start = now;
+        public long local_start = now + offset;
+        public String timezone = TimeZone.getDefault().getID();
+    }
+
+    public static TimesData getTimesData() {
+        TimesData timesData = new TimesData();
+        return timesData;
     }
 
     public static String getDashboardRow(String label, String value) {
