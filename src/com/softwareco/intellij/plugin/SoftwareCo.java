@@ -98,11 +98,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         setupEventListeners();
 
-        // add the kpm payload one_min scheduler
-        final Runnable payloadPushRunner = () -> eventMgr.processKeystrokesData();
-        asyncManager.scheduleService(
-                payloadPushRunner, "payloadPushRunner", 60, 60);
-
         log.info("Code Time: Finished initializing SoftwareCo plugin");
 
         // add the kpm status scheduler
@@ -213,7 +208,7 @@ public class SoftwareCo implements ApplicationComponent {
         JsonObject fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
         eventMgr.updateFileInfoValue(fileInfo, "add", 1);
         keystrokeManager.getKeystrokeCount().setKeystrokes(String.valueOf(1));
-        eventMgr.processKeystrokes(keystrokeManager.getKeystrokeWrapper());
+        keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 
     protected String getRootPath() {
@@ -260,7 +255,10 @@ public class SoftwareCo implements ApplicationComponent {
 
         // process one last time
         // this will ensure we process the latest keystroke updates
-        eventMgr.processKeystrokesData();
+        KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
+        if (keystrokeManager.getKeystrokeCount() != null) {
+            keystrokeManager.getKeystrokeCount().processKeystrokes();
+        }
     }
 
     public static void setLoggingLevel() {

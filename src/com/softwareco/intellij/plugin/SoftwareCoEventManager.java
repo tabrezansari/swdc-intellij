@@ -219,8 +219,7 @@ public class SoftwareCoEventManager {
             final KeystrokeManager.KeystrokeCountWrapper current = keystrokeMgr.getKeystrokeWrapper();
 
             // send the current wrapper and create a new one
-            final Runnable processKpmRunner = () -> this.processKeystrokes(current);
-            processKpmRunner.run();
+            current.getKeystrokeCount().processKeystrokes();
 
             createKeystrokeCountWrapper(projectName, projectFilepath);
         } else {
@@ -271,45 +270,5 @@ public class SoftwareCoEventManager {
             projectDirectory = fileName.substring( 0, fileName.indexOf( projectName ) - 1 );
         }
         return projectDirectory;
-    }
-
-    public void processKeystrokesData() {
-        final KeystrokeManager.KeystrokeCountWrapper current = keystrokeMgr.getKeystrokeWrapper();
-        // send the current wrapper and create a new one
-        processKeystrokes(current);
-    }
-
-    public void processKeystrokes(KeystrokeManager.KeystrokeCountWrapper wrapper) {
-        if (appIsReady) {
-
-            if (wrapper != null && wrapper.getKeystrokeCount() != null && wrapper.getKeystrokeCount().hasData()) {
-
-                // end the file end times
-                wrapper.getKeystrokeCount().endUnendedFiles();
-
-                SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-
-                final String payload = SoftwareCo.gson.toJson(wrapper.getKeystrokeCount());
-
-                int keystrokes = Integer.parseInt(wrapper.getKeystrokeCount().getKeystrokes());
-                SoftwareCoOfflineManager.getInstance().incrementSessionSummaryData(1, keystrokes);
-
-                // store to send later
-                sessionMgr.storePayload(payload);
-
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(10000);
-                        sessionMgr.fetchDailyKpmSessionInfo();
-                    } catch (Exception e) {
-                        System.err.println(e);
-                    }
-                }).start();
-
-            }
-
-            keystrokeMgr.resetData();
-
-        }
     }
 }

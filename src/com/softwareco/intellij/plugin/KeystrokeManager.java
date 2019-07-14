@@ -33,12 +33,6 @@ public class KeystrokeManager {
         }
     }
 
-    public void resetData() {
-        if (wrapper != null && wrapper.getKeystrokeCount() != null) {
-            wrapper.getKeystrokeCount().resetData();;
-        }
-    }
-
     public KeystrokeCount getKeystrokeCount() {
         if (wrapper != null) {
             return wrapper.getKeystrokeCount();

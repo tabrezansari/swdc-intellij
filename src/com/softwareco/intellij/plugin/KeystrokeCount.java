@@ -30,7 +30,6 @@ public class KeystrokeCount {
     private KeystrokeProject project;
 
     public KeystrokeCount() {
-        this.start = Math.round(System.currentTimeMillis() / 1000);
         String appVersion = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin")).getVersion();
         if (appVersion != null) {
             this.version = appVersion;
@@ -62,10 +61,10 @@ public class KeystrokeCount {
         if (this.project != null) {
             this.project.resetData();
         }
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        this.start = timesData.start;
-        this.local_start = timesData.local_start;
-        this.timezone = timesData.timezone;
+
+        this.start = 0L;
+        this.local_start = 0L;
+        this.timezone = "";
     }
 
     public JsonObject getSourceByFileName(String fileName) {
@@ -74,6 +73,22 @@ public class KeystrokeCount {
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+
+        if (this.start == 0) {
+            this.start = timesData.now;
+            this.local_start = timesData.local_now;
+            this.timezone = timesData.timezone;
+
+            // start the keystroke processor 1 minute timer
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000 * 60);
+                    this.processKeystrokes();
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }).start();
+        }
 
         // create one and return the one just created
         JsonObject fileInfoData = new JsonObject();
@@ -88,9 +103,9 @@ public class KeystrokeCount {
         fileInfoData.addProperty("linesAdded", 0);
         fileInfoData.addProperty("linesRemoved", 0);
         fileInfoData.addProperty("syntax", "");
-        fileInfoData.addProperty("start", timesData.start);
+        fileInfoData.addProperty("start", timesData.now);
         fileInfoData.addProperty("end", 0);
-        fileInfoData.addProperty("local_start", timesData.local_start);
+        fileInfoData.addProperty("local_start", timesData.local_now);
         fileInfoData.addProperty("local_end", 0);
         source.add(fileName, fileInfoData);
 
@@ -113,7 +128,7 @@ public class KeystrokeCount {
                 if (endVal == 0) {
                     // set the end time for this file
                     fileinfoDataJsonObj.addProperty("end", timesData.now);
-                    fileinfoDataJsonObj.addProperty("local_end", timesData.now + timesData.offset);
+                    fileinfoDataJsonObj.addProperty("local_end", timesData.local_now);
                 }
             } else {
                 // it does match it, zero out the end timestamp
@@ -134,7 +149,7 @@ public class KeystrokeCount {
             if (endVal == 0) {
                 // set the end time for this file
                 fileinfoDataJsonObj.addProperty("end", timesData.now);
-                fileinfoDataJsonObj.addProperty("local_end", timesData.now + timesData.offset);
+                fileinfoDataJsonObj.addProperty("local_end", timesData.local_now);
             }
         }
     }
@@ -145,6 +160,39 @@ public class KeystrokeCount {
         }
 
         return false;
+    }
+
+    public void processKeystrokes() {
+
+        if (this.hasData()) {
+
+            SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
+
+            // end the file end times
+            this.endUnendedFiles();
+
+            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+
+            final String payload = SoftwareCo.gson.toJson(this);
+
+            SoftwareCoOfflineManager.getInstance().incrementSessionSummaryData(1, Integer.parseInt(keystrokes));
+
+            // store to send later
+            sessionMgr.storePayload(payload);
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(10000);
+                    sessionMgr.fetchDailyKpmSessionInfo();
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }).start();
+
+        }
+
+        this.resetData();
+
     }
 
     public String getKeystrokes() {
