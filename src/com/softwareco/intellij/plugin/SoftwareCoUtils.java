@@ -80,7 +80,7 @@ public class SoftwareCoUtils {
     private static String lastMsg = "";
     private static String lastTooltip = "";
 
-    private static long lastDayOfMonth = 0;
+    private static int lastDayOfMonth = 0;
 
     private static int DASHBOARD_LABEL_WIDTH = 25;
     private static int DASHBOARD_VALUE_WIDTH = 25;
@@ -657,7 +657,6 @@ public class SoftwareCoUtils {
         int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
         Writer writer = null;
 
-        File f = new File(summaryInfoFile);
         if (lastDayOfMonth == 0 || lastDayOfMonth != dayOfMonth) {
             lastDayOfMonth = dayOfMonth;
             String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
