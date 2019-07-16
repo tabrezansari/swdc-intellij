@@ -25,7 +25,6 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.lang.time.DateUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -81,7 +80,7 @@ public class SoftwareCoUtils {
     private static String lastMsg = "";
     private static String lastTooltip = "";
 
-    private static long lastDashboardFetchTime = 0;
+    private static long lastDayOfMonth = 0;
 
     private static int DASHBOARD_LABEL_WIDTH = 25;
     private static int DASHBOARD_VALUE_WIDTH = 25;
@@ -653,13 +652,14 @@ public class SoftwareCoUtils {
     public static void fetchCodeTimeMetricsDashboard(JsonObject summary) {
         String summaryInfoFile = SoftwareCoSessionManager.getSummaryInfoFile(true);
         String dashboardFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
-        long nowInSec = Math.round(System.currentTimeMillis() / 1000);
-        long diff = nowInSec - lastDashboardFetchTime;
+
+        Calendar cal = Calendar.getInstance();
+        int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
         Writer writer = null;
 
         File f = new File(summaryInfoFile);
-        if (!f.exists() || lastDashboardFetchTime == 0 || diff >= DateUtils.MILLIS_PER_DAY) {
-            lastDashboardFetchTime = nowInSec;
+        if (lastDayOfMonth == 0 || lastDayOfMonth != dayOfMonth) {
+            lastDayOfMonth = dayOfMonth;
             String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
             String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
             if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
