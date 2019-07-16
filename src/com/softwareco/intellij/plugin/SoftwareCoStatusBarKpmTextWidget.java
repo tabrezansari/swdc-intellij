@@ -1,6 +1,5 @@
 package com.softwareco.intellij.plugin;
 
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
@@ -8,9 +7,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.event.MouseEvent;
+import java.util.logging.Logger;
 
 public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
-    public static final Logger log = Logger.getInstance("SoftwareCoStatusBarKpmTextWidget");
+    public static final Logger log = Logger.getLogger("SoftwareCoStatusBarKpmTextWidget");
 
     public static final String KPM_TEXT_ID = "software.kpm.text";
 

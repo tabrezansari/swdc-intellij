@@ -1,7 +1,7 @@
 package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonObject;
-import com.intellij.openapi.diagnostic.Logger;
+import java.util.logging.Logger;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -11,7 +11,7 @@ import java.nio.file.Paths;
 
 public class SoftwareCoOfflineManager {
 
-    public static final Logger log = Logger.getInstance("SoftwareCoOfflineManager");
+    public static final Logger log = Logger.getLogger("SoftwareCoOfflineManager");
 
     private static SoftwareCoOfflineManager instance = null;
 
@@ -123,7 +123,7 @@ public class SoftwareCoOfflineManager {
                     data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
                 }
             } catch (Exception e) {
-                log.info("Code Time: Error trying to read and json parse the session file.", e);
+                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
             }
         }
         return data;
@@ -139,7 +139,7 @@ public class SoftwareCoOfflineManager {
                 byte[] encoded = Files.readAllBytes(Paths.get(sessionSummaryFile));
                 content = new String(encoded, Charset.defaultCharset());
             } catch (Exception e) {
-                log.info("Code Time: Error trying to read and json parse the session file.", e);
+                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
             }
         }
         return content;

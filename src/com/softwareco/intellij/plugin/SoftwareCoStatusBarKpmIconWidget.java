@@ -1,19 +1,17 @@
 package com.softwareco.intellij.plugin;
 
-import com.intellij.openapi.wm.StatusBarWidget;
-
-
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.wm.StatusBar;
+import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
+import java.util.logging.Logger;
 
 public class SoftwareCoStatusBarKpmIconWidget implements StatusBarWidget {
-    public static final Logger log = Logger.getInstance("SoftwareCoStatusBarKpmIconWidget");
+    public static final Logger log = Logger.getLogger("SoftwareCoStatusBarKpmIconWidget");
 
     public static final String KPM_ICON_ID = "software.kpm.icon";
 

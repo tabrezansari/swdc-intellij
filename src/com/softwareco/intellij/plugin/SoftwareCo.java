@@ -9,14 +9,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
-import org.apache.log4j.Level;
+
+import java.util.logging.Logger;
 
 
 /**
@@ -26,7 +26,7 @@ import org.apache.log4j.Level;
 public class SoftwareCo implements ApplicationComponent {
 
     public static JsonParser jsonParser = new JsonParser();
-    public static final Logger log = Logger.getInstance("SoftwareCo");
+    public static final Logger log = Logger.getLogger("SoftwareCo");
     public static Gson gson;
 
     public static MessageBusConnection connection;
@@ -91,8 +91,6 @@ public class SoftwareCo implements ApplicationComponent {
     protected void initializePlugin(boolean initializedUser) {
 
         log.info("Code Time: Loaded v" + SoftwareCoUtils.getVersion());
-
-        setLoggingLevel();
 
         gson = new Gson();
 
@@ -248,7 +246,7 @@ public class SoftwareCo implements ApplicationComponent {
                 connection.disconnect();
             }
         } catch(Exception e) {
-            log.debug("Error disconnecting the software.com plugin, reason: " + e.toString());
+            log.info("Error disconnecting the software.com plugin, reason: " + e.toString());
         }
 
         asyncManager.destroyServices();
@@ -261,8 +259,5 @@ public class SoftwareCo implements ApplicationComponent {
         }
     }
 
-    public static void setLoggingLevel() {
-        log.setLevel(Level.INFO);
-    }
 
 }

@@ -6,17 +6,17 @@ package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.intellij.openapi.diagnostic.Logger;
 import org.apache.http.client.methods.HttpPost;
 
 import java.time.ZonedDateTime;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.logging.Logger;
 
 public class SoftwareCoMusicManager {
 
-    public static final Logger log = Logger.getInstance("SoftwareCoMusicManager");
+    public static final Logger log = Logger.getLogger("SoftwareCoMusicManager");
 
     private static SoftwareCoMusicManager instance = null;
 

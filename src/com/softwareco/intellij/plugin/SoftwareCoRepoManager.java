@@ -2,16 +2,16 @@ package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.intellij.openapi.diagnostic.Logger;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
 import java.net.URLEncoder;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class SoftwareCoRepoManager {
 
-    public static final Logger log = Logger.getInstance("SoftwareCoRepoManager");
+    public static final Logger log = Logger.getLogger("SoftwareCoRepoManager");
 
     private static SoftwareCoRepoManager instance = null;
 
@@ -55,7 +55,7 @@ public class SoftwareCoRepoManager {
                     JsonObject latestCommit = payload.get("commit").getAsJsonObject();
                     return latestCommit;
                 } else {
-                    log.debug("Code Time: Unable to fetch latest commit info");
+                    log.info("Code Time: Unable to fetch latest commit info");
                 }
             } catch (Exception e) {
                 //
@@ -230,12 +230,12 @@ public class SoftwareCoRepoManager {
                     message = responseObj.get("message").getAsString();
                 }
 
-                log.debug("Code Time: completed commits update - " + message);
+                log.info("Code Time: completed commits update - " + message);
             } else {
-                log.debug("Code Time: Unable to process repo commits");
+                log.info("Code Time: Unable to process repo commits");
             }
         } catch (Exception e) {
-            log.debug("Code Time: Unable to process repo commits, error: " + e.getMessage());
+            log.warning("Code Time: Unable to process repo commits, error: " + e.getMessage());
         }
     }
 
@@ -286,14 +286,14 @@ public class SoftwareCoRepoManager {
                     // {"status":"success","message":"Updated repo members"}
                     // {"status":"failed","data":"Unable to process repo information"}
                     if (responseData != null && responseData.has("message")) {
-                        log.debug("Code Time: " + responseData.get("message").getAsString());
+                        log.info("Code Time: " + responseData.get("message").getAsString());
                     } else if (responseData != null && responseData.has("data")) {
-                        log.debug("Code Time: " + responseData.get("data").getAsString());
+                        log.info("Code Time: " + responseData.get("data").getAsString());
                     } else {
-                        log.debug("Code Time: Unable to process repo member metrics");
+                        log.info("Code Time: Unable to process repo member metrics");
                     }
                 } catch (Exception e) {
-                    log.debug("Code Time: Unable to process repo member metrics, error: " + e.getMessage());
+                    log.warning("Code Time: Unable to process repo member metrics, error: " + e.getMessage());
                 }
             }
         }

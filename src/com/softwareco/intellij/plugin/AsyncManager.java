@@ -1,6 +1,6 @@
 package com.softwareco.intellij.plugin;
 
-import com.intellij.openapi.diagnostic.Logger;
+import java.util.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class AsyncManager {
 
     private static AsyncManager instance = null;
-    public static final Logger log = Logger.getInstance("AsyncManager");
+    public static final Logger log = Logger.getLogger("AsyncManager");
 
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private List<String> names = new ArrayList<>();

@@ -67,6 +67,23 @@ public class KeystrokeCount {
         this.timezone = "";
     }
 
+    private boolean hasOpenOrCloseMetrics() {
+        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
+        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
+            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
+
+            int openVal = fileinfoDataJsonObj.get("open").getAsInt();
+            if (openVal > 0) {
+                return true;
+            }
+            int closeVal = fileinfoDataJsonObj.get("close").getAsInt();
+            if (closeVal > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public JsonObject getSourceByFileName(String fileName) {
         if (source.has(fileName)) {
             return source.get(fileName).getAsJsonObject();
@@ -155,7 +172,7 @@ public class KeystrokeCount {
     }
 
     public boolean hasData() {
-        if (Integer.parseInt(this.getKeystrokes()) > 0) {
+        if (Integer.parseInt(this.getKeystrokes()) > 0 || this.hasOpenOrCloseMetrics()) {
             return true;
         }
 
@@ -201,18 +218,6 @@ public class KeystrokeCount {
 
     public void setKeystrokes(String keystrokes) {
         this.keystrokes = keystrokes;
-    }
-
-    public void setStart(long start) {
-        this.start = start;
-    }
-
-    public void setLocal_start(long local_start) {
-        this.local_start = local_start;
-    }
-
-    public void setTimezone(String timezone) {
-        this.timezone = timezone;
     }
 
     public KeystrokeProject getProject() {

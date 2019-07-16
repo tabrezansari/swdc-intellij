@@ -8,7 +8,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
@@ -23,11 +22,12 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.logging.Logger;
 
 public class SoftwareCoSessionManager {
 
     private static SoftwareCoSessionManager instance = null;
-    public static final Logger log = Logger.getInstance("SoftwareCoSessionManager");
+    public static final Logger log = Logger.getLogger("SoftwareCoSessionManager");
     private static Map<String, String> sessionMap = new HashMap<>();
     private static long lastAppAvailableCheck = 0;
 
@@ -132,12 +132,13 @@ public class SoftwareCoSessionManager {
         String dataStoreFile = getSoftwareDataStoreFile();
         File f = new File(dataStoreFile);
         try {
+            log.info("Code Time: Storing kpm metrics: " + payload);
             Writer output;
             output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
             output.append(payload);
             output.close();
         } catch (Exception e) {
-            log.info("Code Time: Error appending to the Software data store file", e);
+            log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
         }
     }
 
@@ -203,7 +204,7 @@ public class SoftwareCoSessionManager {
                     log.info("Code Time: No offline data to send");
                 }
             } catch (Exception e) {
-                log.info("Code Time: Error trying to read and send offline data.", e);
+                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
             }
         }
 
@@ -233,7 +234,7 @@ public class SoftwareCoSessionManager {
             output.write(content);
             output.close();
         } catch (Exception e) {
-            log.info("Code Time: Failed to write the key value pair (" + key + ", " + val + ") into the session.", e);
+            log.warning("Code Time: Failed to write the key value pair (" + key + ", " + val + ") into the session, error: " + e.getMessage());
         }
     }
 
@@ -263,7 +264,7 @@ public class SoftwareCoSessionManager {
                     data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
                 }
             } catch (Exception e) {
-                log.info("Code Time: Error trying to read and json parse the session file.", e);
+                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
             }
         }
         return (data == null) ? new JsonObject() : data;
