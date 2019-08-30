@@ -14,6 +14,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ public class SoftwareCoEventManager {
     private KeystrokeManager keystrokeMgr = KeystrokeManager.getInstance();
     private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
     private boolean appIsReady = false;
+    AtomicBoolean flag = new AtomicBoolean(true);
 
     public static SoftwareCoEventManager getInstance() {
         if (instance == null) {
@@ -208,7 +210,21 @@ public class SoftwareCoEventManager {
 
         //
         // Make sure we have the project name and directory info
-        updateKeystrokeProject(projectName, fileName, keystrokeCount);
+        if(flag.get()) {
+            new Thread(() -> {
+                try {
+                    Thread.sleep(60000);
+                    flag.set(true);
+                    LOG.info("Code Time: Reset Flag for project check");
+                } catch (Exception e) {
+                    System.err.println(e);
+                }
+            }).start();
+
+            updateKeystrokeProject(projectName, fileName, keystrokeCount);
+            flag.set(false);
+            LOG.info("Code Time: Update project name & directory");
+        }
     }
 
     private void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {
