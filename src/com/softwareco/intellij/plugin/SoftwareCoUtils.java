@@ -955,7 +955,7 @@ public class SoftwareCoUtils {
 
     public static class TimesData {
         public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
-        public long now = Math.round(System.currentTimeMillis() / 1000);
+        public long now = System.currentTimeMillis() / 1000;
         public long local_now = now + offset;
         public String timezone = TimeZone.getDefault().getID();
     }
