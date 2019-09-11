@@ -182,26 +182,6 @@ public class SoftwareCoEventManager {
         });
     }
 
-    public void updateFileInfoValue(KeystrokeCount.FileInfo fileInfo, String key, int incrementVal) {
-//        Gson gson = new Gson();
-//        KeystrokeCount.FileInfo info = gson.fromJson(fileInfo, FileInfo.class);
-//        if (key.equals("length") || key.equals("lines")) {
-//            // length, lines, or syntax are not additive
-//            fileInfo.addProperty(key, incrementVal);
-//        } else {
-//            int totalVal = keysVal.getAsInt() + incrementVal;
-//            fileInfo.addProperty(key, totalVal);
-//        }
-//
-//        if (key.equals("add") || key.equals("delete")) {
-//            // update the netkeys and the keys
-//            // "netkeys" = add - delete
-//            int deleteCount = fileInfo.get("delete").getAsInt();
-//            int addCount = fileInfo.get("add").getAsInt();
-//            fileInfo.addProperty("netkeys", (addCount - deleteCount));
-//        }
-    }
-
     public void initializeKeystrokeObjectGraph(String fileName, String projectName, String projectFilepath) {
         // initialize it in case it's not initialized yet
         initializeKeystrokeCount(projectName, fileName, projectFilepath);
