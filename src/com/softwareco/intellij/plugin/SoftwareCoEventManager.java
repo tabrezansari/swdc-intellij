@@ -1,7 +1,5 @@
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -63,13 +61,13 @@ public class SoftwareCoEventManager {
             initializeKeystrokeObjectGraph(fileName, project.getName(), project.getProjectFilePath());
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
-        JsonObject fileInfo = keystrokeCount.getSourceByFileName(fileName);
+        KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
             return;
         }
-        updateFileInfoValue(fileInfo,"open", 1);
+        fileInfo.setOpen(fileInfo.getOpen() + 1);
         int documentLineCount = getLineCount(fileName);
-        updateFileInfoValue(fileInfo, "lines", documentLineCount);
+        fileInfo.setLines(documentLineCount);
         LOG.info("Code Time: file opened: " + fileName);
     }
 
@@ -79,11 +77,11 @@ public class SoftwareCoEventManager {
             initializeKeystrokeObjectGraph(fileName, project.getName(), project.getProjectFilePath());
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
-        JsonObject fileInfo = keystrokeCount.getSourceByFileName(fileName);
+        KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
             return;
         }
-        updateFileInfoValue(fileInfo,"close", 1);
+        fileInfo.setClose(fileInfo.getClose() + 1);
         LOG.info("Code Time: file closed: " + fileName);
     }
 
@@ -129,14 +127,14 @@ public class SoftwareCoEventManager {
                                 wrapper.setCurrentFileName(fileName);
                                 wrapper.setCurrentTextLength(currLen);
 
-                                JsonObject fileInfo = keystrokeCount.getSourceByFileName(fileName);
-                                String syntax = fileInfo.get("syntax").getAsString();
+                                KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
+                                String syntax = fileInfo.getSyntax();
                                 if (syntax == null || syntax.equals("")) {
                                     // get the grammar
                                     try {
                                         String fileType = file.getFileType().getName();
                                         if (fileType != null && !fileType.equals("")) {
-                                            fileInfo.addProperty("syntax", fileType);
+                                            fileInfo.setSyntax(fileType);
                                         }
                                     } catch (Exception e) {
                                         //
@@ -144,15 +142,17 @@ public class SoftwareCoEventManager {
                                 }
                                 if (documentEvent.getOldLength() > 0) {
                                     //it's a delete
-                                    updateFileInfoValue(fileInfo, "delete", 1);
+                                    fileInfo.setDelete(fileInfo.getDelete() + 1);
+                                    fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
                                     LOG.info("Code Time: delete incremented");
                                 } else {
                                     // it's an add
                                     if (documentEvent.getNewLength() > 1) {
                                         // it's a paste
-                                        updateFileInfoValue(fileInfo, "paste", 1);
+                                        fileInfo.setPaste(fileInfo.getPaste() + 1);
                                     } else {
-                                        updateFileInfoValue(fileInfo, "add", 1);
+                                        fileInfo.setAdd(fileInfo.getAdd() + 1);
+                                        fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
                                         LOG.info("Code Time: add incremented");
                                     }
                                 }
@@ -161,19 +161,18 @@ public class SoftwareCoEventManager {
                                 keystrokeCount.setKeystrokes(String.valueOf(incrementedCount));
 
                                 int documentLineCount = document.getLineCount();
-                                int savedLines = fileInfo.get("lines").getAsInt();
+                                int savedLines = fileInfo.getLines();
                                 if (savedLines > 0) {
                                     int diff = documentLineCount - savedLines;
                                     if (diff < 0) {
-                                        updateFileInfoValue(fileInfo, "linesRemoved", Math.abs(diff));
+                                        fileInfo.setLinesRemoved(fileInfo.getLinesRemoved() + Math.abs(diff));
                                         LOG.info("Code Time: lines removed incremented");
                                     } else if (diff > 0) {
-                                        updateFileInfoValue(fileInfo, "linesAdded", diff);
+                                        fileInfo.setLinesAdded(fileInfo.getLinesAdded() + diff);
                                         LOG.info("Code Time: lines added incremented");
                                     }
                                 }
-
-                                updateFileInfoValue(fileInfo, "lines", documentLineCount);
+                                fileInfo.setLines(documentLineCount);
                             }
                         }
                     }
@@ -183,23 +182,24 @@ public class SoftwareCoEventManager {
         });
     }
 
-    public void updateFileInfoValue(JsonObject fileInfo, String key, int incrementVal) {
-        JsonPrimitive keysVal = fileInfo.getAsJsonPrimitive(key);
-        if (key.equals("length") || key.equals("lines")) {
-            // length, lines, or syntax are not additive
-            fileInfo.addProperty(key, incrementVal);
-        } else {
-            int totalVal = keysVal.getAsInt() + incrementVal;
-            fileInfo.addProperty(key, totalVal);
-        }
-
-        if (key.equals("add") || key.equals("delete")) {
-            // update the netkeys and the keys
-            // "netkeys" = add - delete
-            int deleteCount = fileInfo.get("delete").getAsInt();
-            int addCount = fileInfo.get("add").getAsInt();
-            fileInfo.addProperty("netkeys", (addCount - deleteCount));
-        }
+    public void updateFileInfoValue(KeystrokeCount.FileInfo fileInfo, String key, int incrementVal) {
+//        Gson gson = new Gson();
+//        KeystrokeCount.FileInfo info = gson.fromJson(fileInfo, FileInfo.class);
+//        if (key.equals("length") || key.equals("lines")) {
+//            // length, lines, or syntax are not additive
+//            fileInfo.addProperty(key, incrementVal);
+//        } else {
+//            int totalVal = keysVal.getAsInt() + incrementVal;
+//            fileInfo.addProperty(key, totalVal);
+//        }
+//
+//        if (key.equals("add") || key.equals("delete")) {
+//            // update the netkeys and the keys
+//            // "netkeys" = add - delete
+//            int deleteCount = fileInfo.get("delete").getAsInt();
+//            int addCount = fileInfo.get("add").getAsInt();
+//            fileInfo.addProperty("netkeys", (addCount - deleteCount));
+//        }
     }
 
     public void initializeKeystrokeObjectGraph(String fileName, String projectName, String projectFilepath) {
