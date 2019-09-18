@@ -203,8 +203,9 @@ public class SoftwareCo implements ApplicationComponent {
         KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
         String fileName = "Untitled";
         eventMgr.initializeKeystrokeObjectGraph(fileName, "Unnamed", "");
-        JsonObject fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
-        eventMgr.updateFileInfoValue(fileInfo, "add", 1);
+        KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
+        fileInfo.setAdd(fileInfo.getAdd() + 1);
+        fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
         keystrokeManager.getKeystrokeCount().setKeystrokes(String.valueOf(1));
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }

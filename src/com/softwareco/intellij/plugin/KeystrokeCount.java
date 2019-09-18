@@ -4,21 +4,21 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.extensions.PluginId;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.logging.Logger;
 
 public class KeystrokeCount {
 
+    private static final Logger LOG = Logger.getLogger("KeystrokeCount");
     // TODO: backend driven, we should look at getting a list of types at some point
     private String type = "Events";
 
     // non-hardcoded attributes
-    private JsonObject source = new JsonObject();
+    private Map<String, FileInfo> source = new HashMap<>();
     private String version;
     private int pluginId;
     private String keystrokes = "0"; // keystroke count
@@ -57,7 +57,7 @@ public class KeystrokeCount {
 
     public void resetData() {
         this.keystrokes = "0";
-        this.source = new JsonObject();
+        this.source = new HashMap<>();
         if (this.project != null) {
             this.project.resetData();
         }
@@ -68,15 +68,13 @@ public class KeystrokeCount {
     }
 
     private boolean hasOpenOrCloseMetrics() {
-        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
-        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
-            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
-
-            int openVal = fileinfoDataJsonObj.get("open").getAsInt();
+        Map<String, FileInfo> fileInfoDataSet = this.source;
+        for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
+            int openVal = fileInfoData.getOpen();
             if (openVal > 0) {
                 return true;
             }
-            int closeVal = fileinfoDataJsonObj.get("close").getAsInt();
+            int closeVal = fileInfoData.getClose();
             if (closeVal > 0) {
                 return true;
             }
@@ -84,9 +82,149 @@ public class KeystrokeCount {
         return false;
     }
 
-    public JsonObject getSourceByFileName(String fileName) {
-        if (source.has(fileName)) {
-            return source.get(fileName).getAsJsonObject();
+    public static class FileInfo {
+        public Integer add = 0;
+        public Integer paste = 0;
+        public Integer open = 0;
+        public Integer close = 0;
+        public Integer delete = 0;
+        public Integer length = 0;
+        public Integer netkeys = 0;
+        public Integer lines = 0;
+        public Integer linesAdded = 0;
+        public Integer linesRemoved = 0;
+        public String syntax = "";
+        public long start = 0;
+        public long end = 0;
+        public long local_start = 0;
+        public long local_end = 0;
+
+        public FileInfo() { }
+
+        public Integer getAdd() {
+            return add;
+        }
+
+        public void setAdd(Integer add) {
+            this.add = add;
+        }
+
+        public Integer getPaste() {
+            return paste;
+        }
+
+        public void setPaste(Integer paste) {
+            this.paste = paste;
+        }
+
+        public Integer getOpen() {
+            return open;
+        }
+
+        public void setOpen(Integer open) {
+            this.open = open;
+        }
+
+        public Integer getClose() {
+            return close;
+        }
+
+        public void setClose(Integer close) {
+            this.close = close;
+        }
+
+        public Integer getDelete() {
+            return delete;
+        }
+
+        public void setDelete(Integer delete) {
+            this.delete = delete;
+        }
+
+        public Integer getLength() {
+            return length;
+        }
+
+        public void setLength(Integer length) {
+            this.length = length;
+        }
+
+        public Integer getNetkeys() {
+            return netkeys;
+        }
+
+        public void setNetkeys(Integer netkeys) {
+            this.netkeys = netkeys;
+        }
+
+        public Integer getLines() {
+            return lines;
+        }
+
+        public void setLines(Integer lines) {
+            this.lines = lines;
+        }
+
+        public Integer getLinesAdded() {
+            return linesAdded;
+        }
+
+        public void setLinesAdded(Integer linesAdded) {
+            this.linesAdded = linesAdded;
+        }
+
+        public Integer getLinesRemoved() {
+            return linesRemoved;
+        }
+
+        public void setLinesRemoved(Integer linesRemoved) {
+            this.linesRemoved = linesRemoved;
+        }
+
+        public String getSyntax() {
+            return syntax;
+        }
+
+        public void setSyntax(String syntax) {
+            this.syntax = syntax;
+        }
+
+        public long getStart() {
+            return start;
+        }
+
+        public void setStart(long start) {
+            this.start = start;
+        }
+
+        public long getEnd() {
+            return end;
+        }
+
+        public void setEnd(long end) {
+            this.end = end;
+        }
+
+        public long getLocal_start() {
+            return local_start;
+        }
+
+        public void setLocal_start(long local_start) {
+            this.local_start = local_start;
+        }
+
+        public long getLocal_end() {
+            return local_end;
+        }
+
+        public void setLocal_end(long local_end) {
+            this.local_end = local_end;
+        }
+    }
+
+    public FileInfo getSourceByFileName(String fileName) {
+        if (source.get(fileName) != null) {
+            return source.get(fileName);
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
@@ -108,23 +246,10 @@ public class KeystrokeCount {
         }
 
         // create one and return the one just created
-        JsonObject fileInfoData = new JsonObject();
-        fileInfoData.addProperty("add", 0);
-        fileInfoData.addProperty("paste", 0);
-        fileInfoData.addProperty("open", 0);
-        fileInfoData.addProperty("close", 0);
-        fileInfoData.addProperty("delete", 0);
-        fileInfoData.addProperty("length", 0);
-        fileInfoData.addProperty("netkeys", 0);
-        fileInfoData.addProperty("lines", 0);
-        fileInfoData.addProperty("linesAdded", 0);
-        fileInfoData.addProperty("linesRemoved", 0);
-        fileInfoData.addProperty("syntax", "");
-        fileInfoData.addProperty("start", timesData.now);
-        fileInfoData.addProperty("end", 0);
-        fileInfoData.addProperty("local_start", timesData.local_now);
-        fileInfoData.addProperty("local_end", 0);
-        source.add(fileName, fileInfoData);
+        FileInfo fileInfoData = new FileInfo();
+        fileInfoData.setStart(timesData.now);
+        fileInfoData.setLocal_start(timesData.local_now);
+        source.put(fileName, fileInfoData);
 
         return fileInfoData;
     }
@@ -135,38 +260,30 @@ public class KeystrokeCount {
 
     public void endPreviousModifiedFiles(String currentFileName) {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
-        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
-            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
+        Map<String, FileInfo> fileInfoDataSet = this.source;
 
-            // if the file info data element doesn't equal the current file name, set the end timestamp
-            if (!fileInfoData.getKey().equals(currentFileName)) {
-                long endVal = fileinfoDataJsonObj.get("end").getAsLong();
-                if (endVal == 0) {
-                    // set the end time for this file
-                    fileinfoDataJsonObj.addProperty("end", timesData.now);
-                    fileinfoDataJsonObj.addProperty("local_end", timesData.local_now);
-                }
-            } else {
-                // it does match it, zero out the end timestamp
-                fileinfoDataJsonObj.addProperty("end", 0);
-                fileinfoDataJsonObj.addProperty("local_end", 0);
-
+        for (FileInfo fileInfoData : fileInfoDataSet.values()) {
+            if (fileInfoData.getEnd() == 0) {
+                fileInfoData.setEnd(timesData.now);
+                fileInfoData.setLocal_end(timesData.local_now);
             }
+        }
+        if(fileInfoDataSet.get(currentFileName) != null) {
+            FileInfo fileInfoData = fileInfoDataSet.get(currentFileName);
+            fileInfoData.setEnd(0);
+            fileInfoData.setLocal_end(0);
         }
     }
 
     public void endUnendedFiles() {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Set<Map.Entry<String, JsonElement>> fileInfoDataSet = this.source.entrySet();
-        for ( Map.Entry<String, JsonElement> fileInfoData : fileInfoDataSet ) {
-            JsonObject fileinfoDataJsonObj = (JsonObject) fileInfoData.getValue();
-            long endVal = fileinfoDataJsonObj.get("end").getAsLong();
+        Map<String, FileInfo> fileInfoDataSet = this.source;
+        for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
             // end the ones that don't have an end time
-            if (endVal == 0) {
+            if (fileInfoData.getEnd() == 0) {
                 // set the end time for this file
-                fileinfoDataJsonObj.addProperty("end", timesData.now);
-                fileinfoDataJsonObj.addProperty("local_end", timesData.local_now);
+                fileInfoData.setEnd(timesData.now);
+                fileInfoData.setLocal_end(timesData.local_now);
             }
         }
     }
