@@ -117,7 +117,7 @@ public class SoftwareCoOfflineManager {
         if (f.exists()) {
             try {
                 byte[] encoded = Files.readAllBytes(Paths.get(sessionSummaryFile));
-                String content = new String(encoded, Charset.defaultCharset());
+                String content = new String(encoded, Charset.forName("UTF-8"));
                 if (content != null) {
                     // json parse it
                     data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
@@ -137,7 +137,7 @@ public class SoftwareCoOfflineManager {
         if (f.exists()) {
             try {
                 byte[] encoded = Files.readAllBytes(Paths.get(sessionSummaryFile));
-                content = new String(encoded, Charset.defaultCharset());
+                content = new String(encoded, Charset.forName("UTF-8"));
             } catch (Exception e) {
                 log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
             }
