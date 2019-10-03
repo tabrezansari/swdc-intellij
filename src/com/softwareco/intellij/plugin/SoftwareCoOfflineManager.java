@@ -151,7 +151,7 @@ public class SoftwareCoOfflineManager {
         Writer writer = null;
         try {
             writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(f), StandardCharsets.UTF_8));
+                    new FileOutputStream(f), Charset.forName("UTF-8")));
             writer.write(content);
         } catch (IOException ex) {
             // Report
