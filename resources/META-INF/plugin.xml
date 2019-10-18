@@ -1,120 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <idea-plugin>
   <id>com.softwareco.intellij.plugin</id>
+
   <name>Code Time</name>
   <version>0.4.4</version>
+
   <vendor email="cody@software.com" url="https://software.com">Software</vendor>
 
-    <!-- Code Time Description -->
     <description><![CDATA[
-      <h1 id="codetimeforintellij">Code Time for IntelliJ</h1>
+<h1 id="codetimeforintellij">Code Time for IntelliJ</h1>
 
-      <blockquote>
-        <p><strong>Code Time</strong> is an open source plugin that provides programming metrics right in your code editor.</p>
-      </blockquote>
+<blockquote>
+<p><strong>Code Time</strong> is an open source plugin that provides programming metrics right in your code editor.</p>
+</blockquote>
 
-      <p align="center" style="margin: 0 10%">
-        <img src="https://raw.githubusercontent.com/swdotcom/swdc-intellij/master/resources/assets/intellij-dashboard.gif" alt="Code Time for IntelliJ" />
-      </p>
+<p align="center" style="margin: 0 10%">
+<img src="https://raw.githubusercontent.com/swdotcom/swdc-intellij/master/resources/assets/intellij-dashboard.gif" alt="Code Time for IntelliJ" />
+</p>
 
-      <h2 id="powerupyourdevelopment">Power up your development</h2>
+<h2 id="powerupyourdevelopment">Power up your development</h2>
 
-      <p><strong>In-editor dashboard</strong>
-      Get daily and weekly reports of your programming activity right in your code editor.</p>
+<p><strong>In-editor dashboard</strong>
+Get daily and weekly reports of your programming activity right in your code editor.</p>
 
-      <p><strong>Status bar metrics</strong>
-      After installing our plugin, your status bar will show real-time metrics about time coded per day.</p>
+<p><strong>Status bar metrics</strong>
+After installing our plugin, your status bar will show real-time metrics about time coded per day.</p>
 
-      <p><strong>Weekly email reports</strong>
-      Get a weekly report delivered right to your email inbox.</p>
+<p><strong>Weekly email reports</strong>
+Get a weekly report delivered right to your email inbox.</p>
 
-      <p><strong>Data visualizations</strong>
-      Go to our web app to get simple data visualizations, such as a rolling heatmap of your best programming times by hour of the day.</p>
+<p><strong>Data visualizations</strong>
+Go to our web app to get simple data visualizations, such as a rolling heatmap of your best programming times by hour of the day.</p>
+<p><strong>Calendar integration</strong>
+Integrate with Google Calendar to automatically set calendar events to protect your best programming times from meetings and interrupts.</p>
 
-      <p><strong>Calendar integration</strong>
-      Integrate with Google Calendar to automatically set calendar events to protect your best programming times from meetings and interrupts.</p>
+<p><strong>More stats</strong>
+See your best time for coding and the speed, frequency, and top files across your commits.</p>
 
-      <p><strong>More stats</strong>
-      See your best music for coding and the speed, frequency, and top files across your commits.</p>
+<h2 id="whyyoushouldtryitout">Why you should try it out</h2>
 
-      <h2 id="whyyoushouldtryitout">Why you should try it out</h2>
+<ul>
+<li>Automatic time reports by project</li>
 
-      <ul>
-      <li>Automatic time reports by project</li>
+<li>See what time you code your bestâ€”find your "flow"</li>
 
-      <li>See what time you code your best—find your “flow”</li>
+<li>Defend your best code times against meetings and interrupts</li>
 
-      <li>Defend your best code times against meetings and interrupts</li>
+<li>Find out what you can learn from your data</li>
+</ul>
 
-      <li>Find out what you can learn from your data</li>
-      </ul>
+<h2 id="itssafesecureandfree">Itâ€™s safe, secure, and free</h2>
 
-      <h2 id="itssafesecureandfree">It’s safe, secure, and free</h2>
+<p><strong>We never access your code</strong>
+We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.</p>
 
-      <p><strong>We never access your code</strong>
-      We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.</p>
+<p><strong>Your data is private</strong>
+We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.</p>
 
-      <p><strong>Your data is private</strong>
-      We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.</p>
-
-      <p><strong>Free for you, forever</strong>
-      We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.</p>
-    ]]></description>
-
-    <!-- Music Time Description -->
-<!--    <description><![CDATA[-->
-<!--      <h1 id="musictimeforintellij">Music Time for IntelliJ</h1>-->
-
-<!--      <blockquote>-->
-<!--        <p><strong>Music Time</strong> is an open source plugin that provides music listening metrics right in your code editor.</p>-->
-<!--      </blockquote>-->
-
-<!--      <p align="center" style="margin: 0 10%">-->
-<!--        <img src="https://raw.githubusercontent.com/swdotcom/swdc-intellij/master/resources/assets/intellij-dashboard.gif" alt="Code Time for IntelliJ" />-->
-<!--      </p>-->
-
-<!--      <h2 id="powerupyourdevelopment">Power up your development</h2>-->
-
-<!--      <p><strong>In-editor dashboard</strong>-->
-<!--      Get daily and weekly reports of your music listening activity right in your code editor.</p>-->
-
-<!--      <p><strong>Status bar metrics</strong>-->
-<!--      After installing our plugin, your status bar will show real-time metrics about time music listen per day.</p>-->
-
-<!--      <p><strong>Weekly email reports</strong>-->
-<!--      Get a weekly report delivered right to your email inbox.</p>-->
-
-<!--      <p><strong>Data visualizations</strong>-->
-<!--      Go to our web app to get simple data visualizations, such as a rolling heatmap of your best programming times by hour of the day.</p>-->
-
-<!--      <p><strong>Calendar integration</strong>-->
-<!--      Integrate with Google Calendar to automatically set calendar events to protect your best programming times from meetings and interrupts.</p>-->
-
-<!--      <p><strong>More stats</strong>-->
-<!--      See your best music for coding and the speed, frequency, and top files across your commits.</p>-->
-
-<!--      <h2 id="whyyoushouldtryitout">Why you should try it out</h2>-->
-
-<!--      <ul>-->
-<!--      <li>Automatic time reports by project</li>-->
-
-<!--      <li>See what time you code your best—find your “flow”</li>-->
-
-<!--      <li>Defend your best code times against meetings and interrupts</li>-->
-
-<!--      <li>Find out what you can learn from your data</li>-->
-<!--      </ul>-->
-
-<!--      <h2 id="itssafesecureandfree">It’s safe, secure, and free</h2>-->
-
-<!--      <p><strong>We never access your code</strong>-->
-<!--      We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.</p>-->
-
-<!--      <p><strong>Your data is private</strong>-->
-<!--      We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.</p>-->
-
-<!--      <p><strong>Free for you, forever</strong>-->
-<!--      We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.</p>-->
-<!--    ]]></description>-->
+<p><strong>Free for you, forever</strong>
+We provide 90 days of data history for free, forever. In the future, we will provide premium plans for advanced features and historical data access.</p>
+]]></description>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
   <idea-version since-build="162"/>
@@ -132,57 +77,43 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <!-- Add your extensions here -->
-    <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity" />
+    <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
   </extensions>
 
   <actions>
       <!-- Code Time Group Tab -->
-    <group id="CustomDefaultActionGroup" class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" popup="true"
-           text="Code Time" description="Code Time menu actions">
-        <add-to-group group-id="MainMenu" relative-to-action="HelpMenu" anchor="before"/>
-        <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" id="CodeTimeMetrics"
-                text="Code time dashboard" description="View your latest coding metrics"/>
+    <group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" popup="true" text="Code Time">
+        <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+        <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
 
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" id="SoftwareTopFortyAction"
-              text="Software top 40" description="Top 40 most popular songs developers around the world listen to as they code"/>
+        <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
 
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" id="SoftwareDashboardAction"
-                text="Web dashboard" description="View your KPM metrics"/>
+        <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
 
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" id="SoftwareLoginAction"
-              text="Log in to see your coding data" description="To see your coding data in Code Time, please log in to your account."/>
+        <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
 
-        <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" id="ToggleStatusBarAction"
-              text="Show/hide status bar metrics" description="Toggle the Code Time status bar metrics."/>
+        <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
 
 <!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction"-->
 <!--              text="Switch to Music Time" description="Toggle the Code Time to Music Time."/>-->
 
     </group>
       <!-- Music Time Group Tab -->
-      <group id="CustomDefaultActionGroup1" class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" popup="true"
-             text="Music Time" description="Music Time menu actions">
-          <add-to-group group-id="MainMenu" relative-to-action="HelpMenu" anchor="before"/>
-          <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" id="MusicTimeMetrics"
-                  text="Music time dashboard" description="View your latest music metrics"/>
+      <group class="com.softwareco.intellij.plugin.actions.CustomMusicActionGroup" description="Music Time menu actions" id="CustomDefaultActionGroup1" popup="true" text="Music Time">
+          <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+          <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest music metrics" id="MusicTimeMetrics" text="Music time dashboard"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" id="SoftwareTopFortyAction1"
-                  text="Software top 40" description="Top 40 most popular songs developers around the world listen to as they code"/>
+          <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction1" text="Software top 40"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" id="SoftwareDashboardAction1"
-                  text="Web dashboard" description="View your KPM metrics"/>
+          <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction1" text="Web dashboard"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" id="SoftwareLoginAction1"
-                  text="Log in to see your coding data" description="To see your music data in Music Time, please log in to your account."/>
+          <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your music data in Music Time, please log in to your account." id="SoftwareLoginAction1" text="Log in to see your coding data"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.ConnectSpotifyAction" id="ConnectSpotifyAction"
-                  text="Connect Spotify" description="Connect to the Spotify."/>
+          <action class="com.softwareco.intellij.plugin.actions.ConnectSpotifyAction" description="Connect to the Spotify." id="ConnectSpotifyAction" text="Connect Spotify"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.DisconnectSpotifyAction" id="DisconnectSpotifyAction"
-                  text="Disconnect Spotify" description="Disconnect to the Spotify."/>
+          <action class="com.softwareco.intellij.plugin.actions.DisconnectSpotifyAction" description="Disconnect to the Spotify." id="DisconnectSpotifyAction" text="Disconnect Spotify"/>
 
-          <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" id="ToggleStatusBarAction1"
-                  text="Show/hide status bar metrics" description="Toggle the Music Time status bar metrics."/>
+          <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Music Time status bar metrics." id="ToggleStatusBarAction1" text="Show/hide status bar metrics"/>
 
           <!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction1"-->
           <!--                text="Switch to Code Time" description="Toggle the Music Time to Code Time."/>-->

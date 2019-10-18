@@ -8,8 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ConnectSpotifyAction extends AnAction {
     @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { //SoftwareCoUtils.connectSpotify();
-         }
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { }
 
     @Override
     public void update(AnActionEvent event) {

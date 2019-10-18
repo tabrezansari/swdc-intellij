@@ -66,6 +66,7 @@ public class SoftwareCoUtils {
     // sublime = 1, vs code = 2, eclipse = 3, intellij = 4, visual studio = 6, atom = 7
     public static int pluginId = 4;
     private static String VERSION = null;
+    public static String pluginName = null;
 
     public final static ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
@@ -122,6 +123,21 @@ public class SoftwareCoUtils {
             VERSION = pluginDescriptor.getVersion();
         }
         return VERSION;
+    }
+
+    public static String getPluginName() {
+        if (pluginName == null) {
+            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin"));
+            pluginName = pluginDescriptor.getName();
+        }
+        return pluginName;
+    }
+
+    public static boolean isMusicTime() {
+        if(getPluginName().equals("Music Time")) {
+            return true;
+        }
+        return false;
     }
 
     public static String getUserHomeDir() {
