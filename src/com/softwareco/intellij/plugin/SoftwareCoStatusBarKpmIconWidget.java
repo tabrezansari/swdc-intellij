@@ -29,7 +29,7 @@ public class SoftwareCoStatusBarKpmIconWidget implements StatusBarWidget {
         eventHandler = new Consumer<MouseEvent>() {
             @Override
             public void consume(MouseEvent mouseEvent) {
-                sessionMgr.statusBarClickHandler();
+                sessionMgr.statusBarClickHandler(mouseEvent, id);
             }
         };
     }

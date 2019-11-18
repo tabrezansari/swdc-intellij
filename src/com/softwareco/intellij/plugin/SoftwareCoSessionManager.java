@@ -11,10 +11,15 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
+import com.intellij.openapi.wm.StatusBar;
+import com.intellij.openapi.wm.WindowManager;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -351,9 +356,42 @@ public class SoftwareCoSessionManager {
         offlineMgr.updateStatusBarWithSummaryData(sessionSummary);
     }
 
-    public void statusBarClickHandler() {
+    public void statusBarClickHandler(MouseEvent mouseEvent, String id) {
         if (SoftwareCoSessionManager.isServerOnline()) {
-            SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+            if(SoftwareCoUtils.pluginName.equals("Code Time")) {
+                SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+            } else if(SoftwareCoUtils.pluginName.equals("Music Time")) {
+                String headphoneiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_headphoneicon";
+                String likeiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_likeicon";
+                String preiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_preicon";
+                String stopiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_stopicon";
+                String pauseiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_pauseicon";
+                String playiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_playicon";
+                String nexticonId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_nexticon";
+                String songtrackId = SoftwareCoStatusBarKpmTextWidget.KPM_TEXT_ID + "_songtrack";
+                String connectspotifyId = SoftwareCoStatusBarKpmTextWidget.KPM_TEXT_ID + "_connectspotify";
+
+                boolean state = false;
+                log.warning("Music Time: Button ID: " + id);
+                if(id.equals(headphoneiconId) || id.equals(connectspotifyId)) {
+                    SoftwareCoUtils.connectSpotify();
+                }
+                else if(id.equals(playiconId)) {
+                    SoftwareCoUtils.playerCounter = 0;
+                    SoftwareCoUtils.playSpotifyDevices();
+                } else if(id.equals(pauseiconId)) {
+                    SoftwareCoUtils.playerCounter = 0;
+                    SoftwareCoUtils.pauseSpotifyDevices();
+                } else if(id.equals(preiconId)) {
+                    SoftwareCoUtils.playerCounter = 0;
+                    SoftwareCoUtils.previousSpotifyTrack();
+                } else if(id.equals(nexticonId)) {
+                    SoftwareCoUtils.playerCounter = 0;
+                    SoftwareCoUtils.nextSpotifyTrack();
+                } else if(id.equals(songtrackId)) {
+                    SoftwareCoUtils.launchPlayer();
+                }
+            }
         } else {
             SoftwareCoUtils.showOfflinePrompt(false);
         }

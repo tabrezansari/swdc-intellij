@@ -33,7 +33,7 @@ See your best music for coding and the speed, frequency, and top files across yo
 -   Defend your best music times against meetings and interrupts
 -   Find out what you can learn from your data
 
-## It’s safe, secure, and free
+## It's safe, secure, and free
 
 **We never access your code**
 We do not process, send, or store your proprietary code. We only provide metrics about music activity, and we make it easy to see the data we collect.

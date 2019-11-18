@@ -10,9 +10,9 @@ import java.util.concurrent.Callable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class SoftwareHttpManager implements Callable<HttpResponse> {
+public class SpotifyHttpManager implements Callable<HttpResponse> {
 
-    public static final Logger LOG = Logger.getLogger("Software");
+    public static final Logger LOG = Logger.getLogger("Spotify");
 
     private String payload;
     private String api;
@@ -20,7 +20,7 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
     private HttpClient httpClient;
     private String overridingJwt;
 
-    public SoftwareHttpManager(String api, String httpMethodName, String payload, String overridingJwt, HttpClient httpClient) {
+    public SpotifyHttpManager(String api, String httpMethodName, String payload, String overridingJwt, HttpClient httpClient) {
         this.payload = payload;
         this.api = api;
         this.httpMethodName = httpMethodName;
@@ -29,14 +29,17 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
     }
 
     @Override
-    public HttpResponse call() {
+    public HttpResponse call() throws Exception {
         HttpUriRequest req = null;
         try {
             HttpResponse response = null;
 
             switch (httpMethodName) {
                 case HttpPost.METHOD_NAME:
-                    req = new HttpPost("" + SoftwareCoUtils.api_endpoint + this.api);
+                    if(this.overridingJwt != null && this.overridingJwt.contains("Basic"))
+                        req = new HttpPost("https://accounts.spotify.com" + this.api);
+                    else
+                        req = new HttpPost("" + SoftwareCoUtils.spotify_endpoint + this.api);
                     if (payload != null) {
                         //
                         // add the json payload
@@ -46,13 +49,20 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
                     }
                     break;
                 case HttpDelete.METHOD_NAME:
-                    req = new HttpDelete(SoftwareCoUtils.api_endpoint + "" + this.api);
+                    req = new HttpDelete(SoftwareCoUtils.spotify_endpoint + "" + this.api);
                     break;
                 case HttpPut.METHOD_NAME:
-                    req = new HttpPut(SoftwareCoUtils.api_endpoint + "" + this.api);
+                    req = new HttpPut(SoftwareCoUtils.spotify_endpoint + "" + this.api);
+                    if (payload != null) {
+                        //
+                        // add the json payload
+                        //
+                        StringEntity params = new StringEntity(payload);
+                        ((HttpPut)req).setEntity(params);
+                    }
                     break;
                 default:
-                    req = new HttpGet(SoftwareCoUtils.api_endpoint + "" + this.api);
+                    req = new HttpGet(SoftwareCoUtils.spotify_endpoint + "" + this.api);
                     break;
             }
 
@@ -63,10 +73,13 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
                 req.addHeader("Authorization", jwtToken);
             }
 
-            req.addHeader("Content-type", "application/json");
+            if(jwtToken.contains("Basic"))
+                req.addHeader("Content-type", "application/x-www-form-urlencoded");
+            else
+                req.addHeader("Content-type", "application/json");
 
             if (payload != null) {
-                LOG.log(Level.INFO, SoftwareCoUtils.pluginName + ": Sending API request: {0}, payload: {1}", new Object[]{api, payload});
+                LOG.log(Level.INFO, "Music Time: Sending API request: {0}, payload: {1}", new Object[]{api, payload});
             }
 
             // execute the request
@@ -77,8 +90,8 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
             //
             return response;
         } catch (IOException e) {
-            LOG.log(Level.WARNING, SoftwareCoUtils.pluginName + ": Unable to make api request.{0}", e.getMessage());
-            LOG.log(Level.INFO, SoftwareCoUtils.pluginName + ": Sending API request: " + this.api);
+            LOG.log(Level.WARNING, "Music Time: Unable to make api request.{0}", e.getMessage());
+            LOG.log(Level.INFO, "Music Time: Sending API request: " + this.api);
         }
 
         return null;

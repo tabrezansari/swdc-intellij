@@ -55,7 +55,7 @@ public class SoftwareCoRepoManager {
                     JsonObject latestCommit = payload.get("commit").getAsJsonObject();
                     return latestCommit;
                 } else {
-                    log.info("Code Time: Unable to fetch latest commit info");
+                    log.info(SoftwareCoUtils.pluginName + ": Unable to fetch latest commit info");
                 }
             } catch (Exception e) {
                 //
@@ -230,12 +230,12 @@ public class SoftwareCoRepoManager {
                     message = responseObj.get("message").getAsString();
                 }
 
-                log.info("Code Time: completed commits update - " + message);
+                log.info(SoftwareCoUtils.pluginName + ": completed commits update - " + message);
             } else {
-                log.info("Code Time: Unable to process repo commits");
+                log.info(SoftwareCoUtils.pluginName + ": Unable to process repo commits");
             }
         } catch (Exception e) {
-            log.warning("Code Time: Unable to process repo commits, error: " + e.getMessage());
+            log.warning(SoftwareCoUtils.pluginName + ": Unable to process repo commits, error: " + e.getMessage());
         }
     }
 
@@ -288,12 +288,12 @@ public class SoftwareCoRepoManager {
                     if (responseData != null && responseData.has("message")) {
                         log.info("Code Time: " + responseData.get("message").getAsString());
                     } else if (responseData != null && responseData.has("data")) {
-                        log.info("Code Time: " + responseData.get("data").getAsString());
+                        log.info(SoftwareCoUtils.pluginName + ": " + responseData.get("data").getAsString());
                     } else {
-                        log.info("Code Time: Unable to process repo member metrics");
+                        log.info(SoftwareCoUtils.pluginName + ": Unable to process repo member metrics");
                     }
                 } catch (Exception e) {
-                    log.warning("Code Time: Unable to process repo member metrics, error: " + e.getMessage());
+                    log.warning(SoftwareCoUtils.pluginName + ": Unable to process repo member metrics, error: " + e.getMessage());
                 }
             }
         }

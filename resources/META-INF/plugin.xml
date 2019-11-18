@@ -1,17 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<idea-plugin>
-  <id>com.softwareco.intellij.plugin</id>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><idea-plugin>
+  <id>com.softwareco.intellij.plugin.musictime</id>
 
-  <name>Code Time</name>
-  <version>0.4.4</version>
+  <name>Music Time</name>
+  <version>1.0.0</version>
 
   <vendor email="cody@software.com" url="https://software.com">Software</vendor>
 
     <description><![CDATA[
-<h1 id="codetimeforintellij">Code Time for IntelliJ</h1>
+<h1 id="musictimeforintellij">Music Time for IntelliJ</h1>
 
 <blockquote>
-<p><strong>Code Time</strong> is an open source plugin that provides programming metrics right in your code editor.</p>
+<p><strong>Music Time</strong> is an open source plugin that provides music listening metrics right in your code editor.</p>
 </blockquote>
 
 <p align="center" style="margin: 0 10%">
@@ -21,10 +20,10 @@
 <h2 id="powerupyourdevelopment">Power up your development</h2>
 
 <p><strong>In-editor dashboard</strong>
-Get daily and weekly reports of your programming activity right in your code editor.</p>
+Get daily and weekly reports of your music listening activity right in your code editor.</p>
 
 <p><strong>Status bar metrics</strong>
-After installing our plugin, your status bar will show real-time metrics about time coded per day.</p>
+After installing our plugin, your status bar will show real-time metrics about time music listen per day.</p>
 
 <p><strong>Weekly email reports</strong>
 Get a weekly report delivered right to your email inbox.</p>
@@ -42,17 +41,17 @@ See your best time for coding and the speed, frequency, and top files across you
 <ul>
 <li>Automatic time reports by project</li>
 
-<li>See what time you code your bestâ€”find your "flow"</li>
+<li>See what time you listen music your best-find your "flow"</li>
 
-<li>Defend your best code times against meetings and interrupts</li>
+<li>Defend your best music times against meetings and interrupts</li>
 
 <li>Find out what you can learn from your data</li>
 </ul>
 
-<h2 id="itssafesecureandfree">Itâ€™s safe, secure, and free</h2>
+<h2 id="itssafesecureandfree">It's safe, secure, and free</h2>
 
 <p><strong>We never access your code</strong>
-We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.</p>
+We do not process, send, or store your proprietary code. We only provide metrics about music listening, and we make it easy to see the data we collect.</p>
 
 <p><strong>Your data is private</strong>
 We will never share your individually identifiable data with your boss. In the future, we will roll up data into groups and teams but we will keep your data anonymized.</p>
@@ -71,54 +70,27 @@ We provide 90 days of data history for free, forever. In the future, we will pro
   <application-components>
     <!-- Add your application components here -->
     <component>
-      <implementation-class>com.softwareco.intellij.plugin.SoftwareCo</implementation-class>
+      <implementation-class>com.softwareco.intellij.plugin.SoftwareCoMusic</implementation-class>
     </component>
   </application-components>
 
   <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-    <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
-  </extensions>
+<postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
+<toolWindow anchor="right" factoryClass="com.softwareco.intellij.plugin.actions.MusicToolWindowFactory" icon="/com/softwareco/intellij/plugin/assets/headphone.png" id="PlayList"/>
+</extensions>
 
   <actions>
-      <!-- Code Time Group Tab -->
-    <group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" popup="true" text="Code Time">
-        <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-        <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
-
-<!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction"-->
-<!--              text="Switch to Music Time" description="Toggle the Code Time to Music Time."/>-->
-
-    </group>
-      <!-- Music Time Group Tab -->
-      <group class="com.softwareco.intellij.plugin.actions.CustomMusicActionGroup" description="Music Time menu actions" id="CustomDefaultActionGroup1" popup="true" text="Music Time">
-          <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-          <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest music metrics" id="MusicTimeMetrics" text="Music time dashboard"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction1" text="Software top 40"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction1" text="Web dashboard"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your music data in Music Time, please log in to your account." id="SoftwareLoginAction1" text="Log in to see your coding data"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.ConnectSpotifyAction" description="Connect to the Spotify." id="ConnectSpotifyAction" text="Connect Spotify"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.DisconnectSpotifyAction" description="Disconnect to the Spotify." id="DisconnectSpotifyAction" text="Disconnect Spotify"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Music Time status bar metrics." id="ToggleStatusBarAction1" text="Show/hide status bar metrics"/>
-
-          <!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction1"-->
-          <!--                text="Switch to Code Time" description="Toggle the Music Time to Code Time."/>-->
-
-      </group>
-  </actions>
+<group class="com.softwareco.intellij.plugin.actions.CustomMusicActionGroup" description="Music Time menu actions" id="CustomDefaultActionGroup1" text="Music Time">
+<add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+<action class="com.softwareco.intellij.plugin.actions.MusicDashboardAction" description="View your latest music metrics on editor" id="MusicDashboardAction" text="Music Time Dashboard"/>
+<action class="com.softwareco.intellij.plugin.actions.SubmitGitIssueAction" description="Encounter a bug? Submit an issue on our GitHub page" id="SubmitGitIssueAction" text="Submit an issue on GitHub"/>
+<action class="com.softwareco.intellij.plugin.actions.SubmitFeedbackAction" description="Send us an email at cody@software.com" id="SubmitFeedbackAction" text="Submit Feedback"/>
+<separator/>
+<action class="com.softwareco.intellij.plugin.actions.ConnectSpotifyAction" description="Connect to the Spotify." id="ConnectSpotifyAction" text="Connect Spotify"/>
+<action class="com.softwareco.intellij.plugin.actions.DisconnectSpotifyAction" description="Disconnect to the Spotify." id="DisconnectSpotifyAction" text="Disconnect Spotify"/>
+<action class="com.softwareco.intellij.plugin.actions.ConnectSlackAction" description="To share a playlist or track on Slack, Please connect your account" id="ConnectSlackAction" text="Connect Slack"/>
+<action class="com.softwareco.intellij.plugin.actions.DisconnectSlackAction" description="Disconnect to the Slack" id="DisconnectSlackAction" text="Disconnect Slack"/>
+</group>
+</actions>
 
 </idea-plugin>

@@ -29,7 +29,7 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
         eventHandler = new Consumer<MouseEvent>() {
             @Override
             public void consume(MouseEvent mouseEvent) {
-                sessionMgr.statusBarClickHandler();
+                sessionMgr.statusBarClickHandler(mouseEvent, id);
             }
         };
     }
@@ -40,7 +40,7 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
 
     public void setTooltip(String tooltip) {
         String name = SoftwareCoSessionManager.getItem("name");
-        if (name != null && !name.equals("")) {
+        if (SoftwareCoUtils.pluginName.equals("Code Time") && name != null && !name.equals("")) {
             if (tooltip != null) {
                 tooltip += " (" + name + ")";
             } else {
