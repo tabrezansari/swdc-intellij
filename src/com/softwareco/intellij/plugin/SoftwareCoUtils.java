@@ -1057,10 +1057,10 @@ public class SoftwareCoUtils {
 
     public static void updatePlayerControles() {
         if(spotifyCacheState) {
-            // Update player controls for every 2 second
+            // Update player controls for every 5 second
             new Thread(() -> {
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(5000);
                     updatePlayerControles();
                 }
                 catch (Exception e){
@@ -1406,6 +1406,7 @@ public class SoftwareCoUtils {
             String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, obj.toString(), accessToken);
             if (resp.isOk()) {
+                updatePlayerControles();
                 return true;
             }
         }
@@ -1427,6 +1428,7 @@ public class SoftwareCoUtils {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
             if (resp.isOk()) {
                 playerCounter = 0;
+                updatePlayerControles();
                 return true;
             } else if (playerCounter < 1 && resp.getCode() == 404) {
                 getSpotifyDevices();
@@ -1442,6 +1444,7 @@ public class SoftwareCoUtils {
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             playPlayer("Spotify");
+            updatePlayerControles();
             return true;
         }
         return false;
@@ -1461,6 +1464,7 @@ public class SoftwareCoUtils {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
             if (resp.isOk()) {
                 playerCounter = 0;
+                updatePlayerControles();
                 return true;
             } else if (playerCounter < 1 && resp.getCode() == 404) {
                 getSpotifyDevices();
@@ -1476,6 +1480,7 @@ public class SoftwareCoUtils {
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             pausePlayer("Spotify");
+            updatePlayerControles();
             return true;
         }
         return false;
@@ -1495,6 +1500,7 @@ public class SoftwareCoUtils {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
             if (resp.isOk()) {
                 playerCounter = 0;
+                updatePlayerControles();
                 return true;
             } else if (playerCounter < 1 && resp.getCode() == 404) {
                 getSpotifyDevices();
@@ -1510,6 +1516,7 @@ public class SoftwareCoUtils {
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             previousTrack("Spotify");
+            updatePlayerControles();
             return true;
         }
         return false;
@@ -1529,6 +1536,7 @@ public class SoftwareCoUtils {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
             if (resp.isOk()) {
                 playerCounter = 0;
+                updatePlayerControles();
                 return true;
             } else if (playerCounter < 1 && resp.getCode() == 404) {
                 getSpotifyDevices();
@@ -1544,6 +1552,7 @@ public class SoftwareCoUtils {
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             nextTrack("Spotify");
+            updatePlayerControles();
             return true;
         }
         return false;
