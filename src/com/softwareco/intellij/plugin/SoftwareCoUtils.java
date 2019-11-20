@@ -474,6 +474,7 @@ public class SoftwareCoUtils {
                         else if (statusBar != null && pluginName.equals("Music Time")) {
                             String headphoneiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_headphoneicon";
                             String likeiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_likeicon";
+                            String unlikeiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_unlikeicon";
                             String preiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_preicon";
                             String stopiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_stopicon";
                             String pauseiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_pauseicon";
@@ -487,6 +488,9 @@ public class SoftwareCoUtils {
                             }
                             if (statusBar.getWidget(likeiconId) != null) {
                                 statusBar.removeWidget(likeiconId);
+                            }
+                            if (statusBar.getWidget(unlikeiconId) != null) {
+                                statusBar.removeWidget(unlikeiconId);
                             }
                             if (statusBar.getWidget(preiconId) != null) {
                                 statusBar.removeWidget(preiconId);
@@ -529,6 +533,7 @@ public class SoftwareCoUtils {
                             } else {
                                 String headphoneIconVal = kpmIcon;
                                 String likeIcon = "like.png";
+                                String unlikeIcon = "unlike.png";
                                 String preIcon = "previous.png";
                                 String stopIcon = "stop.png";
                                 String pauseIcon = "pause.png";
@@ -544,10 +549,10 @@ public class SoftwareCoUtils {
                                         statusBar.updateWidget(connectspotifyId);
                                     }
 
-                                    SoftwareCoStatusBarKpmIconWidget likeIconWidget = buildStatusBarIconWidget(
-                                            likeIcon, "like", likeiconId);
-                                    statusBar.addWidget(likeIconWidget, likeiconId);
-                                    statusBar.updateWidget(likeiconId);
+                                    SoftwareCoStatusBarKpmIconWidget unlikeIconWidget = buildStatusBarIconWidget(
+                                            unlikeIcon, "like", unlikeiconId);
+                                    statusBar.addWidget(unlikeIconWidget, unlikeiconId);
+                                    statusBar.updateWidget(unlikeiconId);
 
                                     SoftwareCoStatusBarKpmIconWidget preIconWidget = buildStatusBarIconWidget(
                                             preIcon, "previous", preiconId);
@@ -684,6 +689,26 @@ public class SoftwareCoUtils {
 
     protected static String startPlayer(String playerName) {
         String[] args = { "open", "-a", playerName + ".app" };
+        return runCommand(args, null);
+    }
+
+    protected static String playPlayer(String playerName) {
+        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play" };
+        return runCommand(args, null);
+    }
+
+    protected static String pausePlayer(String playerName) {
+        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to pause" };
+        return runCommand(args, null);
+    }
+
+    protected static String previousTrack(String playerName) {
+        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play (previous track)" };
+        return runCommand(args, null);
+    }
+
+    protected static String nextTrack(String playerName) {
+        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play (next track)" };
         return runCommand(args, null);
     }
 
@@ -1393,8 +1418,9 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null) {
+        if(currentDeviceId != null && userStatus.equals("premium")) {
             LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
+            SoftwareCoSessionManager.setItem("current_device", currentDeviceId);
 
             String api = "/v1/me/player/play?device_id=" + currentDeviceId;
             String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
@@ -1414,6 +1440,9 @@ public class SoftwareCoUtils {
                     launchPlayer();
                 }
             }
+        } else if(spotifyCacheState && isSpotifyRunning()) {
+            playPlayer("Spotify");
+            return true;
         }
         return false;
     }
@@ -1424,7 +1453,7 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null) {
+        if(currentDeviceId != null && userStatus.equals("premium")) {
             LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
             String api = "/v1/me/player/pause?device_id=" + currentDeviceId;
@@ -1445,6 +1474,9 @@ public class SoftwareCoUtils {
                     launchPlayer();
                 }
             }
+        } else if(spotifyCacheState && isSpotifyRunning()) {
+            pausePlayer("Spotify");
+            return true;
         }
         return false;
     }
@@ -1455,7 +1487,7 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null) {
+        if(currentDeviceId != null && userStatus.equals("premium")) {
             LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
             String api = "/v1/me/player/previous?device_id=" + currentDeviceId;
@@ -1476,6 +1508,9 @@ public class SoftwareCoUtils {
                     launchPlayer();
                 }
             }
+        } else if(spotifyCacheState && isSpotifyRunning()) {
+            previousTrack("Spotify");
+            return true;
         }
         return false;
     }
@@ -1486,7 +1521,7 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null) {
+        if(currentDeviceId != null && userStatus.equals("premium")) {
             LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
             String api = "/v1/me/player/next?device_id=" + currentDeviceId;
@@ -1507,6 +1542,9 @@ public class SoftwareCoUtils {
                     launchPlayer();
                 }
             }
+        } else if(spotifyCacheState && isSpotifyRunning()) {
+            nextTrack("Spotify");
+            return true;
         }
         return false;
     }
