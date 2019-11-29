@@ -284,7 +284,7 @@ public class Deployer {
                 Element toolwindow = document.createElement("toolWindow");
                 toolwindow.setAttribute("anchor", "right");
                 toolwindow.setAttribute("factoryClass", "com.softwareco.intellij.plugin.actions.MusicToolWindowFactory");
-                toolwindow.setAttribute("icon", "/com/softwareco/intellij/plugin/assets/headphone.png");
+                toolwindow.setAttribute("icon", "/com/softwareco/intellij/plugin/assets/playlist.png");
                 toolwindow.setAttribute("id", "PlayList");
 
                 Node extentions = document.getElementsByTagName("extensions").item(0);

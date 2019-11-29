@@ -93,13 +93,14 @@ public class SoftwareCoUtils {
 
     // jwt_from_apptoken_call
     public static String jwt = null;
+
+    // Spotify variables
     private static String CLIENT_ID = null;
     private static String CLIENT_SECRET = null;
     private static String ACCESS_TOKEN = null;
     private static String REFRESH_TOKEN = null;
     private static String userStatus = null;
     private static boolean spotifyCacheState = false;
-    private static boolean slackCacheState = false;
     public static String defaultbtn = "play";
     public static String spotifyUserId = null;
     public static List<String> playlistids = new ArrayList<>();
@@ -113,6 +114,9 @@ public class SoftwareCoUtils {
     public static int playerCounter = 0;
     public static String spotifyStatus = "Not Connected";
 
+    // Slack variables
+    private static boolean slackCacheState = false;
+
     static {
         // initialize the HttpClient
         RequestConfig config = RequestConfig.custom()
@@ -123,6 +127,24 @@ public class SoftwareCoUtils {
 
         pingClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         httpClient = HttpClientBuilder.create().build();
+    }
+
+    public static void resetSpotify() {
+        spotifyUserId = null;
+        playlistTracks.clear();
+        currentTrackId = null;
+        currentTrackName = null;
+        playlistids.clear();
+        currentPlaylistId = null;
+        spotifyDeviceIds.clear();
+        currentDeviceId = null;
+        currentDeviceName = null;
+        ACCESS_TOKEN = null;
+        REFRESH_TOKEN = null;
+        userStatus = null;
+        playerCounter = 0;
+        defaultbtn = "play";
+        spotifyStatus = "Not Connected";
     }
 
     public static boolean isLoggedIn() {
@@ -549,37 +571,39 @@ public class SoftwareCoUtils {
                                         statusBar.updateWidget(connectspotifyId);
                                     }
 
-                                    SoftwareCoStatusBarKpmIconWidget unlikeIconWidget = buildStatusBarIconWidget(
-                                            unlikeIcon, "like", unlikeiconId);
-                                    statusBar.addWidget(unlikeIconWidget, unlikeiconId);
-                                    statusBar.updateWidget(unlikeiconId);
+                                    if(currentTrackId != null) {
+                                        SoftwareCoStatusBarKpmIconWidget unlikeIconWidget = buildStatusBarIconWidget(
+                                                unlikeIcon, "like", unlikeiconId);
+                                        statusBar.addWidget(unlikeIconWidget, unlikeiconId);
+                                        statusBar.updateWidget(unlikeiconId);
 
-                                    SoftwareCoStatusBarKpmIconWidget preIconWidget = buildStatusBarIconWidget(
-                                            preIcon, "previous", preiconId);
-                                    statusBar.addWidget(preIconWidget, preiconId);
-                                    statusBar.updateWidget(preiconId);
+                                        SoftwareCoStatusBarKpmIconWidget preIconWidget = buildStatusBarIconWidget(
+                                                preIcon, "previous", preiconId);
+                                        statusBar.addWidget(preIconWidget, preiconId);
+                                        statusBar.updateWidget(preiconId);
 
 //                                    SoftwareCoStatusBarKpmIconWidget stopIconWidget = buildStatusBarIconWidget(
 //                                            stopIcon, "stop", stopiconId);
 //                                    statusBar.addWidget(stopIconWidget, stopiconId);
 //                                    statusBar.updateWidget(stopiconId);
 
-                                    if(!defaultbtn.equals("play")) {
-                                        SoftwareCoStatusBarKpmIconWidget pauseIconWidget = buildStatusBarIconWidget(
-                                                pauseIcon, "pause", pauseiconId);
-                                        statusBar.addWidget(pauseIconWidget, pauseiconId);
-                                        statusBar.updateWidget(pauseiconId);
-                                    } else {
-                                        SoftwareCoStatusBarKpmIconWidget playIconWidget = buildStatusBarIconWidget(
-                                                playIcon, "play", playiconId);
-                                        statusBar.addWidget(playIconWidget, playiconId);
-                                        statusBar.updateWidget(playiconId);
-                                    }
+                                        if (!defaultbtn.equals("play")) {
+                                            SoftwareCoStatusBarKpmIconWidget pauseIconWidget = buildStatusBarIconWidget(
+                                                    pauseIcon, "pause", pauseiconId);
+                                            statusBar.addWidget(pauseIconWidget, pauseiconId);
+                                            statusBar.updateWidget(pauseiconId);
+                                        } else {
+                                            SoftwareCoStatusBarKpmIconWidget playIconWidget = buildStatusBarIconWidget(
+                                                    playIcon, "play", playiconId);
+                                            statusBar.addWidget(playIconWidget, playiconId);
+                                            statusBar.updateWidget(playiconId);
+                                        }
 
-                                    SoftwareCoStatusBarKpmIconWidget nextIconWidget = buildStatusBarIconWidget(
-                                            nextIcon, "next", nexticonId);
-                                    statusBar.addWidget(nextIconWidget, nexticonId);
-                                    statusBar.updateWidget(nexticonId);
+                                        SoftwareCoStatusBarKpmIconWidget nextIconWidget = buildStatusBarIconWidget(
+                                                nextIcon, "next", nexticonId);
+                                        statusBar.addWidget(nextIconWidget, nexticonId);
+                                        statusBar.updateWidget(nexticonId);
+                                    }
 
 
                                     SoftwareCoStatusBarKpmTextWidget kpmWidget = buildStatusBarTextWidget(
@@ -667,6 +691,12 @@ public class SoftwareCoUtils {
 
     protected static boolean isSpotifyRunning() {
         String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
+        String result = runCommand(args, null);
+        return (result != null) ? Boolean.valueOf(result) : false;
+    }
+
+    protected static boolean isSpotifyInstalled() {
+        String[] args = { "osascript", "-e", "exists application \"Spotify\"" };
         String result = runCommand(args, null);
         return (result != null) ? Boolean.valueOf(result) : false;
     }
@@ -954,20 +984,15 @@ public class SoftwareCoUtils {
                 }
                 if(!exist) {
                     spotifyCacheState = exist;
+                    SoftwareCoSessionManager.setItem("spotify_access_token", null);
+                    SoftwareCoSessionManager.setItem("spotify_refresh_token", null);
                 }
             } else {
                 LOG.log(Level.INFO, "Music Time: Unable to Disconnect Spotify null response");
             }
 
             if(!spotifyCacheState) {
-                spotifyUserId = null;
-                spotifyDeviceIds.clear();
-                currentDeviceId = null;
-                currentDeviceName = null;
-                ACCESS_TOKEN = null;
-                REFRESH_TOKEN = null;
-                userStatus = null;
-                spotifyStatus = "Not Connected";
+                resetSpotify();
                 String headPhoneIcon = "headphone.png";
                 SoftwareCoUtils.setStatusLineMessage(headPhoneIcon, "Connect Spotify", "Connect Spotify");
             } else {
@@ -1027,7 +1052,7 @@ public class SoftwareCoUtils {
         }
     }
 
-    protected synchronized static void lazilyFetchSpotifyStatus(int retryCount) {
+    protected static void lazilyFetchSpotifyStatus(int retryCount) {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         if (!serverIsOnline) {
             SoftwareCoUtils.showOfflinePrompt(false);
@@ -1051,27 +1076,37 @@ public class SoftwareCoUtils {
             if (obj != null)
                 userStatus = obj.get("product").getAsString();
             launchPlayer();
-            updatePlayerControles();
+            lazyUpdatePlayer();
         }
     }
 
-    public static void updatePlayerControles() {
+    public static void lazyUpdatePlayer() {
         if(spotifyCacheState) {
             // Update player controls for every 5 second
             new Thread(() -> {
                 try {
                     Thread.sleep(5000);
-                    updatePlayerControles();
+                    lazyUpdatePlayer();
                 }
                 catch (Exception e){
                     System.err.println(e);
                 }
             }).start();
+            updatePlayerControles();
+        } else {
+            String headPhoneIcon = "headphone.png";
+            SoftwareCoUtils.setStatusLineMessage(headPhoneIcon, "Connect Spotify", "Connect Spotify");
+        }
+    }
 
+    public static void updatePlayerControles() {
+        if(spotifyCacheState) {
             if(currentDeviceId == null || userStatus == null) {
                 initialSetup();
-            } else {
+            } else if(userStatus.equals("premium")){
                 getSpotifyWebCurrentTrack();  // get current track to update status bar
+            } else {
+                getSpotifyDesktopCurrentTrack();  // get current track to update status bar
             }
 
             if(userStatus != null && !userStatus.equals("premium")) {
@@ -1107,25 +1142,37 @@ public class SoftwareCoUtils {
     }
 
     public static void launchPlayer() {
-        if(currentPlaylistId == null)
+        if(currentTrackId == null)
             getSpotifyWebRecentTrack();
 
-        if(currentPlaylistId == null) {
+        if(currentTrackId == null) {
             getUserPlaylists();
             getPlaylistTracks();
             getTrackById();
+            currentTrackName = null;
         }
 
         if(userStatus != null && userStatus.equals("premium")) {
-            if (currentPlaylistId != null) {
-                BrowserUtil.browse("https://open.spotify.com/playlist/" + currentPlaylistId);
-            } else if (currentTrackId != null) {
+//            if (currentPlaylistId != null) {
+//                BrowserUtil.browse("https://open.spotify.com/playlist/" + currentPlaylistId);
+//            }
+            if (currentTrackId != null) {
                 BrowserUtil.browse("https://open.spotify.com/track/" + currentTrackId);
             } else {
-                BrowserUtil.browse("https://open.spotify.com");
+                BrowserUtil.browse("https://open.spotify.com/browse");
             }
         } else if(userStatus != null) {
             startPlayer("spotify");
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000);
+                    if(!isSpotifyRunning())
+                        showMsgPrompt("Spotify Desktop Player is required for Non-Premium account, Please Install Spotify");
+                }
+                catch (Exception e){
+                    System.err.println(e);
+                }
+            }).start();
         }
     }
 
@@ -1171,6 +1218,7 @@ public class SoftwareCoUtils {
         if (resp.isOk()) {
             JsonObject obj = resp.getJsonObj();
             if (obj != null && obj.has("items")) {
+                playlistids.clear();
                 for(JsonElement array : obj.get("items").getAsJsonArray()) {
                     if(array.getAsJsonObject().get("type").getAsString().equals("playlist")) {
                         playlistids.add(array.getAsJsonObject().get("id").getAsString());
@@ -1201,6 +1249,7 @@ public class SoftwareCoUtils {
             JsonObject obj = resp.getJsonObj();
             if (obj != null && obj.has("tracks")) {
                 JsonObject tracks = obj.get("tracks").getAsJsonObject();
+                playlistTracks.clear();
                 for(JsonElement array : tracks.get("items").getAsJsonArray()) {
                     JsonObject track = array.getAsJsonObject().get("track").getAsJsonObject();
                     playlistTracks.add(track.get("id").getAsString());
@@ -1230,6 +1279,7 @@ public class SoftwareCoUtils {
         if (resp.isOk()) {
             JsonObject tracks = resp.getJsonObj();
             if (tracks != null && tracks.has("items")) {
+                playlistTracks.clear();
                 for(JsonElement array : tracks.get("items").getAsJsonArray()) {
                     JsonObject track = array.getAsJsonObject().get("track").getAsJsonObject();
                     playlistTracks.add(track.get("id").getAsString());
@@ -1283,11 +1333,11 @@ public class SoftwareCoUtils {
                 for(JsonElement array : tracks.get("items").getAsJsonArray()) {
                     JsonObject track = array.getAsJsonObject().get("track").getAsJsonObject();
                     currentTrackId = track.get("id").getAsString();
-                    if(!array.getAsJsonObject().get("context").isJsonNull()) {
-                        JsonObject context = array.getAsJsonObject().get("context").getAsJsonObject();
-                        String[] uri = context.get("uri").getAsString().split(":");
-                        currentPlaylistId = uri[uri.length - 1];
-                    }
+//                    if(!array.getAsJsonObject().get("context").isJsonNull()) {
+//                        JsonObject context = array.getAsJsonObject().get("context").getAsJsonObject();
+//                        String[] uri = context.get("uri").getAsString().split(":");
+//                        currentPlaylistId = uri[uri.length - 1];
+//                    }
                 }
 
             }
@@ -1314,7 +1364,7 @@ public class SoftwareCoUtils {
         String api = "/v1/me/player/currently-playing";
         String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
         SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, accessToken);
-        if (resp.isOk()) {
+        if (resp.isOk() && !resp.getJsonObj().isJsonNull()) {
             JsonObject tracks = resp.getJsonObj();
             if (tracks != null && tracks.has("item")) {
                 JsonObject track = tracks.get("item").getAsJsonObject();
@@ -1335,7 +1385,7 @@ public class SoftwareCoUtils {
                 getSpotifyDevices();
             }
             return resp.getJsonObj();
-        } else {
+        } else if(!resp.getJsonObj().isJsonNull()) {
             JsonObject tracks = resp.getJsonObj();
             if (tracks != null && tracks.has("error")) {
                 JsonObject error = tracks.get("error").getAsJsonObject();
@@ -1348,12 +1398,29 @@ public class SoftwareCoUtils {
         return null;
     }
 
+    public static JsonObject getSpotifyDesktopCurrentTrack() {
+        try {
+            JsonObject obj = getCurrentMusicTrack();
+            if(!obj.isJsonNull()) {
+                currentTrackId = obj.get("id").getAsString();
+                currentTrackName = obj.get("name").getAsString();
+                if(obj.get("state").getAsString().equals("playing"))
+                    defaultbtn = "pause";
+                else
+                    defaultbtn = "play";
+                return obj;
+            }
+        }catch (Exception e){
+            LOG.warning("Music Time: Error trying to read and json parse the current track, error: " + e.getMessage());
+        }
+        return null;
+    }
+
     public static JsonObject getSpotifyDevices() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         if (!serverIsOnline) {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
-        spotifyDeviceIds.clear();
 
         String api = "/v1/me/player/devices";
         String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
@@ -1361,13 +1428,13 @@ public class SoftwareCoUtils {
         if (resp.isOk()) {
             JsonObject tracks = resp.getJsonObj();
             if (tracks != null && tracks.has("devices")) {
+                spotifyDeviceIds.clear();
                 for(JsonElement array : tracks.get("devices").getAsJsonArray()) {
                     JsonObject device = array.getAsJsonObject();
                     spotifyDeviceIds.add(device.get("id").getAsString());
                     if(device.get("is_active").getAsBoolean()) {
                         currentDeviceId = device.get("id").getAsString();
                         currentDeviceName = device.get("name").getAsString();
-                        LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
                     }
                 }
             } else {
@@ -1419,28 +1486,36 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null && userStatus.equals("premium")) {
-            LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
-            SoftwareCoSessionManager.setItem("current_device", currentDeviceId);
+        if(userStatus.equals("premium")) {
+            if(currentDeviceId != null) {
 
-            String api = "/v1/me/player/play?device_id=" + currentDeviceId;
-            String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
-            if (resp.isOk()) {
-                playerCounter = 0;
-                updatePlayerControles();
-                return true;
-            } else if (playerCounter < 1 && resp.getCode() == 404) {
-                getSpotifyDevices();
-                if(spotifyDeviceIds.size() > 0) {
-                    if(spotifyDeviceIds.size() == 1)
-                        currentDeviceId = spotifyDeviceIds.get(0);
-                    playerCounter++;
-                    playSpotifyDevices();
-                } else {
-                    currentDeviceId = null;
-                    launchPlayer();
+                LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
+
+                String api = "/v1/me/player/play?device_id=" + currentDeviceId;
+                String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
+                SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
+                if (resp.isOk()) {
+                    playerCounter = 0;
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            updatePlayerControles();
+                        } catch (Exception e) {
+                            System.err.println(e);
+                        }
+                    }).start();
+                    return true;
+                } else if (playerCounter < 1 && resp.getCode() == 404) {
+                    getSpotifyDevices();
+                    if (spotifyDeviceIds.size() > 0) {
+                        if (spotifyDeviceIds.size() == 1)
+                            currentDeviceId = spotifyDeviceIds.get(0);
+                        playerCounter++;
+                        playSpotifyDevices();
+                    }
                 }
+            } else {
+                launchPlayer();
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             playPlayer("Spotify");
@@ -1456,27 +1531,35 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null && userStatus.equals("premium")) {
-            LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
+        if(userStatus.equals("premium")) {
+            if(currentDeviceId != null) {
+                LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
-            String api = "/v1/me/player/pause?device_id=" + currentDeviceId;
-            String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
-            if (resp.isOk()) {
-                playerCounter = 0;
-                updatePlayerControles();
-                return true;
-            } else if (playerCounter < 1 && resp.getCode() == 404) {
-                getSpotifyDevices();
-                if(spotifyDeviceIds.size() > 0) {
-                    if(spotifyDeviceIds.size() == 1)
-                        currentDeviceId = spotifyDeviceIds.get(0);
-                    playerCounter++;
-                    pauseSpotifyDevices();
-                } else {
-                    currentDeviceId = null;
-                    launchPlayer();
+                String api = "/v1/me/player/pause?device_id=" + currentDeviceId;
+                String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
+                SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPut.METHOD_NAME, null, accessToken);
+                if (resp.isOk()) {
+                    playerCounter = 0;
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            updatePlayerControles();
+                        } catch (Exception e) {
+                            System.err.println(e);
+                        }
+                    }).start();
+                    return true;
+                } else if (playerCounter < 1 && resp.getCode() == 404) {
+                    getSpotifyDevices();
+                    if (spotifyDeviceIds.size() > 0) {
+                        if (spotifyDeviceIds.size() == 1)
+                            currentDeviceId = spotifyDeviceIds.get(0);
+                        playerCounter++;
+                        pauseSpotifyDevices();
+                    }
                 }
+            } else {
+                launchPlayer();
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             pausePlayer("Spotify");
@@ -1492,27 +1575,35 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null && userStatus.equals("premium")) {
-            LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
+        if(userStatus.equals("premium")) {
+            if(currentDeviceId != null) {
+                LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
-            String api = "/v1/me/player/previous?device_id=" + currentDeviceId;
-            String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
-            if (resp.isOk()) {
-                playerCounter = 0;
-                updatePlayerControles();
-                return true;
-            } else if (playerCounter < 1 && resp.getCode() == 404) {
-                getSpotifyDevices();
-                if(spotifyDeviceIds.size() > 0) {
-                    if(spotifyDeviceIds.size() == 1)
-                        currentDeviceId = spotifyDeviceIds.get(0);
-                    playerCounter++;
-                    previousSpotifyTrack();
-                } else {
-                    currentDeviceId = null;
-                    launchPlayer();
+                String api = "/v1/me/player/previous?device_id=" + currentDeviceId;
+                String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
+                SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
+                if (resp.isOk()) {
+                    playerCounter = 0;
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            updatePlayerControles();
+                        } catch (Exception e) {
+                            System.err.println(e);
+                        }
+                    }).start();
+                    return true;
+                } else if (playerCounter < 1 && resp.getCode() == 404) {
+                    getSpotifyDevices();
+                    if (spotifyDeviceIds.size() > 0) {
+                        if (spotifyDeviceIds.size() == 1)
+                            currentDeviceId = spotifyDeviceIds.get(0);
+                        playerCounter++;
+                        previousSpotifyTrack();
+                    }
                 }
+            } else {
+                launchPlayer();
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             previousTrack("Spotify");
@@ -1528,27 +1619,35 @@ public class SoftwareCoUtils {
             SoftwareCoUtils.showOfflinePrompt(false);
         }
 
-        if(currentDeviceId != null && userStatus.equals("premium")) {
-            LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
+        if(userStatus.equals("premium")) {
+            if(currentDeviceId != null) {
+                LOG.log(Level.INFO, "Music Time: Device ID: " + currentDeviceId);
 
-            String api = "/v1/me/player/next?device_id=" + currentDeviceId;
-            String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
-            if (resp.isOk()) {
-                playerCounter = 0;
-                updatePlayerControles();
-                return true;
-            } else if (playerCounter < 1 && resp.getCode() == 404) {
-                getSpotifyDevices();
-                if(spotifyDeviceIds.size() > 0) {
-                    if(spotifyDeviceIds.size() == 1)
-                        currentDeviceId = spotifyDeviceIds.get(0);
-                    playerCounter++;
-                    nextSpotifyTrack();
-                } else {
-                    currentDeviceId = null;
-                    launchPlayer();
+                String api = "/v1/me/player/next?device_id=" + currentDeviceId;
+                String accessToken = "Bearer " + SoftwareCoSessionManager.getItem("spotify_access_token");
+                SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, null, accessToken);
+                if (resp.isOk()) {
+                    playerCounter = 0;
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(1000);
+                            updatePlayerControles();
+                        } catch (Exception e) {
+                            System.err.println(e);
+                        }
+                    }).start();
+                    return true;
+                } else if (playerCounter < 1 && resp.getCode() == 404) {
+                    getSpotifyDevices();
+                    if (spotifyDeviceIds.size() > 0) {
+                        if (spotifyDeviceIds.size() == 1)
+                            currentDeviceId = spotifyDeviceIds.get(0);
+                        playerCounter++;
+                        nextSpotifyTrack();
+                    }
                 }
+            } else {
+                launchPlayer();
             }
         } else if(spotifyCacheState && isSpotifyRunning()) {
             nextTrack("Spotify");
@@ -1856,6 +1955,14 @@ public class SoftwareCoUtils {
                         "We will try to reconnect again " + reconnectMsg +
                         "Your status bar will not update at this time.";
                 // ask to download the PM
+                Messages.showInfoMessage(infoMsg, pluginName);
+            }
+        });
+    }
+
+    public static void showMsgPrompt(String infoMsg) {
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            public void run() {
                 Messages.showInfoMessage(infoMsg, pluginName);
             }
         });

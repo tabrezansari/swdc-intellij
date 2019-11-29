@@ -158,7 +158,7 @@ public class SoftwareCoMusic implements ApplicationComponent {
         } else {
             SoftwareCoUtils.getUserProfile();
             //SoftwareCoUtils.launchPlayer();
-            SoftwareCoUtils.updatePlayerControles();
+            SoftwareCoUtils.lazyUpdatePlayer();
         }
 
         SoftwareCoUtils.sendHeartbeat("INITIALIZED");
