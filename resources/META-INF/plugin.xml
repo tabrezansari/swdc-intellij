@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<idea-plugin>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><idea-plugin>
   <id>com.softwareco.intellij.plugin</id>
 
   <name>Code Time</name>
@@ -42,14 +41,14 @@ See your best time for coding and the speed, frequency, and top files across you
 <ul>
 <li>Automatic time reports by project</li>
 
-<li>See what time you code your bestâ€”find your "flow"</li>
+<li>See what time you code your best-find your "flow"</li>
 
 <li>Defend your best code times against meetings and interrupts</li>
 
 <li>Find out what you can learn from your data</li>
 </ul>
 
-<h2 id="itssafesecureandfree">Itâ€™s safe, secure, and free</h2>
+<h2 id="itssafesecureandfree">It's safe, secure, and free</h2>
 
 <p><strong>We never access your code</strong>
 We do not process, send, or store your proprietary code. We only provide metrics about programming, and we make it easy to see the data we collect.</p>
@@ -76,49 +75,18 @@ We provide 90 days of data history for free, forever. In the future, we will pro
   </application-components>
 
   <extensions defaultExtensionNs="com.intellij">
-    <!-- Add your extensions here -->
-    <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
-  </extensions>
+<postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
+</extensions>
 
   <actions>
-      <!-- Code Time Group Tab -->
-    <group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" popup="true" text="Code Time">
-        <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-        <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
-
-        <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
-
-<!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction"-->
-<!--              text="Switch to Music Time" description="Toggle the Code Time to Music Time."/>-->
-
-    </group>
-      <!-- Music Time Group Tab -->
-      <group class="com.softwareco.intellij.plugin.actions.CustomMusicActionGroup" description="Music Time menu actions" id="CustomDefaultActionGroup1" popup="true" text="Music Time">
-          <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-          <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest music metrics" id="MusicTimeMetrics" text="Music time dashboard"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction1" text="Software top 40"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction1" text="Web dashboard"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your music data in Music Time, please log in to your account." id="SoftwareLoginAction1" text="Log in to see your coding data"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.ConnectSpotifyAction" description="Connect to the Spotify." id="ConnectSpotifyAction" text="Connect Spotify"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.DisconnectSpotifyAction" description="Disconnect to the Spotify." id="DisconnectSpotifyAction" text="Disconnect Spotify"/>
-
-          <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Music Time status bar metrics." id="ToggleStatusBarAction1" text="Show/hide status bar metrics"/>
-
-          <!--        <action class="com.softwareco.intellij.plugin.actions.ToggleCodeMusicAction" id="ToggleCodeMusicAction1"-->
-          <!--                text="Switch to Code Time" description="Toggle the Music Time to Code Time."/>-->
-
-      </group>
-  </actions>
+<group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" text="Code Time">
+<add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+<action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
+<action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
+<action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
+<action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
+<action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
+</group>
+</actions>
 
 </idea-plugin>

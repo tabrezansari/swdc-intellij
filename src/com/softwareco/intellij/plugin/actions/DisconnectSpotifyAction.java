@@ -8,13 +8,13 @@ import org.jetbrains.annotations.NotNull;
 
 public class DisconnectSpotifyAction extends AnAction {
     @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { }
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { SoftwareCoUtils.disConnectSpotify(); }
 
     @Override
     public void update(AnActionEvent event) {
         boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
         boolean hasJwt = SoftwareCoSessionManager.jwtExists();
-        boolean isLoggedIn = (!sessionFileExists || !hasJwt)
+        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isSpotifyConncted())
                 ? false : true;
         boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
 

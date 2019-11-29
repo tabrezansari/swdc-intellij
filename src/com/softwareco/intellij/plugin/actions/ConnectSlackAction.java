@@ -6,15 +6,17 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import org.jetbrains.annotations.NotNull;
 
-public class ConnectSpotifyAction extends AnAction {
+public class ConnectSlackAction extends AnAction {
     @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { SoftwareCoUtils.connectSpotify(); }
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
+
+    }
 
     @Override
     public void update(AnActionEvent event) {
         boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
         boolean hasJwt = SoftwareCoSessionManager.jwtExists();
-        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isSpotifyConncted())
+        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isSlackConncted())
                 ? false : true;
         boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
 

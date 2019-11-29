@@ -6,9 +6,9 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import org.jetbrains.annotations.NotNull;
 
-public class ConnectSpotifyAction extends AnAction {
+public class MusicDashboardAction extends AnAction {
     @Override
-    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { SoftwareCoUtils.connectSpotify(); }
+    public void actionPerformed(@NotNull AnActionEvent anActionEvent) { }
 
     @Override
     public void update(AnActionEvent event) {
@@ -18,7 +18,7 @@ public class ConnectSpotifyAction extends AnAction {
                 ? false : true;
         boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
 
-        event.getPresentation().setVisible(!isLoggedIn && serverOnline);
+        event.getPresentation().setVisible(isLoggedIn && serverOnline);
         event.getPresentation().setEnabled(true);
     }
 }

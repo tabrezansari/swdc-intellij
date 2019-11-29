@@ -30,11 +30,11 @@ public class KeystrokeCount {
     private KeystrokeProject project;
 
     public KeystrokeCount() {
-        String appVersion = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin")).getVersion();
+        String appVersion = SoftwareCo.getVersion();
         if (appVersion != null) {
             this.version = appVersion;
         } else {
-            this.version = SoftwareCoUtils.getVersion();
+            this.version = SoftwareCoUtils.VERSION;
         }
         this.pluginId = SoftwareCoUtils.pluginId;
         this.os = SoftwareCoUtils.getOs();

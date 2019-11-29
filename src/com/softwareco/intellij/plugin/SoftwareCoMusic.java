@@ -1,34 +1,19 @@
-/**
- * Copyright (c) 2018 by Software.com
- * All rights reserved
- */
 package com.softwareco.intellij.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonParser;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.extensions.PluginId;
-import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
-import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 
 import java.util.logging.Logger;
 
-
-/**
- * Intellij Plugin Application
- * ....
- */
-public class SoftwareCo implements ApplicationComponent {
-
+public class SoftwareCoMusic implements ApplicationComponent {
     public static JsonParser jsonParser = new JsonParser();
-    public static final Logger log = Logger.getLogger("SoftwareCo");
+    public static final Logger log = Logger.getLogger("SoftwareCoMusic");
     public static Gson gson;
 
     public static MessageBusConnection connection;
@@ -42,12 +27,14 @@ public class SoftwareCo implements ApplicationComponent {
     private static int retry_counter = 0;
     private static long check_online_interval_ms = 1000 * 60 * 10;
 
-    public SoftwareCo() {
+    public static String rootPath;
+
+    public SoftwareCoMusic() {
     }
 
     public static String getVersion() {
         if (SoftwareCoUtils.VERSION == null) {
-            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin"));
+            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin.musictime"));
 
             SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
         }
@@ -56,7 +43,7 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static String getPluginName() {
         if (SoftwareCoUtils.pluginName == null) {
-            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin"));
+            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin.musictime"));
 
             SoftwareCoUtils.pluginName = pluginDescriptor.getName();
         }
@@ -90,6 +77,7 @@ public class SoftwareCo implements ApplicationComponent {
                     jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
                 } else {
                     jwt = SoftwareCoUtils.getAppJwt(serverIsOnline);
+                    SoftwareCoUtils.jwt = jwt;
                 }
                 if (jwt == null) {
                     // it failed, try again later
@@ -121,26 +109,21 @@ public class SoftwareCo implements ApplicationComponent {
 
         gson = new Gson();
 
-        setupEventListeners();
+        log.info(plugName + ": Finished initializing SoftwareCoMusic plugin");
 
-        log.info(plugName + ": Finished initializing SoftwareCo plugin");
+//        final Runnable hourlyRunner = () -> this.processHourlyJobs();
+//        asyncManager.scheduleService(
+//                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
 
-        // add the kpm status scheduler
-        final Runnable kpmStatusRunner = () -> sessionMgr.fetchDailyKpmSessionInfo();
+        // run the music manager task every 15 seconds
+        final Runnable musicTrackRunner = () -> musicMgr.processMusicTrackInfo();
         asyncManager.scheduleService(
-                kpmStatusRunner, "kpmStatusRunner", 15, 60 * 5);
+                musicTrackRunner, "musicTrackRunner", 30, 15);
 
-        final Runnable hourlyRunner = () -> this.processHourlyJobs();
-        asyncManager.scheduleService(
-                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
-
+        // check user status every 3 minute
         final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
         asyncManager.scheduleService(
                 userStatusRunner, "userStatusRunner", 60, 60 * 3);
-
-        // every 30 minutes
-        final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
 
         eventMgr.setAppIsReady(true);
 
@@ -164,59 +147,19 @@ public class SoftwareCo implements ApplicationComponent {
         }
     }
 
-    private void sendOfflineDataRunner() {
-        new Thread(() -> {
-
-            try {
-                SoftwareCoSessionManager.getInstance().sendOfflineData();
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }).start();
-    }
-
-    private void processHourlyJobs() {
-        SoftwareCoUtils.sendHeartbeat("HOURLY");
-
-        SoftwareCoRepoManager repoMgr = SoftwareCoRepoManager.getInstance();
-        new Thread(() -> {
-            try {
-                Thread.sleep(60000);
-                repoMgr.getHistoricalCommits(getRootPath());
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }).start();
-    }
-
     private void initializeUserInfo(boolean initializedUser) {
 
         SoftwareCoUtils.getUserStatus();
+        String userStatus = null;
 
-        if (initializedUser) {
-            // send an initial plugin payload
-            this.sendInstallPayload();
-
-            // ask the user to login one time only
-            new Thread(() -> {
-                try {
-                    Thread.sleep(5000);
-                    sessionMgr.showLoginPrompt();
-                }
-                catch (Exception e){
-                    System.err.println(e);
-                }
-            }).start();
+        if(!SoftwareCoUtils.isSpotifyConncted()) {
+            String headPhoneIcon = "headphone.png";
+            SoftwareCoUtils.setStatusLineMessage(headPhoneIcon, "Connect Spotify", "Connect Spotify");
+        } else {
+            SoftwareCoUtils.getUserProfile();
+            //SoftwareCoUtils.launchPlayer();
+            SoftwareCoUtils.lazyUpdatePlayer();
         }
-
-        new Thread(() -> {
-            try {
-                sessionMgr.fetchDailyKpmSessionInfo();
-            }
-            catch (Exception e){
-                System.err.println(e);
-            }
-        }).start();
 
         SoftwareCoUtils.sendHeartbeat("INITIALIZED");
     }
@@ -232,37 +175,6 @@ public class SoftwareCo implements ApplicationComponent {
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 
-    protected String getRootPath() {
-        Editor[] editors = EditorFactory.getInstance().getAllEditors();
-        if (editors != null && editors.length > 0) {
-            for (Editor editor : editors) {
-                Project project = editor.getProject();
-                if (project != null && project.getBasePath() != null) {
-                    return project.getBasePath();
-                }
-            }
-        }
-        return null;
-    }
-
-    private void setupEventListeners() {
-        ApplicationManager.getApplication().invokeLater(() -> {
-
-            // save file
-            MessageBus bus = ApplicationManager.getApplication().getMessageBus();
-            connection = bus.connect();
-            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
-
-            // edit document
-            EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new SoftwareCoDocumentListener());
-        });
-
-        if(SoftwareCoUtils.pluginName.equals("Code Time"))
-            SoftwareCoUtils.setStatusLineMessage(
-                "Code Time", "Click to see more from Code Time");
-    }
-
-
     public void disposeComponent() {
         try {
             if (connection != null) {
@@ -273,14 +185,5 @@ public class SoftwareCo implements ApplicationComponent {
         }
 
         asyncManager.destroyServices();
-
-        // process one last time
-        // this will ensure we process the latest keystroke updates
-        KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
-        if (keystrokeManager.getKeystrokeCount() != null) {
-            keystrokeManager.getKeystrokeCount().processKeystrokes();
-        }
     }
-
-
 }

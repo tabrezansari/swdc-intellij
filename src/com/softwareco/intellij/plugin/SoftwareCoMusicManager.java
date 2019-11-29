@@ -43,7 +43,7 @@ public class SoftwareCoMusicManager {
             String trackStr = null;
 
             Integer offset  = ZonedDateTime.now().getOffset().getTotalSeconds();
-            long now = Math.round(System.currentTimeMillis() / 1000);
+            long now = System.currentTimeMillis() / 1000;
             long local_start = now + offset;
 
             if (trackInfo == null || !trackInfo.has("id") || !trackInfo.has("name")) {
@@ -161,11 +161,11 @@ public class SoftwareCoMusicManager {
 
                 if (httpResponse != null && !httpResponse.isOk()) {
                     String errorStr = (httpResponse != null && httpResponse.getErrorMessage() != null) ? httpResponse.getErrorMessage() : "";
-                    log.info("Code Time: Unable to get the music track response from the http request, error: " + errorStr);
+                    log.info(SoftwareCoUtils.pluginName + ": Unable to get the music track response from the http request, error: " + errorStr);
                 }
 
             } catch (InterruptedException | ExecutionException e) {
-                log.info("Code Time: Unable to get the music track response from the http request, error: " + e.getMessage());
+                log.info(SoftwareCoUtils.pluginName + ": Unable to get the music track response from the http request, error: " + e.getMessage());
             }
         }
 
