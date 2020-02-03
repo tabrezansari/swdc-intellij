@@ -75,18 +75,19 @@ We provide 90 days of data history for free, forever. In the future, we will pro
   </application-components>
 
   <extensions defaultExtensionNs="com.intellij">
-<postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
-</extensions>
+    <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
+    <toolWindow anchor="right" factoryClass="com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory" icon="/com/softwareco/intellij/plugin/assets/headphone.png" id="Code Time"/>
+  </extensions>
 
   <actions>
-<group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" text="Code Time">
-<add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-<action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
-<action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
-<action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
-<action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
-<action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
-</group>
-</actions>
+    <group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" text="Code Time">
+      <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
+      <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Code time dashboard"/>
+      <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
+      <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="Web dashboard"/>
+      <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
+      <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
+    </group>
+  </actions>
 
 </idea-plugin>
