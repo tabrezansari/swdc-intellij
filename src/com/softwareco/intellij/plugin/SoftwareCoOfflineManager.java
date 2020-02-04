@@ -65,31 +65,6 @@ public class SoftwareCoOfflineManager {
         return file;
     }
 
-    public void updateStatusBarWithSummaryData(JsonObject sessionSummary) {
-
-        long currentDayMinutes = 0;
-        if (sessionSummary.has("currentDayMinutes")) {
-            currentDayMinutes = sessionSummary.get("currentDayMinutes").getAsLong();
-        }
-        long averageDailyMinutes = 0;
-        if (sessionSummary.has("averageDailyMinutes")) {
-            averageDailyMinutes = sessionSummary.get("averageDailyMinutes").getAsLong();
-        }
-
-        String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
-        String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
-
-        String inFlowIcon = currentDayMinutes > averageDailyMinutes ? "rocket.png" : null;
-        String msg = currentDayTimeStr;
-        if (averageDailyMinutes > 0) {
-            msg += " | " + averageDailyMinutesTimeStr;
-        }
-
-        // SoftwareCoUtils.setStatusLineMessage(inFlowIcon, msg, "Code time today vs. your daily average. Click to see more from Code Time");
-
-        SoftwareCoUtils.fetchCodeTimeMetricsDashboard(sessionSummary);
-    }
-
     public void saveSessionSummaryToDisk() {
         File f = new File(getSessionSummaryFile());
 

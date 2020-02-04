@@ -1,5 +1,6 @@
 package com.softwareco.intellij.plugin;
 
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
@@ -36,6 +37,11 @@ public class SoftwareCoStatusBarKpmIconWidget implements StatusBarWidget {
 
     public void setIcon(Icon icon) {
         this.icon = icon;
+    }
+
+    public void updateIcon(String iconName) {
+        Icon icon = IconLoader.findIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
+        this.setIcon(icon);
     }
 
     public void setTooltip(String tooltip) {

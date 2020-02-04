@@ -15,6 +15,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -376,48 +377,11 @@ public class SoftwareCoSessionManager {
                 offlineMgr.setSessionSummaryData(currentDayMinutes, currentDayKeystrokes, averageDailyMinutes);
             }
         }
-        offlineMgr.updateStatusBarWithSummaryData(sessionSummary);
+        // offlineMgr.updateStatusBarWithSummaryData(sessionSummary);
     }
 
     public void statusBarClickHandler(MouseEvent mouseEvent, String id) {
-        if (SoftwareCoSessionManager.isServerOnline()) {
-            if(SoftwareCoUtils.pluginName.equals("Code Time")) {
-                SoftwareCoUtils.launchCodeTimeMetricsDashboard();
-            } else if(SoftwareCoUtils.pluginName.equals("Music Time")) {
-                String headphoneiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_headphoneicon";
-                String likeiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_likeicon";
-                String preiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_preicon";
-                String stopiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_stopicon";
-                String pauseiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_pauseicon";
-                String playiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_playicon";
-                String nexticonId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_nexticon";
-                String songtrackId = SoftwareCoStatusBarKpmTextWidget.KPM_TEXT_ID + "_songtrack";
-                String connectspotifyId = SoftwareCoStatusBarKpmTextWidget.KPM_TEXT_ID + "_connectspotify";
-
-                boolean state = false;
-                log.warning("Music Time: Button ID: " + id);
-                if(id.equals(headphoneiconId) || id.equals(connectspotifyId)) {
-                    SoftwareCoUtils.connectSpotify();
-                }
-                else if(id.equals(playiconId)) {
-                    SoftwareCoUtils.playerCounter = 0;
-                    SoftwareCoUtils.playSpotifyDevices();
-                } else if(id.equals(pauseiconId)) {
-                    SoftwareCoUtils.playerCounter = 0;
-                    SoftwareCoUtils.pauseSpotifyDevices();
-                } else if(id.equals(preiconId)) {
-                    SoftwareCoUtils.playerCounter = 0;
-                    SoftwareCoUtils.previousSpotifyTrack();
-                } else if(id.equals(nexticonId)) {
-                    SoftwareCoUtils.playerCounter = 0;
-                    SoftwareCoUtils.nextSpotifyTrack();
-                } else if(id.equals(songtrackId)) {
-                    SoftwareCoUtils.launchPlayer();
-                }
-            }
-        } else {
-            SoftwareCoUtils.showOfflinePrompt(false);
-        }
+        CodeTimeToolWindowFactory.openToolWindow();
     }
 
     protected static void lazilyFetchUserStatus(int retryCount) {

@@ -56,7 +56,6 @@ public class CodeTimeToolWindow {
         // add a separator
         dataPanel.add(separator, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 1, 0));
 
-
         dataPanel.updateUI();
         dataPanel.setVisible(true);
 

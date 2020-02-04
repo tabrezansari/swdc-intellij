@@ -251,6 +251,17 @@ public class SoftwareCo implements ApplicationComponent {
         return null;
     }
 
+    public static Project getActiveProject() {
+        Editor[] editors = EditorFactory.getInstance().getAllEditors();
+        if (editors != null && editors.length > 0) {
+            for (Editor editor : editors) {
+                Project project = editor.getProject();
+                return project;
+            }
+        }
+        return null;
+    }
+
     private void setupEventListeners() {
         ApplicationManager.getApplication().invokeLater(() -> {
 

@@ -54,7 +54,7 @@ public class WallClockManager {
 
         long minutes = wcTimeVal / 60;
         String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);
-        SoftwareCoUtils.setStatusLineMessage(icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
+        SoftwareCoUtils.updateStatusBar(icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
     }
 
     public long getWcTimeInSeconds() {
