@@ -305,23 +305,13 @@ public class KeystrokeCount {
             // end the file end times
             this.endUnendedFiles();
 
+            // TODO: update the session summary data
             SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
 
             final String payload = SoftwareCo.gson.toJson(this);
 
-            SoftwareCoOfflineManager.getInstance().incrementSessionSummaryData(1, Integer.parseInt(keystrokes));
-
             // store to send later
             sessionMgr.storePayload(payload);
-
-            new Thread(() -> {
-                try {
-                    Thread.sleep(10000);
-                    sessionMgr.fetchDailyKpmSessionInfo();
-                } catch (Exception e) {
-                    System.err.println(e);
-                }
-            }).start();
 
         }
 

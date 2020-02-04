@@ -2,11 +2,18 @@ package com.softwareco.intellij.plugin.fs;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.SoftwareCo;
+import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.SoftwareResponse;
 import org.apache.http.client.methods.HttpPost;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -174,5 +181,52 @@ public class FileManager {
                 log.warning("Code Time: Error trying to read and send offline data: " + e.getMessage());
             }
         }
+    }
+
+    public static String getFileContent(String file) {
+        String content = null;
+
+        File f = new File(file);
+        if (f.exists()) {
+            try {
+                byte[] encoded = Files.readAllBytes(Paths.get(file));
+                content = new String(encoded, Charset.forName("UTF-8"));
+            } catch (Exception e) {
+                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
+            }
+        }
+        return content;
+    }
+
+    public static void saveFileContent(String file, String content) {
+        File f = new File(file);
+
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(f), Charset.forName("UTF-8")));
+            writer.write(content);
+        } catch (IOException ex) {
+            // Report
+        } finally {
+            try {writer.close();} catch (Exception ex) {/*ignore*/}
+        }
+    }
+
+    private static String getLocalReadmeFile() {
+        // TODO: get README.md
+        return "README.md";
+    }
+
+    public static void openReadmeFile() {
+        Project p = SoftwareCoUtils.getOpenProject();
+        if (p == null) {
+            return;
+        }
+        File f = new File(getLocalReadmeFile());
+
+        VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
+        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
+        FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
     }
 }

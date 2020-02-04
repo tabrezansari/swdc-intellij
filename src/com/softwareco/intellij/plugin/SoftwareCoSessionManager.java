@@ -213,16 +213,6 @@ public class SoftwareCoSessionManager {
             }
         }
 
-        SoftwareCoOfflineManager.getInstance().clearSessionSummaryData();
-        // fetch kpm metrics
-        new Thread(() -> {
-            try {
-                Thread.sleep(10000);
-                fetchDailyKpmSessionInfo();
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }).start();
     }
 
     public static void setNumericItem(String key, long val) {
@@ -347,37 +337,6 @@ public class SoftwareCoSessionManager {
     public static String generateToken() {
         String uuid = UUID.randomUUID().toString();
         return uuid.replace("-", "");
-    }
-
-    public void fetchDailyKpmSessionInfo() {
-        SoftwareCoOfflineManager offlineMgr = SoftwareCoOfflineManager.getInstance();
-        JsonObject sessionSummary = offlineMgr.getSessionSummaryFileAsJson();
-        int currentDayMinutes = sessionSummary != null
-                ? sessionSummary.get("currentDayMinutes").getAsInt() : 0;
-        if (currentDayMinutes == 0) {
-            String sessionsApi = "/sessions/summary";
-
-            // make an async call to get the kpm info
-            sessionSummary = SoftwareCoUtils.makeApiCall(sessionsApi, HttpGet.METHOD_NAME, null).getJsonObj();
-            if (sessionSummary != null) {
-
-                if (sessionSummary.has("currentDayMinutes")) {
-                    currentDayMinutes = sessionSummary.get("currentDayMinutes").getAsInt();
-                }
-                int currentDayKeystrokes = 0;
-                if (sessionSummary.has("currentDayKeystrokes")) {
-                    currentDayKeystrokes = sessionSummary.get("currentDayKeystrokes").getAsInt();
-                }
-
-                int averageDailyMinutes = 0;
-                if (sessionSummary.has("averageDailyMinutes")) {
-                    averageDailyMinutes = sessionSummary.get("averageDailyMinutes").getAsInt();
-                }
-
-                offlineMgr.setSessionSummaryData(currentDayMinutes, currentDayKeystrokes, averageDailyMinutes);
-            }
-        }
-        // offlineMgr.updateStatusBarWithSummaryData(sessionSummary);
     }
 
     public void statusBarClickHandler(MouseEvent mouseEvent, String id) {

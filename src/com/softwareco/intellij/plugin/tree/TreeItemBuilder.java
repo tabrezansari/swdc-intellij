@@ -4,6 +4,7 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.fs.FileManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,7 +40,7 @@ public class TreeItemBuilder {
                 } else if (lbl.getName().equals("submitfeedback")) {
                     SoftwareCoUtils.submitFeedback();
                 } else if (lbl.getName().equals("learnmore")) {
-                    // show the readme
+                    FileManager.openReadmeFile();
                 } else if (lbl.getName().equals("togglestatus")) {
                     SoftwareCoUtils.toggleStatusBar();
                 }

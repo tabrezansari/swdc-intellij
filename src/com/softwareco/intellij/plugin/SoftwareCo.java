@@ -18,6 +18,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.util.logging.Logger;
@@ -133,10 +134,7 @@ public class SoftwareCo implements ApplicationComponent {
 
         // initialize the new day checker
 
-        // add the kpm status scheduler
-        final Runnable kpmStatusRunner = () -> sessionMgr.fetchDailyKpmSessionInfo();
-        asyncManager.scheduleService(
-                kpmStatusRunner, "kpmStatusRunner", 15, 60 * 5);
+
 
         final Runnable hourlyRunner = () -> this.processHourlyJobs();
         asyncManager.scheduleService(
@@ -219,7 +217,7 @@ public class SoftwareCo implements ApplicationComponent {
 
         new Thread(() -> {
             try {
-                sessionMgr.fetchDailyKpmSessionInfo();
+                SessionDataManager.fetchSessionSummary(true);
             }
             catch (Exception e){
                 System.err.println(e);

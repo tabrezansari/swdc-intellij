@@ -6,6 +6,7 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 
 import java.util.logging.Logger;
 
@@ -31,52 +32,57 @@ public class WallClockManager {
     }
 
     private void init() {
-        final Runnable wallClockTimer = () -> this.updateWallClockTime();
+        final Runnable wallClockTimer = () -> updateWallClockTime();
         asyncManager.scheduleService(
                 wallClockTimer, "wallClockTimer", 0, SECONDS_INCREMENT);
     }
 
-    private void updateWallClockTime() {
-        long wctime = this.getWcTimeInSeconds() + SECONDS_INCREMENT;
+    private static void updateWallClockTime() {
+        long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
         SoftwareCoSessionManager.setNumericItem("wctime", wctime);
-        this.dispatchStatusViewUpdate();
-
-        // TODO: refresh the code time tree view
+        dispatchStatusViewUpdate();
 
         // update the json time data file
-        this.updateTimeData();
+        updateTimeData();
     }
 
-    public void dispatchStatusViewUpdate() {
-        long wcTimeVal = this.getWcTimeInSeconds();
+    public static void dispatchStatusViewUpdate() {
+        long wcTimeVal = getWcTimeInSeconds();
 
         String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock-blue.png";
 
         long minutes = wcTimeVal / 60;
         String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);
-        SoftwareCoUtils.updateStatusBar(icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
+        SoftwareCoUtils.updateStatusBar(
+                icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
+        // refresh the code time tree view
+        CodeTimeToolWindow.refresh();
     }
 
-    public long getWcTimeInSeconds() {
+    public static long getWcTimeInSeconds() {
         return SoftwareCoSessionManager.getNumericItem("wctime", 0L);
     }
 
-    public void setWcTime(long seconds) {
+    public static void setWcTime(long seconds) {
         SoftwareCoSessionManager.setNumericItem("wctime", seconds);
-        this.updateWallClockTime();
+        updateWallClockTime();
     }
 
-    private void updateTimeData() {
-        long editorSeconds = this.getWcTimeInSeconds();
+    private static void updateTimeData() {
+        long editorSeconds = getWcTimeInSeconds();
         TimeData td = TimeDataManager.getTodayTimeDataSummary();
 
         TimeDataManager.updateTimeDataSummary(editorSeconds, td.getSession_seconds(), td.getFile_seconds());
     }
 
-    private void updateBasedOnSessionSeconds(long sessionSeconds) {
-        long wcTimeVal = this.getWcTimeInSeconds();
+    public static void updateBasedOnSessionSeconds(long sessionSeconds) {
+        long wcTimeVal = getWcTimeInSeconds();
         if (wcTimeVal < sessionSeconds) {
-            this.setWcTime((sessionSeconds));
+            // this will update the status bar and tree view metrics
+            setWcTime((sessionSeconds));
+        } else {
+            // just update the tree view metrics
+            CodeTimeToolWindow.refresh();
         }
     }
 }

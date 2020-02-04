@@ -2,7 +2,6 @@ package com.softwareco.intellij.plugin.tree;
 
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;

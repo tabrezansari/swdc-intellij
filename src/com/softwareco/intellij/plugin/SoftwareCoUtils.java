@@ -21,6 +21,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.WindowManager;
+import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import com.sun.jna.platform.mac.SystemB;
@@ -696,32 +699,26 @@ public class SoftwareCoUtils {
         BrowserUtil.browse("mailto:cody@software.com");
     }
 
-    public static void fetchCodeTimeMetricsDashboard(JsonObject summary) {
+    public static void buildCodeTimeMetricsDashboard() {
         String summaryInfoFile = SoftwareCoSessionManager.getSummaryInfoFile(true);
         String dashboardFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
 
-        Calendar cal = Calendar.getInstance();
-        int dayOfMonth = cal.get(Calendar.DAY_OF_MONTH);
         Writer writer = null;
+        String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
+        String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
+        if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
+            dashboardSummary = SERVICE_NOT_AVAIL;
+        }
 
-        if (lastDayOfMonth == 0 || lastDayOfMonth != dayOfMonth) {
-            lastDayOfMonth = dayOfMonth;
-            String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
-            String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
-            if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
-                dashboardSummary = SERVICE_NOT_AVAIL;
-            }
-
-            // write the summary content
-            try {
-                writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(summaryInfoFile), StandardCharsets.UTF_8));
-                writer.write(dashboardSummary);
-            } catch (IOException ex) {
-                // Report
-            } finally {
-                try {writer.close();} catch (Exception ex) {/*ignore*/}
-            }
+        // write the summary content
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(summaryInfoFile), StandardCharsets.UTF_8));
+            writer.write(dashboardSummary);
+        } catch (IOException ex) {
+            // Report
+        } finally {
+            try {writer.close();} catch (Exception ex) {/*ignore*/}
         }
 
         // concat summary info with the dashboard file
@@ -734,16 +731,11 @@ public class SoftwareCoUtils {
         String todayStr = formatDay.format(new Date());
         dashboardContent += getSectionHeader("Today (" + todayStr + ")");
 
-
+        SessionSummary summary = SessionDataManager.fetchSessionSummary(false);
         if (summary != null) {
-            long currentDayMinutes = 0;
-            if (summary.has("currentDayMinutes")) {
-                currentDayMinutes = summary.get("currentDayMinutes").getAsLong();
-            }
-            long averageDailyMinutes = 0;
-            if (summary.has("averageDailyMinutes")) {
-                averageDailyMinutes = summary.get("averageDailyMinutes").getAsLong();
-            }
+            long currentDayMinutes = summary.getCurrentDayMinutes();
+
+            long averageDailyMinutes = summary.getAverageDailyMinutes();
 
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
             String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
@@ -754,13 +746,13 @@ public class SoftwareCoUtils {
         }
 
         // append the summary content
-        String summaryInfoContent = SoftwareCoOfflineManager.getInstance().getSessionSummaryInfoFileContent();
-        if (summaryInfoContent != null) {
-            dashboardContent += summaryInfoContent;
+        String infoFileContent = FileManager.getFileContent(summaryInfoFile);
+        if (infoFileContent != null) {
+            dashboardContent += infoFileContent;
         }
 
         // write the dashboard content to the dashboard file
-        SoftwareCoOfflineManager.getInstance().saveFileContent(dashboardContent, dashboardFile);
+        FileManager.saveFileContent(dashboardFile, dashboardContent);
 
     }
 
@@ -773,9 +765,7 @@ public class SoftwareCoUtils {
             return;
         }
 
-        SoftwareCoSessionManager.getInstance().fetchDailyKpmSessionInfo();
-        JsonObject sessionSummary = SoftwareCoOfflineManager.getInstance().getSessionSummaryFileAsJson();
-        fetchCodeTimeMetricsDashboard(sessionSummary);
+        buildCodeTimeMetricsDashboard();
 
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         File f = new File(codeTimeFile);
@@ -967,7 +957,7 @@ public class SoftwareCoUtils {
         if (loggedInCacheState != loggedIn && pluginName.equals("Code Time")) {
             sendHeartbeat("STATE_CHANGE:LOGGED_IN:" + loggedIn);
             // refetch kpm
-            final Runnable kpmStatusRunner = () -> SoftwareCoSessionManager.getInstance().fetchDailyKpmSessionInfo();
+            final Runnable kpmStatusRunner = () -> SessionDataManager.fetchSessionSummary(true);
             kpmStatusRunner.run();
         }
 
