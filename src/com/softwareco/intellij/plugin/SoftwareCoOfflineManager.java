@@ -15,8 +15,6 @@ public class SoftwareCoOfflineManager {
 
     private static SoftwareCoOfflineManager instance = null;
 
-    private JsonObject currentTrack = new JsonObject();
-
     public SessionSummaryData sessionSummaryData = new SessionSummaryData();
 
     public static SoftwareCoOfflineManager getInstance() {
@@ -87,7 +85,7 @@ public class SoftwareCoOfflineManager {
             msg += " | " + averageDailyMinutesTimeStr;
         }
 
-        SoftwareCoUtils.setStatusLineMessage(inFlowIcon, msg, "Code time today vs. your daily average. Click to see more from Code Time");
+        // SoftwareCoUtils.setStatusLineMessage(inFlowIcon, msg, "Code time today vs. your daily average. Click to see more from Code Time");
 
         SoftwareCoUtils.fetchCodeTimeMetricsDashboard(sessionSummary);
     }
@@ -123,7 +121,7 @@ public class SoftwareCoOfflineManager {
                     data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
                 }
             } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
+                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
             }
         }
         return data;
@@ -139,7 +137,7 @@ public class SoftwareCoOfflineManager {
                 byte[] encoded = Files.readAllBytes(Paths.get(sessionSummaryFile));
                 content = new String(encoded, Charset.forName("UTF-8"));
             } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
+                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
             }
         }
         return content;

@@ -33,7 +33,6 @@ public class SoftwareCoSessionManager {
 
     private static SoftwareCoSessionManager instance = null;
     public static final Logger log = Logger.getLogger("SoftwareCoSessionManager");
-    private static Map<String, String> sessionMap = new HashMap<>();
     private static long lastAppAvailableCheck = 0;
 
     public static SoftwareCoSessionManager getInstance() {
@@ -225,8 +224,7 @@ public class SoftwareCoSessionManager {
         }).start();
     }
 
-    public static void setItem(String key, String val) {
-        sessionMap.put(key, val);
+    public static void setNumericItem(String key, long val) {
         JsonObject jsonObj = getSoftwareSessionAsJson();
         jsonObj.addProperty(key, val);
 
@@ -243,11 +241,40 @@ public class SoftwareCoSessionManager {
         }
     }
 
-    public static String getItem(String key) {
-        String val = sessionMap.get(key);
-        if (val != null) {
-            return val;
+    public static long getNumericItem(String key, Long defaultVal) {
+        JsonObject jsonObj = getSoftwareSessionAsJson();
+        if (jsonObj != null && jsonObj.has(key) && !jsonObj.get(key).isJsonNull()) {
+            return jsonObj.get(key).getAsLong();
         }
+        return defaultVal.longValue();
+    }
+
+    public static void setItem(String key, String val) {
+        JsonObject jsonObj = getSoftwareSessionAsJson();
+        jsonObj.addProperty(key, val);
+
+        String content = jsonObj.toString();
+
+        String sessionFile = getSoftwareSessionFile(true);
+
+        try {
+            Writer output = new BufferedWriter(new FileWriter(sessionFile));
+            output.write(content);
+            output.close();
+        } catch (Exception e) {
+            log.warning("Code Time: Failed to write the key value pair (" + key + ", " + val + ") into the session, error: " + e.getMessage());
+        }
+    }
+
+    public static String getItem(String key, String defaultVal) {
+        String val = getItem(key);
+        if (val == null) {
+            return defaultVal;
+        }
+        return val;
+    }
+
+    public static String getItem(String key) {
         JsonObject jsonObj = getSoftwareSessionAsJson();
         if (jsonObj != null && jsonObj.has(key) && !jsonObj.get(key).isJsonNull()) {
             return jsonObj.get(key).getAsString();
@@ -269,7 +296,7 @@ public class SoftwareCoSessionManager {
                     data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
                 }
             } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and json parse the session file, error: " + e.getMessage());
+                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
             }
         }
         return (data == null) ? new JsonObject() : data;
@@ -347,10 +374,6 @@ public class SoftwareCoSessionManager {
                 }
 
                 offlineMgr.setSessionSummaryData(currentDayMinutes, currentDayKeystrokes, averageDailyMinutes);
-
-            } else {
-                SoftwareCoUtils.setStatusLineMessage(
-                        "Code Time", "Click to see more from Code Time");
             }
         }
         offlineMgr.updateStatusBarWithSummaryData(sessionSummary);

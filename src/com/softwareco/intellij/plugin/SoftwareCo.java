@@ -17,6 +17,8 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
+import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.util.logging.Logger;
 
@@ -33,8 +35,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static MessageBusConnection connection;
 
-
-    private SoftwareCoMusicManager musicMgr = SoftwareCoMusicManager.getInstance();
     private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
     private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private AsyncManager asyncManager = AsyncManager.getInstance();
@@ -124,6 +124,14 @@ public class SoftwareCo implements ApplicationComponent {
         setupEventListeners();
 
         log.info(plugName + ": Finished initializing SoftwareCo plugin");
+
+        // store the activate event
+        EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
+
+        // initialize the wall clock manager
+        WallClockManager.getInstance();
+
+        // initialize the new day checker
 
         // add the kpm status scheduler
         final Runnable kpmStatusRunner = () -> sessionMgr.fetchDailyKpmSessionInfo();
@@ -217,8 +225,6 @@ public class SoftwareCo implements ApplicationComponent {
                 System.err.println(e);
             }
         }).start();
-
-        SoftwareCoUtils.sendHeartbeat("INITIALIZED");
     }
 
     protected void sendInstallPayload() {
@@ -256,14 +262,13 @@ public class SoftwareCo implements ApplicationComponent {
             // edit document
             EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new SoftwareCoDocumentListener());
         });
-
-        if(SoftwareCoUtils.pluginName.equals("Code Time"))
-            SoftwareCoUtils.setStatusLineMessage(
-                "Code Time", "Click to see more from Code Time");
     }
 
 
     public void disposeComponent() {
+        // store the activate event
+        EventManager.createCodeTimeEvent("resource", "unload", "EditorDeactivate");
+
         try {
             if (connection != null) {
                 connection.disconnect();

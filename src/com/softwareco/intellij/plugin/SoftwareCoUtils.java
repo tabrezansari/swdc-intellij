@@ -20,6 +20,8 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.softwareco.intellij.plugin.wallclock.WallClockManager;
+import com.sun.jna.platform.mac.SystemB;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.net.util.Base64;
@@ -38,7 +40,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -231,13 +233,9 @@ public class SoftwareCoUtils {
         SoftwareResponse softwareResponse = new SoftwareResponse();
 
         SoftwareHttpManager httpTask = null;
-        SpotifyHttpManager spotifyTask = null;
         if (api.contains("/ping") || api.contains("/sessions") || api.contains("/dashboard") || api.contains("/users/plugin/accounts")) {
             // if the server is having issues, we'll timeout within 5 seconds for these calls
             httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
-        } else if (api.contains("/v1") || api.contains("/api/token")) {
-            // if the server is having issues, we'll timeout within 5 seconds for these calls
-            spotifyTask = new SpotifyHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
         } else {
             if (httpMethodName.equals(HttpPost.METHOD_NAME)) {
                 // continue, POSTS encapsulated "invokeLater" with a timeout of 5 seconds
@@ -251,12 +249,7 @@ public class SoftwareCoUtils {
                 httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
             }
         }
-        Future<HttpResponse> response = null;
-        if (api.contains("/v1") || api.contains("/api/token")) {
-            response = EXECUTOR_SERVICE.submit(spotifyTask);
-        } else {
-            response = EXECUTOR_SERVICE.submit(httpTask);
-        }
+        Future<HttpResponse> response = EXECUTOR_SERVICE.submit(httpTask);
 
         //
         // Handle the Future if it exist
@@ -316,8 +309,6 @@ public class SoftwareCoUtils {
                         if (jsonObj.has("code")) {
                             String code = jsonObj.get("code").getAsString();
                             if (code != null && code.equals("DEACTIVATED")) {
-                                SoftwareCoUtils.setStatusLineMessage(
-                                        "warning.png", pluginName, "To see your coding data in Code Time, please reactivate your account.");
                                 softwareResponse.setDeactivated(true);
                             }
                         }
@@ -372,16 +363,14 @@ public class SoftwareCoUtils {
         return sb.toString();
     }
 
+    public static boolean showingStatusText() {
+        return showStatusText;
+    }
+
     public static void toggleStatusBar() {
         showStatusText = !showStatusText;
 
-        if(pluginName.equals("Code Time")) {
-            if (showStatusText) {
-                SoftwareCoUtils.setStatusLineMessage(lastMsg, lastTooltip);
-            } else {
-                SoftwareCoUtils.setStatusLineMessage("clock.png", "", lastMsg + " | " + lastTooltip);
-            }
-        }
+        WallClockManager.getInstance().dispatchStatusViewUpdate();
     }
 
     public static synchronized void setStatusLineMessage(
@@ -1411,7 +1400,7 @@ public class SoftwareCoUtils {
                 return obj;
             }
         }catch (Exception e){
-            LOG.warning("Music Time: Error trying to read and json parse the current track, error: " + e.getMessage());
+            LOG.warning("Music Time: Error trying to read and parse: " + e.getMessage());
         }
         return null;
     }
@@ -1968,16 +1957,48 @@ public class SoftwareCoUtils {
         });
     }
 
+    public static Date atStartOfDay(Date date) {
+        LocalDateTime localDateTime = dateToLocalDateTime(date);
+        LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
+        return localDateTimeToDate(startOfDay);
+    }
+
+    public static Date atEndOfDay(Date date) {
+        LocalDateTime localDateTime = dateToLocalDateTime(date);
+        LocalDateTime endOfDay = localDateTime.with(LocalTime.MAX);
+        return localDateTimeToDate(endOfDay);
+    }
+
+    private static LocalDateTime dateToLocalDateTime(Date date) {
+        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
+    }
+
+    private static Date localDateTimeToDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    // the timestamps are all in seconds
     public static class TimesData {
         public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
         public long now = System.currentTimeMillis() / 1000;
         public long local_now = now + offset;
         public String timezone = TimeZone.getDefault().getID();
+        public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+        public long local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+        public long utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
     }
+
 
     public static TimesData getTimesData() {
         TimesData timesData = new TimesData();
         return timesData;
+    }
+
+    public static String getTodayInStandardFormat() {
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
+        String day = formatDay.format(new Date(timesData.local_now * 1000));
+        return day;
     }
 
     public static String getDashboardRow(String label, String value) {
