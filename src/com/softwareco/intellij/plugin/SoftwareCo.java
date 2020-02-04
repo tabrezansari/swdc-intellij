@@ -84,14 +84,8 @@ public class SoftwareCo implements ApplicationComponent {
                 }).start();
             } else {
                 getPluginName();
-                boolean music = SoftwareCoUtils.isMusicTime();
-                String jwt = null;
-                if(!music) {
-                    // create the anon user
-                    jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
-                } else {
-                    jwt = SoftwareCoUtils.getAppJwt(serverIsOnline);
-                }
+                // create the anon user
+                String jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {

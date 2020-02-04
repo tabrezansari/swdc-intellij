@@ -173,13 +173,6 @@ public class SoftwareCoUtils {
         return hostname;
     }
 
-    public static boolean isMusicTime() {
-        if(pluginName.equals("Music Time")) {
-            return true;
-        }
-        return false;
-    }
-
     public static String getUserHomeDir() {
         return System.getProperty("user.home");
     }
@@ -570,41 +563,6 @@ public class SoftwareCoUtils {
         // `ps -ef | grep "${appName}" | grep -v grep | awk '{print $2}' | xargs kill`;
         String[] args = { "ps", "-ef", "|", "grep", "\"" + playerName + ".app\"", "|", "grep", "-v", "grep", "|", "awk", "'{print $2}'", "|", "xargs", "kill" };
         return runCommand(args, null);
-    }
-
-    public static JsonObject getCurrentMusicTrack() {
-        JsonObject jsonObj = new JsonObject();
-        if (!SoftwareCoUtils.isMac()) {
-            return jsonObj;
-        }
-
-        boolean spotifyRunning = isSpotifyRunning();
-        boolean itunesRunning = isItunesRunning();
-
-        String trackInfo = "";
-        // Vintage Trouble, My Whole World Stopped Without You, spotify:track:7awBL5Pu8LD6Fl7iTrJotx, My Whole World Stopped Without You, 244080
-        if (spotifyRunning) {
-            trackInfo = getSpotifyTrack();
-        } else if (itunesRunning) {
-            trackInfo = getItunesTrack();
-        }
-
-        if (trackInfo != null && !trackInfo.equals("")) {
-            // trim and replace things
-            trackInfo = trackInfo.trim();
-            trackInfo = trackInfo.replace("\"", "");
-            trackInfo = trackInfo.replace("'", "");
-            String[] paramParts = trackInfo.split(";");
-            for (String paramPart : paramParts) {
-                paramPart = paramPart.trim();
-                String[] params = paramPart.split("=");
-                if (params != null && params.length == 2) {
-                    jsonObj.addProperty(params[0], params[1]);
-                }
-            }
-
-        }
-        return jsonObj;
     }
 
     /**

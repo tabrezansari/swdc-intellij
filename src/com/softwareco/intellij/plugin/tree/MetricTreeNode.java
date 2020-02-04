@@ -10,6 +10,7 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
     protected DefaultTreeModel model;
 
     private String id;
+    private String iconName;
 
     public MetricTreeNode(String nodeName, String id) {
         super(nodeName);
@@ -43,5 +44,13 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getIconName() {
+        return iconName;
+    }
+
+    public void setIconName(String iconName) {
+        this.iconName = iconName;
     }
 }

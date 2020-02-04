@@ -84,7 +84,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildWebDashboardLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw.svg");
         label.setIcon(icon);
         label.setText("See advanced metrics");
         label.setName("webdashboard");
@@ -102,7 +102,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildToggleStatusTextLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/visible.svg");
         label.setIcon(icon);
         if (SoftwareCoUtils.showingStatusText()) {
             label.setText("Hide status bar metrics");
@@ -115,7 +115,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildLearnMoreLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.findIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
+        Icon icon = IconLoader.findIcon("/com/softwareco/intellij/plugin/assets/readme.svg");
         label.setIcon(icon);
         label.setText("Learn more");
         label.setName("learnmore");
@@ -124,7 +124,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildSubmitFeedbackLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/message.svg");
         label.setIcon(icon);
         label.setText("Submit feedback");
         label.setName("submitfeedback");
@@ -138,14 +138,14 @@ public class TreeItemBuilder {
         return separator;
     }
 
-    private static MetricTree buildTreeItem(String parentName, String todayValue, String avgValue, String globalValue) {
+    private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
         MetricTreeNode node = buildParentNode(parentName);
-        addChildToParent("Today: " + todayValue, node);
-        if (avgValue != null) {
-            addChildToParent("Your average: " + avgValue, node);
+        node.add(todayNode);
+        if (avgNode != null) {
+            node.add(avgNode);
         }
-        if (globalValue != null) {
-            addChildToParent("Global average: " + globalValue, node);
+        if (globalNode != null) {
+            node.add(globalNode);
         }
 
         DefaultTreeModel model = new DefaultTreeModel(node);
@@ -162,14 +162,19 @@ public class TreeItemBuilder {
 
     public static MetricTree buildEditorTimeTree() {
         String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
-        return buildTreeItem("Editor Time", min, null, null);
+        MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
+        return buildTreeItem("Editor time", todayNode, null, null);
     }
 
     public static MetricTree buildCodeTimeTree() {
         String min = SoftwareCoUtils.humanizeMinutes(sessionSummary.getCurrentDayMinutes());
         String avg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getAverageDailyMinutes());
         String globalAvg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getGlobalAverageDailyMinutes());
-        return buildTreeItem("Code Time", min, avg, globalAvg);
+        MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
+        String avgIconName = sessionSummary.getAverageDailyMinutes() < sessionSummary.getCurrentDayMinutes() ? "bolt.svg" : "bolt-grey.svg";
+        MetricTreeNode avgNode = buildChildNode("Your average: " + avg, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvg, "global-grey.svg");
+        return buildTreeItem("Code time", todayNode, avgNode, globalNode);
     }
 
     public static MetricTree buildLinesAddedTree() {
@@ -178,7 +183,11 @@ public class TreeItemBuilder {
         long linesAdded = sessionSummary.getCurrentDayLinesAdded();
         long avgLinesAdded = sessionSummary.getAverageLinesAdded();
         long globalAvgLinesAdded = sessionSummary.getGlobalAverageLinesAdded();
-        return buildTreeItem("Editor Time", "" + linesAdded, "" + avgLinesAdded, "" + globalAvgLinesAdded);
+        MetricTreeNode todayNode = buildChildNode("Today: " + linesAdded, "rocket.svg");
+        String avgIconName = sessionSummary.getAverageLinesAdded() < sessionSummary.getCurrentDayLinesAdded() ? "bolt.svg" : "bolt-grey.svg";
+        MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesAdded, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesAdded, "global-grey.svg");
+        return buildTreeItem("Lines added", todayNode, avgNode, globalNode);
     }
 
     public static MetricTree buildLinesRemovedTree() {
@@ -187,7 +196,11 @@ public class TreeItemBuilder {
         long linesRemoved = sessionSummary.getCurrentDayLinesRemoved();
         long avgLinesRemoved = sessionSummary.getAverageLinesRemoved();
         long globalAvgLinesRemoved = sessionSummary.getGlobalAverageLinesAdded();
-        return buildTreeItem("Editor Time", "" + linesRemoved, "" + avgLinesRemoved, "" + globalAvgLinesRemoved);
+        MetricTreeNode todayNode = buildChildNode("Today: " + linesRemoved, "rocket.svg");
+        String avgIconName = sessionSummary.getAverageLinesRemoved() < sessionSummary.getCurrentDayLinesRemoved() ? "bolt.svg" : "bolt-grey.svg";
+        MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesRemoved, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesRemoved, "global-grey.svg");
+        return buildTreeItem("Lines removed", todayNode, avgNode, globalNode);
     }
 
     public static MetricTree buildKeystrokesTree() {
@@ -196,7 +209,11 @@ public class TreeItemBuilder {
         long keystrokes = sessionSummary.getCurrentDayKeystrokes();
         long avgKeystrokes = sessionSummary.getAverageDailyKeystrokes();
         long globalKeystrokes = sessionSummary.getGlobalAverageDailyKeystrokes();
-        return buildTreeItem("Editor Time", "" + keystrokes, "" + avgKeystrokes, "" + globalKeystrokes);
+        MetricTreeNode todayNode = buildChildNode("Today: " + keystrokes, "rocket.svg");
+        String avgIconName = sessionSummary.getAverageDailyKeystrokes() < sessionSummary.getCurrentDayKeystrokes() ? "bolt.svg" : "bolt-grey.svg";
+        MetricTreeNode avgNode = buildChildNode("Your average: " + avgKeystrokes, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average: " + globalKeystrokes, "global-grey.svg");
+        return buildTreeItem("Editor Time", todayNode, avgNode, globalNode);
     }
 
     private static MetricTreeNode buildParentNode(String name) {
@@ -205,6 +222,13 @@ public class TreeItemBuilder {
         DefaultTreeModel parentNodeModel = new DefaultTreeModel(parentNode);
         parentNode.setModel(parentNodeModel);
         return parentNode;
+    }
+
+    private static MetricTreeNode buildChildNode(String name, String iconName) {
+        String id = name.replaceAll("\\s+", "");
+        MetricTreeNode childNode = new MetricTreeNode(name, id);
+        childNode.setIconName(iconName);
+        return childNode;
     }
 
     private static void addChildToParent(String childName, MetricTreeNode parentNode) {

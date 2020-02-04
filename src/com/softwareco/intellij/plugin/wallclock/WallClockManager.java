@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class WallClockManager {
 
-    public static final Logger log = Logger.getLogger("SoftwareCoMusicManager");
+    public static final Logger log = Logger.getLogger("WallClockManager");
 
     private static final int SECONDS_INCREMENT = 30;
     private static final int DAY_CHECK_TIMER_INTERVAL = 60;
