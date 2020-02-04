@@ -41,7 +41,12 @@ public class CodeTimeToolWindow {
         win = this;
     }
 
+    /**
+     * Build the Tree
+     */
     private synchronized void rebuildTreeView() {
+        TreeItemBuilder.initializeSessionSummary();
+
         dataPanel.removeAll();
         dataPanel.setBackground((Color) null);
         dataPanel.setFocusable(true);
@@ -54,6 +59,22 @@ public class CodeTimeToolWindow {
         JSeparator separator = TreeItemBuilder.getSeparator();
         // add a separator
         dataPanel.add(separator, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 1, 0));
+
+        // add the metric nodes
+        MetricTree editorTime = TreeItemBuilder.buildEditorTimeTree();
+        dataPanel.add(editorTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        MetricTree codeTime = TreeItemBuilder.buildCodeTimeTree();
+        dataPanel.add(codeTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        MetricTree linesAdded = TreeItemBuilder.buildLinesAddedTree();
+        dataPanel.add(linesAdded, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        MetricTree linesRemoved = TreeItemBuilder.buildLinesRemovedTree();
+        dataPanel.add(linesRemoved, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        MetricTree keystrokes = TreeItemBuilder.buildKeystrokesTree();
+        dataPanel.add(keystrokes, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
         dataPanel.updateUI();
         dataPanel.setVisible(true);

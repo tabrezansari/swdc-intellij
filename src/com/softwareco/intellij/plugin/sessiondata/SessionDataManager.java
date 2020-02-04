@@ -35,7 +35,7 @@ public class SessionDataManager {
         FileManager.writeData(getSessionDataSummaryFile(), summary);
     }
 
-    private static SessionSummary getSessionSummaryData() {
+    public static SessionSummary getSessionSummaryData() {
         JsonObject jsonObj = FileManager.getFileContentAsJson(getSessionDataSummaryFile());
         if (jsonObj == null) {
             clearSessionSummaryData();
