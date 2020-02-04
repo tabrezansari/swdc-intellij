@@ -50,7 +50,7 @@ public class WallClockManager {
     public void dispatchStatusViewUpdate() {
         long wcTimeVal = this.getWcTimeInSeconds();
 
-        String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock.png";
+        String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock-blue.png";
 
         long minutes = wcTimeVal / 60;
         String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);

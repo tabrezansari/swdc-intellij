@@ -52,6 +52,14 @@ public class TreeItemBuilder {
                 lst.clearSelection();
             }
         });
+        jbList.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                super.mouseMoved(e);
+                int row = jbList.locationToIndex(e.getPoint());
+                jbList.setSelectedIndex(row);
+            }
+        });
         jbList.updateUI();
 
         return jbList;
@@ -79,7 +87,11 @@ public class TreeItemBuilder {
         JLabel label = new JLabel();
         Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
         label.setIcon(icon);
-        label.setText("Hide status bar metrics");
+        if (SoftwareCoUtils.showingStatusText()) {
+            label.setText("Hide status bar metrics");
+        } else {
+            label.setText("Show status bar metrics");
+        }
         label.setName("togglestatus");
         return label;
     }
@@ -108,4 +120,5 @@ public class TreeItemBuilder {
         separator.setForeground(new Color(58, 86, 187));
         return separator;
     }
+
 }

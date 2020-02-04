@@ -1,24 +1,35 @@
 package com.softwareco.intellij.plugin.tree;
 
 
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
-import com.softwareco.intellij.plugin.SoftwareCoUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 import java.util.logging.Logger;
 
 public class CodeTimeToolWindow {
 
     public static final Logger LOG = Logger.getLogger("CodeTimeToolWindow");
+
     private JPanel codetimeWindowContent;
     private JScrollPane scrollPane;
     private JPanel dataPanel;
+
+    private static CodeTimeToolWindow win;
+
+    public static void refresh() {
+        if (win != null) {
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                public void run() {
+                    win.rebuildTreeView();
+                }
+            });
+        }
+    }
 
     public CodeTimeToolWindow(ToolWindow toolWindow) {
         codetimeWindowContent.setFocusable(true);
@@ -27,11 +38,11 @@ public class CodeTimeToolWindow {
 
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         codetimeWindowContent.setBackground((Color) null);
+
+        win = this;
     }
 
-    public synchronized void rebuildTreeView() {
-        Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);
-
+    private synchronized void rebuildTreeView() {
         dataPanel.removeAll();
         dataPanel.setBackground((Color) null);
         dataPanel.setFocusable(true);

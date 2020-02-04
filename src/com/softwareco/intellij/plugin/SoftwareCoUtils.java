@@ -20,6 +20,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import com.sun.jna.platform.mac.SystemB;
 import org.apache.commons.lang.StringUtils;
@@ -371,6 +372,9 @@ public class SoftwareCoUtils {
         showStatusText = !showStatusText;
 
         WallClockManager.getInstance().dispatchStatusViewUpdate();
+
+        // refresh the tree
+        CodeTimeToolWindow.refresh();
     }
 
     public static synchronized void setStatusLineMessage(
