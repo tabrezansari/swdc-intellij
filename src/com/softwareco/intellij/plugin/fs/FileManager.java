@@ -116,6 +116,14 @@ public class FileManager {
         return jsonArray;
     }
 
+    public static void deleteFile(String file) {
+        File f = new File(file);
+        // if the file exists, delete it
+        if (f.exists()) {
+            f.delete();
+        }
+    }
+
     public static void sendBatchData(String file, String api) {
         File f = new File(file);
         if (f.exists()) {
@@ -128,6 +136,7 @@ public class FileManager {
                 BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
                 String line = null;
+                // add commas to the end of each line
                 while ((line = br.readLine()) != null) {
                     if (line.length() > 0) {
                         sb.append(line).append(",");
@@ -138,16 +147,14 @@ public class FileManager {
 
                 if (sb.length() > 0) {
                     // check to see if it's already an array
-                    String data = sb.toString();
-                    if (data.endsWith(",")) {
-                        // remove the comma at the end of the data string
-                        data = data.substring(0, data.lastIndexOf(","));
-                    }
-                    if (!data.startsWith("[") && !data.endsWith("]")) {
-                        data = "[" + data + "]";
-                    }
+                    String payloads = sb.toString();
+                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
+                    payloads = "[" + payloads + "]";
 
-                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(data);
+                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+
+                    // delete the file
+                    deleteFile(file);
 
                     JsonArray batch = new JsonArray();
                     // go through the array about 50 at a time

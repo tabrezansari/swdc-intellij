@@ -7,7 +7,6 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.CodeTimeEvent;
-import com.softwareco.intellij.plugin.models.TimeData;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

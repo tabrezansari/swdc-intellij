@@ -103,7 +103,7 @@ public class SoftwareCoSessionManager {
         return file;
     }
 
-    private String getSoftwareDataStoreFile() {
+    public static String getSoftwareDataStoreFile() {
         String file = getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
             file += "\\data.json";

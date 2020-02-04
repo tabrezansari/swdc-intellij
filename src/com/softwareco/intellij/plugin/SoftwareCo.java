@@ -172,7 +172,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     private void sendOfflineDataRunner() {
         new Thread(() -> {
-
             try {
                 SoftwareCoSessionManager.getInstance().sendOfflineData();
             } catch (Exception e) {

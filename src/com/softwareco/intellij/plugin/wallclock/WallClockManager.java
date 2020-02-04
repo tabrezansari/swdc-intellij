@@ -2,9 +2,12 @@ package com.softwareco.intellij.plugin.wallclock;
 
 
 import com.softwareco.intellij.plugin.AsyncManager;
+import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.TimeData;
+import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 
@@ -15,6 +18,7 @@ public class WallClockManager {
     public static final Logger log = Logger.getLogger("SoftwareCoMusicManager");
 
     private static final int SECONDS_INCREMENT = 30;
+    private static final int DAY_CHECK_TIMER_INTERVAL = 60;
 
     private static WallClockManager instance = null;
     private AsyncManager asyncManager = AsyncManager.getInstance();
@@ -35,6 +39,36 @@ public class WallClockManager {
         final Runnable wallClockTimer = () -> updateWallClockTime();
         asyncManager.scheduleService(
                 wallClockTimer, "wallClockTimer", 0, SECONDS_INCREMENT);
+
+        final Runnable newDayCheckerTimer = () -> newDayChecker();
+        asyncManager.scheduleService(
+                newDayCheckerTimer, "newDayCheckerTimer", 30, DAY_CHECK_TIMER_INTERVAL);
+    }
+
+    private static void newDayChecker() {
+        String currentDay = SoftwareCoSessionManager.getItem("currentDay", "");
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        String day = SoftwareCoUtils.getTodayInStandardFormat();
+        if (!day.equals(currentDay)) {
+            // send the payloads
+            SoftwareCoSessionManager.getInstance().sendOfflineData();
+
+            // send the time data
+            TimeDataManager.sendOfflineTimeData();
+
+            // clear the wc time and the session summary
+            clearWcTime();
+            SessionDataManager.clearSessionSummaryData();
+
+            // update the current day
+            SoftwareCoSessionManager.setItem("currentDay", day);
+
+            // update the last payload timestamp
+            SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
+
+            // refresh the tree
+            CodeTimeToolWindow.refresh();
+        }
     }
 
     private static void updateWallClockTime() {
@@ -57,6 +91,10 @@ public class WallClockManager {
                 icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
         // refresh the code time tree view
         CodeTimeToolWindow.refresh();
+    }
+
+    private static void clearWcTime() {
+        setWcTime(0);
     }
 
     public static long getWcTimeInSeconds() {
