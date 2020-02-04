@@ -138,32 +138,38 @@ public class TreeItemBuilder {
         return separator;
     }
 
-    public static MetricTree buildEditorTimeTree() {
-        // create the editor time parent
-        MetricTreeNode node = buildParentNode("Editor Time");
-        String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
-        addChildToParent("Today: " + min, node);
+    private static MetricTree buildTreeItem(String parentName, String todayValue, String avgValue, String globalValue) {
+        MetricTreeNode node = buildParentNode(parentName);
+        addChildToParent("Today: " + todayValue, node);
+        if (avgValue != null) {
+            addChildToParent("Your average: " + avgValue, node);
+        }
+        if (globalValue != null) {
+            addChildToParent("Global average: " + globalValue, node);
+        }
 
         DefaultTreeModel model = new DefaultTreeModel(node);
         MetricTree tree = new MetricTree(model);
 
         tree.setCellRenderer(new MetricTreeRenderer());
+        MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
+        renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
+        renderer.setBorderSelectionColor(new Color(0,0,0,0));
+        tree.setBackground((Color)null);
+        tree.requestFocus();
         return tree;
     }
 
+    public static MetricTree buildEditorTimeTree() {
+        String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
+        return buildTreeItem("Editor Time", min, null, null);
+    }
+
     public static MetricTree buildCodeTimeTree() {
-        // create the editor time parent
-        MetricTreeNode node = buildParentNode("Code Time");
         String min = SoftwareCoUtils.humanizeMinutes(sessionSummary.getCurrentDayMinutes());
         String avg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getAverageDailyMinutes());
-        addChildToParent("Today: " + min, node);
-        addChildToParent("Your average: " + avg, node);
-
-        DefaultTreeModel model = new DefaultTreeModel(node);
-        MetricTree tree = new MetricTree(model);
-
-        tree.setCellRenderer(new MetricTreeRenderer());
-        return tree;
+        String globalAvg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getGlobalAverageDailyMinutes());
+        return buildTreeItem("Code Time", min, avg, globalAvg);
     }
 
     public static MetricTree buildLinesAddedTree() {
@@ -171,14 +177,8 @@ public class TreeItemBuilder {
         MetricTreeNode node = buildParentNode("Lines added");
         long linesAdded = sessionSummary.getCurrentDayLinesAdded();
         long avgLinesAdded = sessionSummary.getAverageLinesAdded();
-        addChildToParent("Today: " + linesAdded, node);
-        addChildToParent("Your average: " + avgLinesAdded, node);
-
-        DefaultTreeModel model = new DefaultTreeModel(node);
-        MetricTree tree = new MetricTree(model);
-
-        tree.setCellRenderer(new MetricTreeRenderer());
-        return tree;
+        long globalAvgLinesAdded = sessionSummary.getGlobalAverageLinesAdded();
+        return buildTreeItem("Editor Time", "" + linesAdded, "" + avgLinesAdded, "" + globalAvgLinesAdded);
     }
 
     public static MetricTree buildLinesRemovedTree() {
@@ -186,14 +186,8 @@ public class TreeItemBuilder {
         MetricTreeNode node = buildParentNode("Lines removed");
         long linesRemoved = sessionSummary.getCurrentDayLinesRemoved();
         long avgLinesRemoved = sessionSummary.getAverageLinesRemoved();
-        addChildToParent("Today: " + linesRemoved, node);
-        addChildToParent("Your average: " + avgLinesRemoved, node);
-
-        DefaultTreeModel model = new DefaultTreeModel(node);
-        MetricTree tree = new MetricTree(model);
-
-        tree.setCellRenderer(new MetricTreeRenderer());
-        return tree;
+        long globalAvgLinesRemoved = sessionSummary.getGlobalAverageLinesAdded();
+        return buildTreeItem("Editor Time", "" + linesRemoved, "" + avgLinesRemoved, "" + globalAvgLinesRemoved);
     }
 
     public static MetricTree buildKeystrokesTree() {
@@ -201,14 +195,8 @@ public class TreeItemBuilder {
         MetricTreeNode node = buildParentNode("Keystrokes");
         long keystrokes = sessionSummary.getCurrentDayKeystrokes();
         long avgKeystrokes = sessionSummary.getAverageDailyKeystrokes();
-        addChildToParent("Today: " + keystrokes, node);
-        addChildToParent("Your average: " + avgKeystrokes, node);
-
-        DefaultTreeModel model = new DefaultTreeModel(node);
-        MetricTree tree = new MetricTree(model);
-
-        tree.setCellRenderer(new MetricTreeRenderer());
-        return tree;
+        long globalKeystrokes = sessionSummary.getGlobalAverageDailyKeystrokes();
+        return buildTreeItem("Editor Time", "" + keystrokes, "" + avgKeystrokes, "" + globalKeystrokes);
     }
 
     private static MetricTreeNode buildParentNode(String name) {

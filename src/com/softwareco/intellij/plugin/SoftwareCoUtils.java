@@ -739,7 +739,9 @@ public class SoftwareCoUtils {
 
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
             String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
+            String wcTime = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
 
+            dashboardContent += getDashboardRow("Editor time today", wcTime);
             dashboardContent += getDashboardRow("Hours coded today", currentDayTimeStr);
             dashboardContent += getDashboardRow("90-day avg", averageDailyMinutesTimeStr);
             dashboardContent += "\n";
