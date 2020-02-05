@@ -219,9 +219,9 @@ public class SoftwareCo implements ApplicationComponent {
         String fileName = "Untitled";
         eventMgr.initializeKeystrokeObjectGraph(fileName, "Unnamed", "");
         KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
-        fileInfo.setAdd(fileInfo.getAdd() + 1);
-        fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
-        keystrokeManager.getKeystrokeCount().setKeystrokes(String.valueOf(1));
+        fileInfo.add = fileInfo.add + 1;
+        fileInfo.netkeys = fileInfo.add - fileInfo.delete;
+        keystrokeManager.getKeystrokeCount().setKeystrokes(1);
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 

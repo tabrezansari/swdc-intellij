@@ -256,18 +256,22 @@ public class TreeItemBuilder {
         // add the change stat children (insertions and deletions)
         String insertions = "insertion(s): " + commitChangeStats.getInsertions();
         MetricTreeNode insertionsNode = new MetricTreeNode(insertions, "insertions-" + p.getName());
+        insertionsNode.setIconName("insertion.svg");
         parentNode.add(insertionsNode);
         String deletions = "deletion(s): " + commitChangeStats.getDeletions();
         MetricTreeNode deletionNode = new MetricTreeNode(deletions, "deletions-" + p.getName());
+        deletionNode.setIconName("deletion.svg");
         parentNode.add(deletionNode);
 
         if (commitChangeStats.isCommitted()) {
             // add the change stat children (commits and files changed)
             String commits = "commit(s): " + commitChangeStats.getCommitCount();
             MetricTreeNode commitsNode = new MetricTreeNode(commits, "commits-" + p.getName());
+            commitsNode.setIconName("commit.svg");
             parentNode.add(commitsNode);
             String filesChanged = "Files changed: " + commitChangeStats.getFileCount();
             MetricTreeNode filesChangedNode = new MetricTreeNode(filesChanged, "filecount-" + p.getName());
+            filesChangedNode.setIconName("files.svg");
             parentNode.add(filesChangedNode);
         }
 

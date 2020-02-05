@@ -4,8 +4,10 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.intellij.ide.plugins.PluginManager;
-import com.intellij.openapi.extensions.PluginId;
+import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.models.FileChangeInfo;
+import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
+import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +23,7 @@ public class KeystrokeCount {
     private Map<String, FileInfo> source = new HashMap<>();
     private String version;
     private int pluginId;
-    private String keystrokes = "0"; // keystroke count
+    private int keystrokes = 0;
     // start and end are in seconds
     private long start;
     private long local_start;
@@ -56,7 +58,7 @@ public class KeystrokeCount {
     }
 
     public void resetData() {
-        this.keystrokes = "0";
+        this.keystrokes = 0;
         this.source = new HashMap<>();
         if (this.project != null) {
             this.project.resetData();
@@ -67,15 +69,10 @@ public class KeystrokeCount {
         this.timezone = "";
     }
 
-    private boolean hasOpenOrCloseMetrics() {
+    private boolean hasOpenAndCloseMetrics() {
         Map<String, FileInfo> fileInfoDataSet = this.source;
         for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
-            int openVal = fileInfoData.getOpen();
-            if (openVal > 0) {
-                return true;
-            }
-            int closeVal = fileInfoData.getClose();
-            if (closeVal > 0) {
+            if (fileInfoData.open > 0 && fileInfoData.close > 0) {
                 return true;
             }
         }
@@ -93,133 +90,12 @@ public class KeystrokeCount {
         public Integer lines = 0;
         public Integer linesAdded = 0;
         public Integer linesRemoved = 0;
+        public Integer keystrokes = 0;
         public String syntax = "";
         public long start = 0;
         public long end = 0;
         public long local_start = 0;
         public long local_end = 0;
-
-        public FileInfo() { }
-
-        public Integer getAdd() {
-            return add;
-        }
-
-        public void setAdd(Integer add) {
-            this.add = add;
-        }
-
-        public Integer getPaste() {
-            return paste;
-        }
-
-        public void setPaste(Integer paste) {
-            this.paste = paste;
-        }
-
-        public Integer getOpen() {
-            return open;
-        }
-
-        public void setOpen(Integer open) {
-            this.open = open;
-        }
-
-        public Integer getClose() {
-            return close;
-        }
-
-        public void setClose(Integer close) {
-            this.close = close;
-        }
-
-        public Integer getDelete() {
-            return delete;
-        }
-
-        public void setDelete(Integer delete) {
-            this.delete = delete;
-        }
-
-        public Integer getLength() {
-            return length;
-        }
-
-        public void setLength(Integer length) {
-            this.length = length;
-        }
-
-        public Integer getNetkeys() {
-            return netkeys;
-        }
-
-        public void setNetkeys(Integer netkeys) {
-            this.netkeys = netkeys;
-        }
-
-        public Integer getLines() {
-            return lines;
-        }
-
-        public void setLines(Integer lines) {
-            this.lines = lines;
-        }
-
-        public Integer getLinesAdded() {
-            return linesAdded;
-        }
-
-        public void setLinesAdded(Integer linesAdded) {
-            this.linesAdded = linesAdded;
-        }
-
-        public Integer getLinesRemoved() {
-            return linesRemoved;
-        }
-
-        public void setLinesRemoved(Integer linesRemoved) {
-            this.linesRemoved = linesRemoved;
-        }
-
-        public String getSyntax() {
-            return syntax;
-        }
-
-        public void setSyntax(String syntax) {
-            this.syntax = syntax;
-        }
-
-        public long getStart() {
-            return start;
-        }
-
-        public void setStart(long start) {
-            this.start = start;
-        }
-
-        public long getEnd() {
-            return end;
-        }
-
-        public void setEnd(long end) {
-            this.end = end;
-        }
-
-        public long getLocal_start() {
-            return local_start;
-        }
-
-        public void setLocal_start(long local_start) {
-            this.local_start = local_start;
-        }
-
-        public long getLocal_end() {
-            return local_end;
-        }
-
-        public void setLocal_end(long local_end) {
-            this.local_end = local_end;
-        }
     }
 
     public FileInfo getSourceByFileName(String fileName) {
@@ -247,8 +123,8 @@ public class KeystrokeCount {
 
         // create one and return the one just created
         FileInfo fileInfoData = new FileInfo();
-        fileInfoData.setStart(timesData.now);
-        fileInfoData.setLocal_start(timesData.local_now);
+        fileInfoData.start = timesData.now;
+        fileInfoData.local_start = timesData.local_now;
         source.put(fileName, fileInfoData);
 
         return fileInfoData;
@@ -263,15 +139,15 @@ public class KeystrokeCount {
         Map<String, FileInfo> fileInfoDataSet = this.source;
 
         for (FileInfo fileInfoData : fileInfoDataSet.values()) {
-            if (fileInfoData.getEnd() == 0) {
-                fileInfoData.setEnd(timesData.now);
-                fileInfoData.setLocal_end(timesData.local_now);
+            if (fileInfoData.end == 0) {
+                fileInfoData.end = timesData.now;
+                fileInfoData.local_end = timesData.local_now;
             }
         }
         if(fileInfoDataSet.get(currentFileName) != null) {
             FileInfo fileInfoData = fileInfoDataSet.get(currentFileName);
-            fileInfoData.setEnd(0);
-            fileInfoData.setLocal_end(0);
+            fileInfoData.end = 0;
+            fileInfoData.local_end = 0;
         }
     }
 
@@ -280,24 +156,39 @@ public class KeystrokeCount {
         Map<String, FileInfo> fileInfoDataSet = this.source;
         for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
             // end the ones that don't have an end time
-            if (fileInfoData.getEnd() == 0) {
+            if (fileInfoData.end == 0) {
                 // set the end time for this file
-                fileInfoData.setEnd(timesData.now);
-                fileInfoData.setLocal_end(timesData.local_now);
+                fileInfoData.end = timesData.now;
+                fileInfoData.local_end = timesData.local_now;
             }
         }
     }
 
+    // update each source with it's true amount of keystrokes
     public boolean hasData() {
-        if (Integer.parseInt(this.getKeystrokes()) > 0 || this.hasOpenOrCloseMetrics()) {
-            return true;
+        boolean foundKpmData = false;
+        if (this.getKeystrokes() > 0 || this.hasOpenAndCloseMetrics()) {
+            foundKpmData = true;
         }
 
-        return false;
+        int keystrokesTally = 0;
+
+        // tally the metrics to set the keystrokes for each source key
+        Map<String, FileInfo> fileInfoDataSet = this.source;
+        for ( FileInfo data : fileInfoDataSet.values() ) {
+            data.keystrokes = data.add + data.paste + data.delete + data.linesAdded + data.linesRemoved;
+            keystrokesTally += data.keystrokes;
+        }
+
+        if (keystrokesTally > this.getKeystrokes()) {
+            this.setKeystrokes(keystrokesTally);
+        }
+
+        return foundKpmData;
     }
 
-    public void processKeystrokes() {
 
+    public void processKeystrokes() {
         if (this.hasData()) {
 
             SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
@@ -305,25 +196,52 @@ public class KeystrokeCount {
             // end the file end times
             this.endUnendedFiles();
 
-            // TODO: update the session summary data
-            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            updateAggregates();
 
             final String payload = SoftwareCo.gson.toJson(this);
 
             // store to send later
             sessionMgr.storePayload(payload);
-
         }
 
         this.resetData();
-
     }
 
-    public String getKeystrokes() {
+    private void updateAggregates() {
+        Map<String, FileChangeInfo> fileChangeInfoMap = FileAggregateDataManager.getFileChangeInfo();
+        KeystrokeAggregate aggregate = new KeystrokeAggregate();
+        if (this.project != null) {
+            aggregate.directory = this.project.getDirectory();
+        } else {
+            aggregate.directory = "Unnamed";
+        }
+        for (String key : this.source.keySet()) {
+            FileInfo fileInfo = this.source.get(key);
+
+            aggregate.aggregate(fileInfo);
+
+            FileChangeInfo existingFileInfo = fileChangeInfoMap.get(key);
+            if (existingFileInfo == null) {
+                existingFileInfo = new FileChangeInfo();
+                fileChangeInfoMap.put(key, existingFileInfo);
+            }
+            existingFileInfo.update_count += 1;
+            existingFileInfo.aggregate(fileInfo);
+            existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
+        }
+
+        // update the aggregate info
+        SessionDataManager.incrementSessionSummary(aggregate);
+
+        // update the file info map
+        FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
+    }
+
+    public int getKeystrokes() {
         return keystrokes;
     }
 
-    public void setKeystrokes(String keystrokes) {
+    public void setKeystrokes(int keystrokes) {
         this.keystrokes = keystrokes;
     }
 

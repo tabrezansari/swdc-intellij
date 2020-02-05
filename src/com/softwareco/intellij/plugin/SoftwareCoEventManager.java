@@ -65,9 +65,9 @@ public class SoftwareCoEventManager {
         if (fileInfo == null) {
             return;
         }
-        fileInfo.setOpen(fileInfo.getOpen() + 1);
+        fileInfo.open = fileInfo.open + 1;
         int documentLineCount = getLineCount(fileName);
-        fileInfo.setLines(documentLineCount);
+        fileInfo.lines = documentLineCount;
         LOG.info("Code Time: file opened: " + fileName);
     }
 
@@ -81,7 +81,7 @@ public class SoftwareCoEventManager {
         if (fileInfo == null) {
             return;
         }
-        fileInfo.setClose(fileInfo.getClose() + 1);
+        fileInfo.close = fileInfo.close + 1;
         LOG.info("Code Time: file closed: " + fileName);
     }
 
@@ -128,13 +128,13 @@ public class SoftwareCoEventManager {
                                 wrapper.setCurrentTextLength(currLen);
 
                                 KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
-                                String syntax = fileInfo.getSyntax();
+                                String syntax = fileInfo.syntax;
                                 if (syntax == null || syntax.equals("")) {
                                     // get the grammar
                                     try {
                                         String fileType = file.getFileType().getName();
                                         if (fileType != null && !fileType.equals("")) {
-                                            fileInfo.setSyntax(fileType);
+                                            fileInfo.syntax = fileType;
                                         }
                                     } catch (Exception e) {
                                         //
@@ -142,37 +142,36 @@ public class SoftwareCoEventManager {
                                 }
                                 if (documentEvent.getOldLength() > 0) {
                                     //it's a delete
-                                    fileInfo.setDelete(fileInfo.getDelete() + 1);
-                                    fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
+                                    fileInfo.delete = fileInfo.delete + 1;
+                                    fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                     LOG.info("Code Time: delete incremented");
                                 } else {
                                     // it's an add
                                     if (documentEvent.getNewLength() > 1) {
                                         // it's a paste
-                                        fileInfo.setPaste(fileInfo.getPaste() + 1);
+                                        fileInfo.paste = fileInfo.paste + 1;
                                     } else {
-                                        fileInfo.setAdd(fileInfo.getAdd() + 1);
-                                        fileInfo.setNetkeys(fileInfo.getAdd() - fileInfo.getDelete());
+                                        fileInfo.add = fileInfo.add + 1;
+                                        fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                         LOG.info("Code Time: add incremented");
                                     }
                                 }
 
-                                int incrementedCount = Integer.parseInt(keystrokeCount.getKeystrokes()) + 1;
-                                keystrokeCount.setKeystrokes(String.valueOf(incrementedCount));
+                                keystrokeCount.setKeystrokes(keystrokeCount.getKeystrokes() + 1);
 
                                 int documentLineCount = document.getLineCount();
-                                int savedLines = fileInfo.getLines();
+                                int savedLines = fileInfo.lines;
                                 if (savedLines > 0) {
                                     int diff = documentLineCount - savedLines;
                                     if (diff < 0) {
-                                        fileInfo.setLinesRemoved(fileInfo.getLinesRemoved() + Math.abs(diff));
+                                        fileInfo.linesRemoved = fileInfo.linesRemoved + Math.abs(diff);
                                         LOG.info("Code Time: lines removed incremented");
                                     } else if (diff > 0) {
-                                        fileInfo.setLinesAdded(fileInfo.getLinesAdded() + diff);
+                                        fileInfo.linesAdded = fileInfo.linesAdded + diff;
                                         LOG.info("Code Time: lines added incremented");
                                     }
                                 }
-                                fileInfo.setLines(documentLineCount);
+                                fileInfo.lines = documentLineCount;
                             }
                         }
                     }

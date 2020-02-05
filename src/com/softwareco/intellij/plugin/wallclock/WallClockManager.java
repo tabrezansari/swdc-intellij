@@ -3,6 +3,7 @@ package com.softwareco.intellij.plugin.wallclock;
 import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
@@ -62,6 +63,7 @@ public class WallClockManager {
             // clear the wc time and the session summary
             clearWcTime();
             SessionDataManager.clearSessionSummaryData();
+            FileAggregateDataManager.clearFileChangeInfoSummaryData();
 
             // update the current day
             SoftwareCoSessionManager.setItem("currentDay", day);

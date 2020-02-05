@@ -8,7 +8,10 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.SoftwareResponse;
 import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.models.TimeData;
+import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpGet;
 
@@ -73,5 +76,42 @@ public class SessionDataManager {
         WallClockManager.getInstance().updateBasedOnSessionSeconds(session_seconds);
 
         return summary;
+    }
+
+    public static void incrementSessionSummary(KeystrokeAggregate aggregate) {
+        WallClockManager wcMgr = WallClockManager.getInstance();
+        SessionSummary summary = getSessionSummaryData();
+
+        long incrementMinutes = getMinutesSinceLastPayload();
+        summary.setCurrentDayMinutes(summary.getCurrentDayMinutes() + incrementMinutes);
+
+        long sessionSeconds = summary.getCurrentDayMinutes() * 60;
+        wcMgr.updateBasedOnSessionSeconds(sessionSeconds);
+        long editorSeconds = wcMgr.getWcTimeInSeconds();
+
+        summary.setCurrentDayKeystrokes(summary.getCurrentDayKeystrokes() + aggregate.keystrokes);
+        summary.setCurrentDayLinesAdded(summary.getCurrentDayLinesAdded() + aggregate.linesAdded);
+        summary.setCurrentDayLinesRemoved(summary.getCurrentDayLinesRemoved() + aggregate.linesRemoved);
+
+        // get the current time data and update
+        TimeData td = TimeDataManager.getTodayTimeDataSummary();
+        long fileSeconds = td.getFile_seconds() + 60;
+
+        TimeDataManager.updateTimeDataSummary(editorSeconds, sessionSeconds, fileSeconds);
+    }
+
+    private static long getMinutesSinceLastPayload() {
+        long minutesSinceLastPayload = 1;
+        long lastPayloadEnd = SoftwareCoSessionManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
+        if (lastPayloadEnd > 0) {
+            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            long diffInSec = timesData.now - lastPayloadEnd;
+            long sessionThresholdSeconds = 60 * 15;
+            if (diffInSec > 0 && diffInSec <= sessionThresholdSeconds) {
+                minutesSinceLastPayload = diffInSec / 60;
+            }
+        }
+
+        return minutesSinceLastPayload;
     }
 }
