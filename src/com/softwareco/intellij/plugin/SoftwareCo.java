@@ -123,13 +123,6 @@ public class SoftwareCo implements ApplicationComponent {
         // store the activate event
         EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
 
-        // initialize the wall clock manager
-        WallClockManager.getInstance();
-
-        // initialize the new day checker
-
-
-
         final Runnable hourlyRunner = () -> this.processHourlyJobs();
         asyncManager.scheduleService(
                 hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
@@ -216,6 +209,9 @@ public class SoftwareCo implements ApplicationComponent {
                 System.err.println(e);
             }
         }).start();
+
+        // start the wallclock
+        WallClockManager.getInstance();
     }
 
     protected void sendInstallPayload() {

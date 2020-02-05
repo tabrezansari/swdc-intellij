@@ -1,11 +1,8 @@
 package com.softwareco.intellij.plugin.wallclock;
 
-
 import com.softwareco.intellij.plugin.AsyncManager;
-import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
@@ -23,9 +20,15 @@ public class WallClockManager {
     private static WallClockManager instance = null;
     private AsyncManager asyncManager = AsyncManager.getInstance();
 
+    private static boolean dispatching = false;
+
     public static WallClockManager getInstance() {
         if (instance == null) {
-            instance = new WallClockManager();
+            synchronized (log) {
+                if (instance == null) {
+                    instance = new WallClockManager();
+                }
+            }
         }
         return instance;
     }
@@ -45,7 +48,7 @@ public class WallClockManager {
                 newDayCheckerTimer, "newDayCheckerTimer", 30, DAY_CHECK_TIMER_INTERVAL);
     }
 
-    private static void newDayChecker() {
+    private void newDayChecker() {
         String currentDay = SoftwareCoSessionManager.getItem("currentDay", "");
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         String day = SoftwareCoUtils.getTodayInStandardFormat();
@@ -71,7 +74,7 @@ public class WallClockManager {
         }
     }
 
-    private static void updateWallClockTime() {
+    private void updateWallClockTime() {
         long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
         SoftwareCoSessionManager.setNumericItem("wctime", wctime);
         dispatchStatusViewUpdate();
@@ -80,40 +83,44 @@ public class WallClockManager {
         updateTimeData();
     }
 
-    public static void dispatchStatusViewUpdate() {
-        long wcTimeVal = getWcTimeInSeconds();
+    public void dispatchStatusViewUpdate() {
+        if (!dispatching) {
+            dispatching = true;
+            long wcTimeVal = getWcTimeInSeconds();
 
-        String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock-blue.png";
+            String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock-blue.png";
 
-        long minutes = wcTimeVal / 60;
-        String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);
-        SoftwareCoUtils.updateStatusBar(
-                icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
-        // refresh the code time tree view
-        CodeTimeToolWindow.refresh();
+            long minutes = wcTimeVal / 60;
+            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);
+            SoftwareCoUtils.updateStatusBar(
+                    icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
+            // refresh the code time tree view
+            CodeTimeToolWindow.refresh();
+        }
+        dispatching = false;
     }
 
-    private static void clearWcTime() {
+    private void clearWcTime() {
         setWcTime(0);
     }
 
-    public static long getWcTimeInSeconds() {
+    public long getWcTimeInSeconds() {
         return SoftwareCoSessionManager.getNumericItem("wctime", 0L);
     }
 
-    public static void setWcTime(long seconds) {
+    public void setWcTime(long seconds) {
         SoftwareCoSessionManager.setNumericItem("wctime", seconds);
         updateWallClockTime();
     }
 
-    private static void updateTimeData() {
+    private void updateTimeData() {
         long editorSeconds = getWcTimeInSeconds();
         TimeData td = TimeDataManager.getTodayTimeDataSummary();
 
         TimeDataManager.updateTimeDataSummary(editorSeconds, td.getSession_seconds(), td.getFile_seconds());
     }
 
-    public static void updateBasedOnSessionSeconds(long sessionSeconds) {
+    public void updateBasedOnSessionSeconds(long sessionSeconds) {
         long wcTimeVal = getWcTimeInSeconds();
         if (wcTimeVal < sessionSeconds) {
             // this will update the status bar and tree view metrics

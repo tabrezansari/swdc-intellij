@@ -1,11 +1,15 @@
 package com.softwareco.intellij.plugin.tree;
 
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.models.CommitChangeStats;
 import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.repo.GitUtil;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
@@ -138,30 +142,8 @@ public class TreeItemBuilder {
         return separator;
     }
 
-    private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
-        MetricTreeNode node = buildParentNode(parentName);
-        node.add(todayNode);
-        if (avgNode != null) {
-            node.add(avgNode);
-        }
-        if (globalNode != null) {
-            node.add(globalNode);
-        }
-
-        DefaultTreeModel model = new DefaultTreeModel(node);
-        MetricTree tree = new MetricTree(model);
-
-        tree.setCellRenderer(new MetricTreeRenderer());
-        MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
-        renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
-        renderer.setBorderSelectionColor(new Color(0,0,0,0));
-        tree.setBackground((Color)null);
-        tree.requestFocus();
-        return tree;
-    }
-
     public static MetricTree buildEditorTimeTree() {
-        String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
+        String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
         return buildTreeItem("Editor time", todayNode, null, null);
     }
@@ -213,7 +195,83 @@ public class TreeItemBuilder {
         String avgIconName = sessionSummary.getAverageDailyKeystrokes() < sessionSummary.getCurrentDayKeystrokes() ? "bolt.svg" : "bolt-grey.svg";
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgKeystrokes, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalKeystrokes, "global-grey.svg");
-        return buildTreeItem("Editor Time", todayNode, avgNode, globalNode);
+        return buildTreeItem("Keystrokes", todayNode, avgNode, globalNode);
+    }
+
+    public static MetricTree buildOpenGitChanges() {
+        MetricTreeNode openChangesNode = new MetricTreeNode("Open changes", "open-changes");
+        openChangesNode.setModel(new DefaultTreeModel(openChangesNode));
+
+        ProjectManager pm = ProjectManager.getInstance();
+        if (pm != null && pm.getOpenProjects() != null && pm.getOpenProjects().length > 0) {
+            for (Project p : pm.getOpenProjects()) {
+                CommitChangeStats commitChangeStats = GitUtil.getUncommitedChanges(p.getBasePath());
+                MetricTreeNode node = buildGitChangeNode(p, commitChangeStats);
+                openChangesNode.add(node);
+            }
+        }
+
+        DefaultTreeModel model = new DefaultTreeModel(openChangesNode);
+        MetricTree tree = new MetricTree(model);
+
+        tree.setCellRenderer(new MetricTreeRenderer());
+        MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
+        renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
+        renderer.setBorderSelectionColor(new Color(0,0,0,0));
+        tree.setBackground((Color)null);
+        tree.requestFocus();
+        return tree;
+    }
+
+    public static MetricTree buildCommittedGitChanges() {
+        MetricTreeNode committedTodayNode = new MetricTreeNode("Committed today", "committed-today");
+        committedTodayNode.setModel(new DefaultTreeModel(committedTodayNode));
+
+        ProjectManager pm = ProjectManager.getInstance();
+        if (pm != null && pm.getOpenProjects() != null && pm.getOpenProjects().length > 0) {
+            for (Project p : pm.getOpenProjects()) {
+                CommitChangeStats commitChangeStats = GitUtil.getTodaysCommits(p.getBasePath());
+                MetricTreeNode node = buildGitChangeNode(p, commitChangeStats);
+                committedTodayNode.add(node);
+            }
+        }
+
+        DefaultTreeModel model = new DefaultTreeModel(committedTodayNode);
+        MetricTree tree = new MetricTree(model);
+
+        tree.setCellRenderer(new MetricTreeRenderer());
+        MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
+        renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
+        renderer.setBorderSelectionColor(new Color(0,0,0,0));
+        tree.setBackground((Color)null);
+        tree.requestFocus();
+        return tree;
+    }
+
+    private static MetricTreeNode buildGitChangeNode(Project p, CommitChangeStats commitChangeStats) {
+        MetricTreeNode parentNode = new MetricTreeNode(p.getName(), p.getName());
+        DefaultTreeModel parentNodeModel = new DefaultTreeModel(parentNode);
+        parentNode.setModel(parentNodeModel);
+
+        // add the change stat children (insertions and deletions)
+        String insertions = "insertion(s): " + commitChangeStats.getInsertions();
+        MetricTreeNode insertionsNode = new MetricTreeNode(insertions, "insertions-" + p.getName());
+        parentNode.add(insertionsNode);
+        String deletions = "deletion(s): " + commitChangeStats.getDeletions();
+        MetricTreeNode deletionNode = new MetricTreeNode(deletions, "deletions-" + p.getName());
+        parentNode.add(deletionNode);
+
+        if (commitChangeStats.isCommitted()) {
+            // add the change stat children (commits and files changed)
+            String commits = "commit(s): " + commitChangeStats.getCommitCount();
+            MetricTreeNode commitsNode = new MetricTreeNode(commits, "commits-" + p.getName());
+            parentNode.add(commitsNode);
+            String filesChanged = "Files changed: " + commitChangeStats.getFileCount();
+            MetricTreeNode filesChangedNode = new MetricTreeNode(filesChanged, "filecount-" + p.getName());
+            parentNode.add(filesChangedNode);
+        }
+
+        return parentNode;
     }
 
     private static MetricTreeNode buildParentNode(String name) {
@@ -235,6 +293,28 @@ public class TreeItemBuilder {
         String id = childName.replaceAll("\\s+", "");
         MetricTreeNode childNode = new MetricTreeNode(childName, id);
         parentNode.add(childNode);
+    }
+
+    private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
+        MetricTreeNode node = buildParentNode(parentName);
+        node.add(todayNode);
+        if (avgNode != null) {
+            node.add(avgNode);
+        }
+        if (globalNode != null) {
+            node.add(globalNode);
+        }
+
+        DefaultTreeModel model = new DefaultTreeModel(node);
+        MetricTree tree = new MetricTree(model);
+
+        tree.setCellRenderer(new MetricTreeRenderer());
+        MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
+        renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
+        renderer.setBorderSelectionColor(new Color(0,0,0,0));
+        tree.setBackground((Color)null);
+        tree.requestFocus();
+        return tree;
     }
 
 }

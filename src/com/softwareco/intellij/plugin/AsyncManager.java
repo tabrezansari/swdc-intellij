@@ -20,7 +20,11 @@ public class AsyncManager {
 
     public static AsyncManager getInstance() {
         if (instance == null) {
-            instance = new AsyncManager();
+            synchronized (log) {
+                if (instance == null) {
+                    instance = new AsyncManager();
+                }
+            }
         }
         return instance;
     }

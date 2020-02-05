@@ -19,24 +19,20 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
-import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
-import com.sun.jna.platform.mac.SystemB;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
-import org.apache.commons.net.util.Base64;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.HttpClientBuilder;
 
@@ -63,8 +59,6 @@ public class SoftwareCoUtils {
     public final static String api_endpoint = "https://api.software.com";
     // set the launch url to use
     public final static String launch_url = "https://app.software.com";
-    // set the api endpoint for spotify
-    public final static String spotify_endpoint = "https://api.spotify.com";
 
     public static HttpClient httpClient;
     public static HttpClient pingClient;
@@ -134,24 +128,6 @@ public class SoftwareCoUtils {
 
         pingClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         httpClient = HttpClientBuilder.create().build();
-    }
-
-    public static void resetSpotify() {
-        spotifyUserId = null;
-        playlistTracks.clear();
-        currentTrackId = null;
-        currentTrackName = null;
-        playlistids.clear();
-        currentPlaylistId = null;
-        spotifyDeviceIds.clear();
-        currentDeviceId = null;
-        currentDeviceName = null;
-        ACCESS_TOKEN = null;
-        REFRESH_TOKEN = null;
-        userStatus = null;
-        playerCounter = 0;
-        defaultbtn = "play";
-        spotifyStatus = "Not Connected";
     }
 
     public static boolean isLoggedIn() {
@@ -594,6 +570,18 @@ public class SoftwareCoUtils {
         }
     }
 
+    public static List<String> getCommandResult(List<String> cmdList, String dir) {
+        String[] args = Arrays.copyOf(cmdList.toArray(), cmdList.size(), String[].class);
+        List<String> results = new ArrayList<>();
+        String result = runCommand(args, dir);
+        if (result == null || result.trim().length() == 0) {
+            return results;
+        }
+        String[] contentList = result.split("\n");
+        results =  Arrays.asList(contentList);
+        return results;
+    }
+
     private static long copyLarge(InputStream input, OutputStream output, byte[] buffer) throws IOException {
 
         long count = 0;
@@ -697,7 +685,7 @@ public class SoftwareCoUtils {
 
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
             String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
-            String wcTime = SoftwareCoUtils.humanizeMinutes(WallClockManager.getWcTimeInSeconds() / 60);
+            String wcTime = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
 
             dashboardContent += getDashboardRow("Editor time today", wcTime);
             dashboardContent += getDashboardRow("Hours coded today", currentDayTimeStr);

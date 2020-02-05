@@ -1,6 +1,6 @@
 package com.softwareco.intellij.plugin.sessiondata;
 
-import com.google.gson.JsonArray;
+
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
@@ -9,14 +9,10 @@ import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.SoftwareResponse;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpGet;
 
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 public class SessionDataManager {
 
@@ -74,7 +70,7 @@ public class SessionDataManager {
         // update the wallclock time if it's
         // lagging behind the newly gathered current day seconds
         long session_seconds = summary.getCurrentDayMinutes() * 60;
-        WallClockManager.updateBasedOnSessionSeconds(session_seconds);
+        WallClockManager.getInstance().updateBasedOnSessionSeconds(session_seconds);
 
         return summary;
     }

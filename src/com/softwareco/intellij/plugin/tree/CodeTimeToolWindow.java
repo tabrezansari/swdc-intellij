@@ -61,20 +61,36 @@ public class CodeTimeToolWindow {
         dataPanel.add(separator, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 1, 0));
 
         // add the metric nodes
+        // editor time
         MetricTree editorTime = TreeItemBuilder.buildEditorTimeTree();
         dataPanel.add(editorTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
+        // code time
         MetricTree codeTime = TreeItemBuilder.buildCodeTimeTree();
         dataPanel.add(codeTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
+        // lines added
         MetricTree linesAdded = TreeItemBuilder.buildLinesAddedTree();
         dataPanel.add(linesAdded, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
+        // lines removed
         MetricTree linesRemoved = TreeItemBuilder.buildLinesRemovedTree();
         dataPanel.add(linesRemoved, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
+        // keystrokes
         MetricTree keystrokes = TreeItemBuilder.buildKeystrokesTree();
         dataPanel.add(keystrokes, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        // add a separator
+        separator = TreeItemBuilder.getSeparator();
+        // add a separator
+        dataPanel.add(separator, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 1, 0));
+
+        // add the commit info
+        MetricTree openChangesTree = TreeItemBuilder.buildOpenGitChanges();
+        MetricTree committedChangesTree = TreeItemBuilder.buildCommittedGitChanges();
+        dataPanel.add(openChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+        dataPanel.add(committedChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
         dataPanel.updateUI();
         dataPanel.setVisible(true);

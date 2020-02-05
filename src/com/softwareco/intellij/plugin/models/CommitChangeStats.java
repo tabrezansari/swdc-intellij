@@ -5,6 +5,15 @@ public class CommitChangeStats {
     private int deletions = 0;
     private int fileCount = 0;
     private int commitCount = 0;
+    private boolean committed = false;
+
+    public CommitChangeStats(boolean committed) {
+        this.committed = committed;
+    }
+
+    public boolean isCommitted() {
+        return committed;
+    }
 
     public int getInsertions() {
         return insertions;
