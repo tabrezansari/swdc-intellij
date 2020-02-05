@@ -17,6 +17,7 @@ public class MetricTreeRenderer extends DefaultTreeCellRenderer {
             boolean leaf,
             int row,
             boolean hasFocus) {
+
         tree.requestFocusInWindow();
 
         super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, true);

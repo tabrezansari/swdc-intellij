@@ -223,8 +223,20 @@ public class TreeItemBuilder {
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
 
-        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
-        tree.addTreeExpansionListener(listenerImpl);
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+                String id = mtNode.getId();
+
+                boolean currentState = CodeTimeToolWindow.getExpandState(id).booleanValue();
+                CodeTimeToolWindow.updateExpandState(id, !currentState);
+            }
+        });
+
         tree.setBackground((Color)null);
         tree.requestFocus();
         tree.setExpandState(expandState.booleanValue());
@@ -255,8 +267,20 @@ public class TreeItemBuilder {
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
 
-        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
-        tree.addTreeExpansionListener(listenerImpl);
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+                String id = mtNode.getId();
+
+                boolean currentState = CodeTimeToolWindow.getExpandState(id).booleanValue();
+                CodeTimeToolWindow.updateExpandState(id, !currentState);
+            }
+        });
+
         tree.setBackground((Color)null);
         tree.requestFocus();
         tree.setExpandState(expandState.booleanValue());
@@ -331,12 +355,27 @@ public class TreeItemBuilder {
         DefaultTreeModel model = new DefaultTreeModel(node);
         MetricTree tree = new MetricTree(model);
 
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+                String id = mtNode.getId();
+
+                boolean currentState = CodeTimeToolWindow.getExpandState(id).booleanValue();
+                CodeTimeToolWindow.updateExpandState(id, !currentState);
+            }
+
+        });
+
         tree.setCellRenderer(new MetricTreeRenderer());
+
         MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
-        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
-        tree.addTreeExpansionListener(listenerImpl);
+
         tree.setBackground((Color)null);
         tree.requestFocus();
         tree.setExpandState(expandState.booleanValue());

@@ -53,7 +53,7 @@ public class CodeTimeToolWindow {
     public static Boolean getExpandState(String id) {
         Boolean expandState = expandStateMap.get(id);
         if (expandState == null) {
-            return new Boolean(false);
+            return new Boolean(true);
         }
         return expandState;
     }
