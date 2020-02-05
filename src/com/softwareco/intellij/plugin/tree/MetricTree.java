@@ -30,10 +30,6 @@ public class MetricTree extends JTree {
         return expandState;
     }
 
-    public void setExpandState(boolean expandState) {
-        this.expandState = !expandState;
-    }
-
     @Override
     public TreeCellRenderer getCellRenderer() {
         return super.getCellRenderer();

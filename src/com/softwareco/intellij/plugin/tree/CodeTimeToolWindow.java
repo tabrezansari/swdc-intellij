@@ -50,12 +50,12 @@ public class CodeTimeToolWindow {
         expandStateMap.put(id, expandState);
     }
 
-    public static Boolean getExpandState(String id) {
+    public static boolean getExpandState(String id) {
         Boolean expandState = expandStateMap.get(id);
         if (expandState == null) {
-            return new Boolean(true);
+            return true;
         }
-        return expandState;
+        return expandState.booleanValue();
     }
 
     /**
