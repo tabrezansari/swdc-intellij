@@ -14,6 +14,8 @@ import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import javax.swing.*;
+import javax.swing.event.TreeExpansionEvent;
+import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.*;
 import java.awt.event.*;
@@ -199,7 +201,9 @@ public class TreeItemBuilder {
     }
 
     public static MetricTree buildOpenGitChanges() {
-        MetricTreeNode openChangesNode = new MetricTreeNode("Open changes", "open-changes");
+        String id = "open-changes";
+        Boolean expandState = CodeTimeToolWindow.getExpandState(id);
+        MetricTreeNode openChangesNode = new MetricTreeNode("Open changes", id);
         openChangesNode.setModel(new DefaultTreeModel(openChangesNode));
 
         ProjectManager pm = ProjectManager.getInstance();
@@ -218,13 +222,20 @@ public class TreeItemBuilder {
         MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
+
+        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
+        tree.addTreeExpansionListener(listenerImpl);
         tree.setBackground((Color)null);
         tree.requestFocus();
+        tree.setExpandState(expandState.booleanValue());
         return tree;
     }
 
     public static MetricTree buildCommittedGitChanges() {
-        MetricTreeNode committedTodayNode = new MetricTreeNode("Committed today", "committed-today");
+        String id = "committed-today";
+        Boolean expandState = CodeTimeToolWindow.getExpandState(id);
+
+        MetricTreeNode committedTodayNode = new MetricTreeNode("Committed today", id);
         committedTodayNode.setModel(new DefaultTreeModel(committedTodayNode));
 
         ProjectManager pm = ProjectManager.getInstance();
@@ -243,8 +254,12 @@ public class TreeItemBuilder {
         MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
+
+        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
+        tree.addTreeExpansionListener(listenerImpl);
         tree.setBackground((Color)null);
         tree.requestFocus();
+        tree.setExpandState(expandState.booleanValue());
         return tree;
     }
 
@@ -300,6 +315,10 @@ public class TreeItemBuilder {
     }
 
     private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
+
+        String id = parentName.replaceAll("\\s+", "");
+        Boolean expandState = CodeTimeToolWindow.getExpandState(id);
+
         MetricTreeNode node = buildParentNode(parentName);
         node.add(todayNode);
         if (avgNode != null) {
@@ -316,8 +335,11 @@ public class TreeItemBuilder {
         MetricTreeRenderer renderer = (MetricTreeRenderer) tree.getCellRenderer();
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
+        TreeExpandListenerImpl listenerImpl = new TreeExpandListenerImpl(id);
+        tree.addTreeExpansionListener(listenerImpl);
         tree.setBackground((Color)null);
         tree.requestFocus();
+        tree.setExpandState(expandState.booleanValue());
         return tree;
     }
 

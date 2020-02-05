@@ -5,9 +5,12 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Logger;
 
 public class CodeTimeToolWindow {
@@ -18,17 +21,9 @@ public class CodeTimeToolWindow {
     private JScrollPane scrollPane;
     private JPanel dataPanel;
 
-    private static CodeTimeToolWindow win;
+    private static Map<String, Boolean> expandStateMap = new HashMap<>();
 
-    public static void refresh() {
-        if (win != null) {
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    win.rebuildTreeView();
-                }
-            });
-        }
-    }
+    private static CodeTimeToolWindow win;
 
     public CodeTimeToolWindow(ToolWindow toolWindow) {
         codetimeWindowContent.setFocusable(true);
@@ -41,11 +36,36 @@ public class CodeTimeToolWindow {
         win = this;
     }
 
+    public static void refresh() {
+        if (win != null) {
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                public void run() {
+                    win.rebuildTreeView();
+                }
+            });
+        }
+    }
+
+    public static void updateExpandState(String id, Boolean expandState) {
+        expandStateMap.put(id, expandState);
+    }
+
+    public static Boolean getExpandState(String id) {
+        Boolean expandState = expandStateMap.get(id);
+        if (expandState == null) {
+            return new Boolean(false);
+        }
+        return expandState;
+    }
+
     /**
      * Build the Tree
      */
     private synchronized void rebuildTreeView() {
         TreeItemBuilder.initializeSessionSummary();
+
+        // get vspace component to add at the end
+        Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);
 
         dataPanel.removeAll();
         dataPanel.setBackground((Color) null);
@@ -91,6 +111,9 @@ public class CodeTimeToolWindow {
         MetricTree committedChangesTree = TreeItemBuilder.buildCommittedGitChanges();
         dataPanel.add(openChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
         dataPanel.add(committedChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+
+        // Add VSpacer at last
+        dataPanel.add(component, gridConstraints(dataPanel.getComponentCount(), 6, 1, 0, 2, 0));
 
         dataPanel.updateUI();
         dataPanel.setVisible(true);
