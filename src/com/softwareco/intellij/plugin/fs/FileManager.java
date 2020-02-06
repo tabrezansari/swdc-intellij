@@ -4,16 +4,21 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
+import com.intellij.openapi.preview.PreviewManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.SoftwareResponse;
+import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpPost;
 
 import javax.swing.*;
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,6 +28,23 @@ public class FileManager {
 
     public static final Logger log = Logger.getLogger("FileManager");
 
+    private static FileManager instance = null;
+
+
+    public static FileManager getInstance() {
+        if (instance == null) {
+            synchronized (log) {
+                if (instance == null) {
+                    instance = new FileManager();
+                }
+            }
+        }
+        return instance;
+    }
+
+    private FileManager() {
+        //
+    }
 
     public static void writeData(String file, Object o) {
         if (o == null) {
@@ -220,19 +242,24 @@ public class FileManager {
     }
 
     private static String getLocalReadmeFile() {
-        // TODO: get README.md
-        return "README.md";
+        return "codetime.readme.md";
     }
 
-    public static void openReadmeFile() {
+    public void openReadmeFile() {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
             return;
         }
-        File f = new File(getLocalReadmeFile());
+        // Getting Resource as file object
+        URL url = getClass().getResource("/com/softwareco/intellij/plugin/assets/" + getLocalReadmeFile());
+        File f = new File(url.getFile());
 
         VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
-        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
-        FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+        // TODO: figure out how to show it with only the preview window
+        // OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
+        FileEditorManagerEx fileEdMgr = FileEditorManagerEx.getInstanceEx(p);
+        fileEdMgr.updateFilePresentation(vFile);
+        fileEdMgr.openFile(vFile, true);
+        // FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
     }
 }

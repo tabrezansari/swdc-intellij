@@ -91,7 +91,7 @@ public class WallClockManager {
             dispatching = true;
             long wcTimeVal = getWcTimeInSeconds();
 
-            String icon = SoftwareCoUtils.showingStatusText() ? "software-paw.png" : "clock-blue.png";
+            String icon = SoftwareCoUtils.showingStatusText() ? "paw.png" : "clock.png";
 
             long minutes = wcTimeVal / 60;
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);

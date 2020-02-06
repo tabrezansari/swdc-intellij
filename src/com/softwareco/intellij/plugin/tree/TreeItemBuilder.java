@@ -63,7 +63,7 @@ public class TreeItemBuilder {
                 } else if (lbl.getName().equals("submitfeedback")) {
                     SoftwareCoUtils.submitFeedback();
                 } else if (lbl.getName().equals("learnmore")) {
-                    FileManager.openReadmeFile();
+                    FileManager.getInstance().openReadmeFile();
                 } else if (lbl.getName().equals("togglestatus")) {
                     SoftwareCoUtils.toggleStatusBar();
                 }
@@ -92,7 +92,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildWebDashboardLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw.svg");
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw.png");
         label.setIcon(icon);
         label.setText("See advanced metrics");
         label.setName("webdashboard");
