@@ -8,25 +8,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.wm.StatusBar;
-import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -302,12 +295,11 @@ public class SoftwareCoSessionManager {
     }
 
     private Project getCurrentProject() {
-        Project project = null;
-        Editor[] editors = EditorFactory.getInstance().getAllEditors();
-        if (editors != null && editors.length > 0) {
-            project = editors[0].getProject();
+        Project[] projects = ProjectManager.getInstance().getOpenProjects();
+        if (projects != null && projects.length > 0) {
+            return projects[0];
         }
-        return project;
+        return null;
     }
 
     public void showLoginPrompt() {
@@ -324,7 +316,7 @@ public class SoftwareCoSessionManager {
                     int options = Messages.showDialog(
                             project,
                             msg,
-                            "Software", new String[]{"Log in", "Not now"},
+                            "Software", new String[]{"Complete setup"},
                             0, Messages.getInformationIcon());
                     if (options == 0) {
                         launchLogin();

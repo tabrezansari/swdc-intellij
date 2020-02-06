@@ -60,7 +60,7 @@ public class WallClockManager {
             // send the time data
             TimeDataManager.sendOfflineTimeData();
 
-            // clear the wc time and the session summary
+            // clear the wc time and the session summary and the file change info summary
             clearWcTime();
             SessionDataManager.clearSessionSummaryData();
             FileAggregateDataManager.clearFileChangeInfoSummaryData();

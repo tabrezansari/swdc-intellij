@@ -10,11 +10,11 @@ import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.event.EventManager;
@@ -226,25 +226,17 @@ public class SoftwareCo implements ApplicationComponent {
     }
 
     protected String getRootPath() {
-        Editor[] editors = EditorFactory.getInstance().getAllEditors();
-        if (editors != null && editors.length > 0) {
-            for (Editor editor : editors) {
-                Project project = editor.getProject();
-                if (project != null && project.getBasePath() != null) {
-                    return project.getBasePath();
-                }
-            }
+        Project[] projects = ProjectManager.getInstance().getOpenProjects();
+        if (projects != null && projects.length > 0) {
+            return projects[0].getBasePath();
         }
         return null;
     }
 
     public static Project getActiveProject() {
-        Editor[] editors = EditorFactory.getInstance().getAllEditors();
-        if (editors != null && editors.length > 0) {
-            for (Editor editor : editors) {
-                Project project = editor.getProject();
-                return project;
-            }
+        Project[] projects = ProjectManager.getInstance().getOpenProjects();
+        if (projects != null && projects.length > 0) {
+            return projects[0];
         }
         return null;
     }

@@ -6,10 +6,14 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.codehaus.plexus.util.Expand;
 
 import javax.swing.*;
+import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -21,7 +25,7 @@ public class CodeTimeToolWindow {
     private JScrollPane scrollPane;
     private JPanel dataPanel;
 
-    private static Map<String, Boolean> expandStateMap = new HashMap<>();
+    private static Map<String, List<ExpandState>> expandStateMap = new HashMap<>();
 
     private static CodeTimeToolWindow win;
 
@@ -36,6 +40,16 @@ public class CodeTimeToolWindow {
         win = this;
     }
 
+    public static class ExpandState {
+        public boolean expand = false;
+        public TreePath path = null;
+
+        public ExpandState(boolean expand, TreePath path) {
+            this.expand = expand;
+            this.path = path;
+        }
+    }
+
     public static void refresh() {
         if (win != null) {
             ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -46,16 +60,29 @@ public class CodeTimeToolWindow {
         }
     }
 
-    public static void updateExpandState(String id, Boolean expandState) {
-        expandStateMap.put(id, expandState);
+    public static void updateExpandState(String id, ExpandState expandState) {
+        List<ExpandState> expandStates = expandStateMap.get(id);
+        if (expandStates == null) {
+            expandStates = new ArrayList<>();
+            expandStates.add(expandState);
+        } else {
+            boolean foundIt = false;
+            for (ExpandState existingState : expandStates) {
+                if (existingState.path == expandState.path) {
+                    existingState.expand = expandState.expand;
+                    foundIt = true;
+                    break;
+                }
+            }
+            if (!foundIt) {
+                expandStates.add(expandState);
+            }
+        }
+        expandStateMap.put(id, expandStates);
     }
 
-    public static boolean getExpandState(String id) {
-        Boolean expandState = expandStateMap.get(id);
-        if (expandState == null) {
-            return true;
-        }
-        return expandState.booleanValue();
+    public static List<ExpandState> getExpandStates(String id) {
+        return expandStateMap.get(id);
     }
 
     /**

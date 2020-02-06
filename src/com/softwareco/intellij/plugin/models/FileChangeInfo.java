@@ -38,6 +38,8 @@ public class FileChangeInfo {
         this.delete += fileInfo.delete;
         this.linesAdded += fileInfo.linesAdded;
         this.linesRemoved += fileInfo.linesRemoved;
+        this.duration_seconds += fileInfo.duration_seconds;
+        this.update_count += 1;
 
         // just set
         this.lines = fileInfo.lines;

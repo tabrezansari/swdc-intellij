@@ -96,6 +96,8 @@ public class KeystrokeCount {
         public long end = 0;
         public long local_start = 0;
         public long local_end = 0;
+        public long duration_seconds = 0;
+        public String fsPath = "";
     }
 
     public FileInfo getSourceByFileName(String fileName) {
@@ -196,7 +198,8 @@ public class KeystrokeCount {
             // end the file end times
             this.endUnendedFiles();
 
-            updateAggregates();
+            // update the file aggregate info
+            this.updateAggregates();
 
             final String payload = SoftwareCo.gson.toJson(this);
 
@@ -217,6 +220,8 @@ public class KeystrokeCount {
         }
         for (String key : this.source.keySet()) {
             FileInfo fileInfo = this.source.get(key);
+            fileInfo.duration_seconds = fileInfo.end - fileInfo.start;
+            fileInfo.fsPath = key;
 
             aggregate.aggregate(fileInfo);
 
@@ -225,7 +230,6 @@ public class KeystrokeCount {
                 existingFileInfo = new FileChangeInfo();
                 fileChangeInfoMap.put(key, existingFileInfo);
             }
-            existingFileInfo.update_count += 1;
             existingFileInfo.aggregate(fileInfo);
             existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
         }

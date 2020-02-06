@@ -1,6 +1,7 @@
 package com.softwareco.intellij.plugin.sessiondata;
 
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
@@ -40,6 +41,15 @@ public class SessionDataManager {
             clearSessionSummaryData();
             jsonObj = FileManager.getFileContentAsJson(getSessionDataSummaryFile());
         }
+        JsonElement val = jsonObj.get("lastUpdatedToday");
+        if (val != null) {
+            // make sure it's a boolean and not a number
+            if (!val.getAsJsonPrimitive().isBoolean()) {
+                // set it to boolean
+                boolean newVal = val.getAsInt() == 0 ? false : true;
+                jsonObj.addProperty("lastUpdatedToday", newVal);
+            }
+        }
         Type type = new TypeToken<SessionSummary>() {}.getType();
         SessionSummary summary = SoftwareCo.gson.fromJson(jsonObj, type);
         return summary;
@@ -56,6 +66,15 @@ public class SessionDataManager {
                     sessionsApi, HttpGet.METHOD_NAME, null);
             if (resp.isOk()) {
                 JsonObject jsonObj = resp.getJsonObj();
+                JsonElement val = jsonObj.get("lastUpdatedToday");
+                if (val != null) {
+                    // make sure it's a boolean and not a number
+                    if (!val.getAsJsonPrimitive().isBoolean()) {
+                        // set it to boolean
+                        boolean newVal = val.getAsInt() == 0 ? false : true;
+                        jsonObj.addProperty("lastUpdatedToday", newVal);
+                    }
+                }
                 Type type = new TypeToken<SessionSummary>() {}.getType();
                 summary = SoftwareCo.gson.fromJson(jsonObj, type);
 

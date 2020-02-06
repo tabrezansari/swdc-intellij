@@ -14,12 +14,12 @@ import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import javax.swing.*;
-import javax.swing.event.TreeExpansionEvent;
-import javax.swing.event.TreeExpansionListener;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Enumeration;
+import java.util.List;
 
 public class TreeItemBuilder {
 
@@ -80,8 +80,9 @@ public class TreeItemBuilder {
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
-                int row = jbList.locationToIndex(e.getPoint());
-                jbList.setSelectedIndex(row);
+                JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                int row = lst.locationToIndex(e.getPoint());
+                lst.setSelectedIndex(row);
             }
         });
         jbList.updateUI();
@@ -203,7 +204,7 @@ public class TreeItemBuilder {
 
     public static MetricTree buildOpenGitChanges() {
         String id = "open-changes";
-        boolean expandState = CodeTimeToolWindow.getExpandState(id);
+        List<CodeTimeToolWindow.ExpandState> expandStates = CodeTimeToolWindow.getExpandStates(id);
         MetricTreeNode openChangesNode = new MetricTreeNode("Open changes", id);
         openChangesNode.setModel(new DefaultTreeModel(openChangesNode));
 
@@ -232,20 +233,39 @@ public class TreeItemBuilder {
                 MetricTree mTree = (MetricTree)e.getSource();
                 DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
                 MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+                TreePath treePath = new TreePath(dfModel.getPathToRoot(mtNode));
                 String id = mtNode.getId();
-                CodeTimeToolWindow.updateExpandState(id, mTree.expandState);
+                Enumeration<TreePath> expandedDescendants = mTree.getExpandedDescendants(treePath);
+                if (expandedDescendants != null) {
+                    while (expandedDescendants.hasMoreElements()) {
+                        TreePath p = expandedDescendants.nextElement();
+
+                        CodeTimeToolWindow.ExpandState expandState =
+                                new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
+                        CodeTimeToolWindow.updateExpandState(id, expandState);
+                    }
+                }
             }
         });
 
         tree.setBackground((Color)null);
         tree.requestFocus();
-        tree.setExpandedState(new TreePath(model.getPathToRoot(openChangesNode)), expandState);
+        if (expandStates != null && expandStates.size() > 0) {
+            for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
+                if (expandState.expand) {
+                    int row = expandState.path.getPathCount() - 1;
+                    tree.expandRow(expandState.path.getPathCount() - 1);
+                }
+            }
+        } else {
+            tree.setExpandedState(new TreePath(model.getPathToRoot(openChangesNode)), false);
+        }
         return tree;
     }
 
     public static MetricTree buildCommittedGitChanges() {
         String id = "committed-today";
-        boolean expandState = CodeTimeToolWindow.getExpandState(id);
+        List<CodeTimeToolWindow.ExpandState> expandStates = CodeTimeToolWindow.getExpandStates(id);
 
         MetricTreeNode committedTodayNode = new MetricTreeNode("Committed today", id);
         committedTodayNode.setModel(new DefaultTreeModel(committedTodayNode));
@@ -255,6 +275,7 @@ public class TreeItemBuilder {
             for (Project p : pm.getOpenProjects()) {
                 CommitChangeStats commitChangeStats = GitUtil.getTodaysCommits(p.getBasePath());
                 MetricTreeNode node = buildGitChangeNode(p, commitChangeStats);
+
                 committedTodayNode.add(node);
             }
         }
@@ -272,16 +293,38 @@ public class TreeItemBuilder {
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
                 MetricTree mTree = (MetricTree)e.getSource();
+
                 DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
                 MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+
+                TreePath treePath = new TreePath(dfModel.getPathToRoot(mtNode));
                 String id = mtNode.getId();
-                CodeTimeToolWindow.updateExpandState(id, mTree.expandState);
+
+                Enumeration<TreePath> expandedDescendants = mTree.getExpandedDescendants(treePath);
+                if (expandedDescendants != null) {
+                    while (expandedDescendants.hasMoreElements()) {
+                        TreePath p = expandedDescendants.nextElement();
+
+                        CodeTimeToolWindow.ExpandState expandState =
+                                new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
+                        CodeTimeToolWindow.updateExpandState(id, expandState);
+                    }
+                }
             }
         });
 
         tree.setBackground((Color)null);
         tree.requestFocus();
-        tree.setExpandedState(new TreePath(model.getPathToRoot(committedTodayNode)), expandState);
+        if (expandStates != null && expandStates.size() > 0) {
+            for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
+                if (expandState.expand) {
+                    int row = expandState.path.getPathCount() - 1;
+                    tree.expandRow(expandState.path.getPathCount() - 1);
+                }
+            }
+        } else {
+            tree.setExpandedState(new TreePath(model.getPathToRoot(committedTodayNode)), false);
+        }
         return tree;
     }
 
@@ -295,6 +338,7 @@ public class TreeItemBuilder {
         MetricTreeNode insertionsNode = new MetricTreeNode(insertions, "insertions-" + p.getName());
         insertionsNode.setIconName("insertion.svg");
         parentNode.add(insertionsNode);
+
         String deletions = "deletion(s): " + commitChangeStats.getDeletions();
         MetricTreeNode deletionNode = new MetricTreeNode(deletions, "deletions-" + p.getName());
         deletionNode.setIconName("deletion.svg");
@@ -306,6 +350,7 @@ public class TreeItemBuilder {
             MetricTreeNode commitsNode = new MetricTreeNode(commits, "commits-" + p.getName());
             commitsNode.setIconName("commit.svg");
             parentNode.add(commitsNode);
+
             String filesChanged = "Files changed: " + commitChangeStats.getFileCount();
             MetricTreeNode filesChangedNode = new MetricTreeNode(filesChanged, "filecount-" + p.getName());
             filesChangedNode.setIconName("files.svg");
@@ -339,7 +384,7 @@ public class TreeItemBuilder {
     private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
 
         String id = parentName.replaceAll("\\s+", "");
-        boolean expandState = CodeTimeToolWindow.getExpandState(id);
+        List<CodeTimeToolWindow.ExpandState> expandStates = CodeTimeToolWindow.getExpandStates(id);
 
         MetricTreeNode node = buildParentNode(parentName);
         node.add(todayNode);
@@ -361,7 +406,10 @@ public class TreeItemBuilder {
                 DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
                 MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
                 String id = mtNode.getId();
-                CodeTimeToolWindow.updateExpandState(id, mTree.expandState);
+                // update the expand state map
+                CodeTimeToolWindow.ExpandState expandState =
+                        new CodeTimeToolWindow.ExpandState(mTree.expandState, new TreePath(dfModel.getPathToRoot(mtNode)));
+                CodeTimeToolWindow.updateExpandState(id, expandState);
             }
 
         });
@@ -374,7 +422,16 @@ public class TreeItemBuilder {
 
         tree.setBackground((Color)null);
         tree.requestFocus();
-        tree.setExpandedState(new TreePath(model.getPathToRoot(node)), expandState);
+        if (expandStates != null && expandStates.size() > 0) {
+            for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
+                if (expandState.expand) {
+                    int row = expandState.path.getPathCount() - 1;
+                    tree.expandRow(expandState.path.getPathCount() - 1);
+                }
+            }
+        } else {
+            tree.setExpandedState(new TreePath(model.getPathToRoot(node)), false);
+        }
         return tree;
     }
 
