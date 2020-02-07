@@ -251,7 +251,6 @@ public class TreeItemBuilder {
         });
 
         tree.setBackground((Color)null);
-        tree.requestFocus();
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {
@@ -317,7 +316,6 @@ public class TreeItemBuilder {
         });
 
         tree.setBackground((Color)null);
-        tree.requestFocus();
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {
@@ -425,7 +423,6 @@ public class TreeItemBuilder {
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
 
         tree.setBackground((Color)null);
-        tree.requestFocus();
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {

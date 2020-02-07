@@ -18,8 +18,6 @@ public class MetricTreeRenderer extends DefaultTreeCellRenderer {
             int row,
             boolean hasFocus) {
 
-        tree.requestFocusInWindow();
-
         super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, true);
 
         Icon icon = null;
@@ -34,7 +32,7 @@ public class MetricTreeRenderer extends DefaultTreeCellRenderer {
             setIcon(icon);
         }
 
-        tree.requestFocusInWindow();
+        // tree.requestFocusInWindow();
 
         return this;
     }
