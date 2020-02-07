@@ -123,18 +123,6 @@ public class SoftwareCo implements ApplicationComponent {
         // store the activate event
         EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
 
-        final Runnable hourlyRunner = () -> this.processHourlyJobs();
-        asyncManager.scheduleService(
-                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
-
-        final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
-        asyncManager.scheduleService(
-                userStatusRunner, "userStatusRunner", 60, 60 * 3);
-
-        // every 30 minutes
-        final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
-
         eventMgr.setAppIsReady(true);
 
         initializeUserInfoWhenProjectsReady(initializedUser);
@@ -203,12 +191,27 @@ public class SoftwareCo implements ApplicationComponent {
 
         new Thread(() -> {
             try {
+                // the initial summary fetch should force an api fetch
                 SessionDataManager.fetchSessionSummary(true);
             }
             catch (Exception e){
                 System.err.println(e);
             }
         }).start();
+
+        // every hour
+        final Runnable hourlyRunner = () -> this.processHourlyJobs();
+        asyncManager.scheduleService(
+                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
+
+        // every 35 minutes
+        final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
+        asyncManager.scheduleService(
+                userStatusRunner, "userStatusRunner", 60, 60 * 35);
+
+        // every 30 minutes
+        final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
+        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
 
         // start the wallclock
         WallClockManager.getInstance();
