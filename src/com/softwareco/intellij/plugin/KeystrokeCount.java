@@ -8,6 +8,7 @@ import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -239,6 +240,9 @@ public class KeystrokeCount {
 
         // update the file info map
         FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
+
+        // refresh the code time tree view
+        CodeTimeToolWindow.refresh();
     }
 
     public int getKeystrokes() {

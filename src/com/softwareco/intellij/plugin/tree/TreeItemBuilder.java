@@ -27,6 +27,7 @@ public class TreeItemBuilder {
 
     public static void initializeSessionSummary() {
         sessionSummary = SessionDataManager.getSessionSummaryData();
+        System.out.println("fetched session summary");
     }
 
     public static JBList<JLabel> buildCodeTimeLabels() {

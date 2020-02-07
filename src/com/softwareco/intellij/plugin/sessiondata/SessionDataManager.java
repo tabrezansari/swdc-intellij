@@ -116,6 +116,9 @@ public class SessionDataManager {
         TimeData td = TimeDataManager.getTodayTimeDataSummary();
         long fileSeconds = td.getFile_seconds() + 60;
 
+        // save the file
+        FileManager.writeData(getSessionDataSummaryFile(), summary);
+
         TimeDataManager.updateTimeDataSummary(editorSeconds, sessionSeconds, fileSeconds);
     }
 
