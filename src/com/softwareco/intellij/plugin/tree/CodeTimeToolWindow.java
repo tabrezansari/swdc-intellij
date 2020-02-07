@@ -28,9 +28,12 @@ public class CodeTimeToolWindow {
     private static Map<String, List<ExpandState>> expandStateMap = new HashMap<>();
 
     private static CodeTimeToolWindow win;
+    private static boolean refreshing = false;
 
     public CodeTimeToolWindow(ToolWindow toolWindow) {
         codetimeWindowContent.setFocusable(true);
+
+        System.out.println("initializing the tool window");
 
         this.rebuildTreeView();
 
@@ -51,6 +54,11 @@ public class CodeTimeToolWindow {
     }
 
     public static void refresh() {
+        if (refreshing) {
+            return;
+        }
+        refreshing = true;
+        System.out.println("refreshing the tree");
         if (win != null) {
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
@@ -58,10 +66,12 @@ public class CodeTimeToolWindow {
                 }
             });
         }
+        refreshing = false;
     }
 
     public static void updateExpandState(String id, ExpandState expandState) {
         List<ExpandState> expandStates = expandStateMap.get(id);
+        System.out.println("updating the expand state");
         if (expandStates == null) {
             expandStates = new ArrayList<>();
             expandStates.add(expandState);
@@ -91,12 +101,13 @@ public class CodeTimeToolWindow {
     private synchronized void rebuildTreeView() {
         TreeItemBuilder.initializeSessionSummary();
 
+        System.out.println("rebuilding the tree view");
+
         // get vspace component to add at the end
         Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);
 
         dataPanel.removeAll();
         dataPanel.setBackground((Color) null);
-        dataPanel.setFocusable(true);
 
         JBList<JLabel> labels = TreeItemBuilder.buildCodeTimeLabels();
 
@@ -145,11 +156,9 @@ public class CodeTimeToolWindow {
         dataPanel.updateUI();
         dataPanel.setVisible(true);
 
-        scrollPane.setFocusable(true);
         scrollPane.setVisible(true);
 
         codetimeWindowContent.updateUI();
-        codetimeWindowContent.setFocusable(true);
         codetimeWindowContent.setVisible(true);
     }
 

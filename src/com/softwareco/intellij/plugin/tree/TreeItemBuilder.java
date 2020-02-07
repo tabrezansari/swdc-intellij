@@ -72,6 +72,7 @@ public class TreeItemBuilder {
             @Override
             public void mouseExited(MouseEvent e) {
                 super.mouseExited(e);
+                System.out.println("mouse exited");
                 JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                 lst.clearSelection();
             }
@@ -80,6 +81,7 @@ public class TreeItemBuilder {
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
+                System.out.println("mouse motion listened");
                 JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                 int row = lst.locationToIndex(e.getPoint());
                 lst.setSelectedIndex(row);
@@ -292,6 +294,7 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                System.out.println("mouse clicked");
                 MetricTree mTree = (MetricTree)e.getSource();
 
                 DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
@@ -402,6 +405,7 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
+                System.out.println("mouse clicked");
                 MetricTree mTree = (MetricTree)e.getSource();
                 DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
                 MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
