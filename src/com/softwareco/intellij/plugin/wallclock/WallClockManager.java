@@ -1,5 +1,6 @@
 package com.softwareco.intellij.plugin.wallclock;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
@@ -78,12 +79,15 @@ public class WallClockManager {
     }
 
     private void updateWallClockTime() {
-        long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
-        SoftwareCoSessionManager.setNumericItem("wctime", wctime);
-        dispatchStatusViewUpdate();
+        boolean isActive = ApplicationManager.getApplication().isActive();
+        if (isActive) {
+            long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
+            SoftwareCoSessionManager.setNumericItem("wctime", wctime);
+            dispatchStatusViewUpdate();
 
-        // update the json time data file
-        updateTimeData();
+            // update the json time data file
+            updateTimeData();
+        }
     }
 
     public void dispatchStatusViewUpdate() {
