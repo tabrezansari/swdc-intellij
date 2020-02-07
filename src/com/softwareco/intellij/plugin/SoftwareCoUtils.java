@@ -134,10 +134,6 @@ public class SoftwareCoUtils {
         return loggedInCacheState;
     }
 
-    public static boolean isSpotifyConncted() { return spotifyCacheState; }
-
-    public static boolean isSlackConncted() { return slackCacheState; }
-
     public static class UserStatus {
         public boolean loggedIn;
     }
@@ -846,18 +842,6 @@ public class SoftwareCoUtils {
                 if (validateEmail(email)) {
                     SoftwareCoSessionManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
                     SoftwareCoSessionManager.setItem("name", email);
-                    for(JsonElement array : userObj.get("auths").getAsJsonArray()) {
-                        if(array.getAsJsonObject().get("type").getAsString().equals("spotify")) {
-                            if(ACCESS_TOKEN == null && REFRESH_TOKEN == null) {
-                                ACCESS_TOKEN = array.getAsJsonObject().get("access_token").getAsString();
-                                REFRESH_TOKEN = array.getAsJsonObject().get("refresh_token").getAsString();
-                                SoftwareCoSessionManager.setItem("spotify_access_token", ACCESS_TOKEN);
-                                SoftwareCoSessionManager.setItem("spotify_refresh_token", REFRESH_TOKEN);
-                            }
-                            jwt = userObj.get("plugin_token").getAsString();
-                            spotifyCacheState = true;
-                        }
-                    }
                     return true;
                 }
             }
@@ -891,26 +875,20 @@ public class SoftwareCoUtils {
 
     public static synchronized UserStatus getUserStatus() {
         UserStatus currentUserStatus = new UserStatus();
-        if (loggedInCacheState && pluginName.equals("Code Time")) {
+
+        if (loggedInCacheState) {
             currentUserStatus.loggedIn = loggedInCacheState;
             return currentUserStatus;
         }
 
+        // check if they're logged on
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
 
         boolean loggedIn = isLoggedOn(serverIsOnline);
 
         currentUserStatus.loggedIn = loggedIn;
 
-        if (loggedInCacheState != loggedIn && pluginName.equals("Code Time")) {
-            sendHeartbeat("STATE_CHANGE:LOGGED_IN:" + loggedIn);
-            // refetch kpm
-            final Runnable kpmStatusRunner = () -> SessionDataManager.fetchSessionSummary(true);
-            kpmStatusRunner.run();
-        }
-
         loggedInCacheState = loggedIn;
-
         return currentUserStatus;
     }
 
