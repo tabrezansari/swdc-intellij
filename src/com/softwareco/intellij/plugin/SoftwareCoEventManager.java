@@ -26,7 +26,6 @@ public class SoftwareCoEventManager {
 
     private KeystrokeManager keystrokeMgr = KeystrokeManager.getInstance();
     private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
-    private boolean appIsReady = false;
     AtomicBoolean flag = new AtomicBoolean(true);
 
     public static SoftwareCoEventManager getInstance() {
@@ -34,10 +33,6 @@ public class SoftwareCoEventManager {
             instance = new SoftwareCoEventManager();
         }
         return instance;
-    }
-
-    public void setAppIsReady(boolean appIsReady) {
-        this.appIsReady = appIsReady;
     }
 
     protected int getLineCount(String fileName) {

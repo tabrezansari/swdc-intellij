@@ -10,6 +10,8 @@ import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -99,6 +101,7 @@ public class KeystrokeCount {
         public long local_end = 0;
         public long duration_seconds = 0;
         public String fsPath = "";
+        public String name = "";
     }
 
     public FileInfo getSourceByFileName(String fileName) {
@@ -196,10 +199,10 @@ public class KeystrokeCount {
 
             SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
 
-            // end the file end times
+            // end the file end times.
             this.endUnendedFiles();
 
-            // update the file aggregate info
+            // update the file aggregate info.
             this.updateAggregates();
 
             final String payload = SoftwareCo.gson.toJson(this);
@@ -223,6 +226,14 @@ public class KeystrokeCount {
             FileInfo fileInfo = this.source.get(key);
             fileInfo.duration_seconds = fileInfo.end - fileInfo.start;
             fileInfo.fsPath = key;
+
+            Path path = Paths.get(key);
+            if (path != null) {
+                Path fileName = path.getFileName();
+                if (fileName != null) {
+                    fileInfo.name = fileName.toString();
+                }
+            }
 
             aggregate.aggregate(fileInfo);
 

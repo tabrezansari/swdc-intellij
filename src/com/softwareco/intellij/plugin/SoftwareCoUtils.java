@@ -40,6 +40,7 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
 import java.util.*;
@@ -454,87 +455,15 @@ public class SoftwareCoUtils {
         return str;
     }
 
-    protected static boolean isItunesRunning() {
-        // get running of application "iTunes"
-        String[] args = { "osascript", "-e", "get running of application \"iTunes\"" };
-        String result = runCommand(args, null);
-        return (result != null) ? Boolean.valueOf(result) : false;
+    public static String humanizeDoubleNumbers(double number) {
+        NumberFormat nf = NumberFormat.getInstance();
+        nf.setMinimumFractionDigits(2);
+        return nf.format(number);
     }
 
-    protected static String itunesTrackScript = "tell application \"iTunes\"\n" +
-            "set track_artist to artist of current track\n" +
-            "set track_album to album of current track\n" +
-            "set track_name to name of current track\n" +
-            "set track_duration to duration of current track\n" +
-            "set track_id to id of current track\n" +
-            "set track_genre to genre of current track\n" +
-            "set track_state to player state\n" +
-            "set json to \"type='itunes';album='\" & track_album & \"';genre='\" & track_genre & \"';artist='\" & track_artist & \"';id='\" & track_id & \"';name='\" & track_name & \"';state='\" & track_state & \"';duration='\" & track_duration & \"'\"\n" +
-            "end tell\n" +
-            "return json\n";
-
-    protected static String getItunesTrack() {
-        String[] args = { "osascript", "-e", itunesTrackScript };
-        return runCommand(args, null);
-    }
-
-    protected static boolean isSpotifyRunning() {
-        String[] args = { "osascript", "-e", "get running of application \"Spotify\"" };
-        String result = runCommand(args, null);
-        return (result != null) ? Boolean.valueOf(result) : false;
-    }
-
-    protected static boolean isSpotifyInstalled() {
-        String[] args = { "osascript", "-e", "exists application \"Spotify\"" };
-        String result = runCommand(args, null);
-        return (result != null) ? Boolean.valueOf(result) : false;
-    }
-
-    protected static String spotifyTrackScript = "tell application \"Spotify\"\n" +
-            "set track_artist to artist of current track\n" +
-            "set track_album to album of current track\n" +
-            "set track_name to name of current track\n" +
-            "set track_duration to duration of current track\n" +
-            "set track_id to id of current track\n" +
-            "set track_state to player state\n" +
-            "set json to \"type='spotify';album='\" & track_album & \"';genre='';artist='\" & track_artist & \"';id='\" & track_id & \"';name='\" & track_name & \"';state='\" & track_state & \"';duration='\" & track_duration & \"'\"\n" +
-            "end tell\n" +
-            "return json\n";
-
-    protected static String getSpotifyTrack() {
-        String[] args = { "osascript", "-e", spotifyTrackScript };
-        return runCommand(args, null);
-    }
-
-    protected static String startPlayer(String playerName) {
-        String[] args = { "open", "-a", playerName + ".app" };
-        return runCommand(args, null);
-    }
-
-    protected static String playPlayer(String playerName) {
-        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play" };
-        return runCommand(args, null);
-    }
-
-    protected static String pausePlayer(String playerName) {
-        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to pause" };
-        return runCommand(args, null);
-    }
-
-    protected static String previousTrack(String playerName) {
-        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play (previous track)" };
-        return runCommand(args, null);
-    }
-
-    protected static String nextTrack(String playerName) {
-        String[] args = { "osascript", "-e", "tell application \""+ playerName + "\" to play (next track)" };
-        return runCommand(args, null);
-    }
-
-    protected static String stopPlayer(String playerName) {
-        // `ps -ef | grep "${appName}" | grep -v grep | awk '{print $2}' | xargs kill`;
-        String[] args = { "ps", "-ef", "|", "grep", "\"" + playerName + ".app\"", "|", "grep", "-v", "grep", "|", "awk", "'{print $2}'", "|", "xargs", "kill" };
-        return runCommand(args, null);
+    public static String humanizeLongNumbers(long number) {
+        NumberFormat nf = NumberFormat.getInstance();
+        return nf.format(number);
     }
 
     /**
@@ -700,23 +629,22 @@ public class SoftwareCoUtils {
 
     }
 
-    public static void launchCodeTimeMetricsDashboard() {
-        if (!SoftwareCoSessionManager.isServerOnline()) {
-            SoftwareCoUtils.showOfflinePrompt(false);
-        }
+    public static void launchFile(String fsPath) {
         Project p = getOpenProject();
         if (p == null) {
             return;
         }
-
-        buildCodeTimeMetricsDashboard();
-
-        String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
-        File f = new File(codeTimeFile);
-
+        File f = new File(fsPath);
         VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
         OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
         FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+    }
+
+    public static void launchCodeTimeMetricsDashboard() {
+        buildCodeTimeMetricsDashboard();
+
+        String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
+        launchFile(codeTimeFile);
     }
 
     private static String getSingleLineResult(List<String> cmd, int maxLen) {
@@ -923,14 +851,6 @@ public class SoftwareCoUtils {
                         "We will try to reconnect again " + reconnectMsg +
                         "Your status bar will not update at this time.";
                 // ask to download the PM
-                Messages.showInfoMessage(infoMsg, pluginName);
-            }
-        });
-    }
-
-    public static void showMsgPrompt(String infoMsg) {
-        ApplicationManager.getApplication().invokeLater(new Runnable() {
-            public void run() {
                 Messages.showInfoMessage(infoMsg, pluginName);
             }
         });

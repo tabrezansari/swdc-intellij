@@ -32,8 +32,6 @@ public class MetricTreeRenderer extends DefaultTreeCellRenderer {
             setIcon(icon);
         }
 
-        // tree.requestFocusInWindow();
-
         return this;
     }
 

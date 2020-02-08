@@ -116,17 +116,9 @@ public class SoftwareCo implements ApplicationComponent {
 
         gson = new Gson();
 
-        setupEventListeners();
-
         log.info(plugName + ": Finished initializing SoftwareCo plugin");
 
-        // store the activate event
-        EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
-
-        eventMgr.setAppIsReady(true);
-
         initializeUserInfoWhenProjectsReady(initializedUser);
-
     }
 
     private void initializeUserInfoWhenProjectsReady(boolean initializedUser) {
@@ -141,6 +133,9 @@ public class SoftwareCo implements ApplicationComponent {
                 }
             }).start();
         } else {
+            // store the activate event
+            EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
+
             initializeUserInfo(initializedUser);
         }
     }
@@ -171,8 +166,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     private void initializeUserInfo(boolean initializedUser) {
 
-        SoftwareCoUtils.getUserStatus();
-
         if (initializedUser) {
             // send an initial plugin payload
             this.sendInstallPayload();
@@ -191,6 +184,9 @@ public class SoftwareCo implements ApplicationComponent {
 
         new Thread(() -> {
             try {
+                setupEventListeners();
+
+                SoftwareCoUtils.getUserStatus();
                 // the initial summary fetch should force an api fetch
                 SessionDataManager.fetchSessionSummary(true);
             }

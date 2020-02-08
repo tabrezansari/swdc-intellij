@@ -6,8 +6,10 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.CommitChangeStats;
+import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.repo.GitUtil;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
@@ -18,16 +20,19 @@ import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreePath;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Enumeration;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.List;
 
 public class TreeItemBuilder {
 
     private static SessionSummary sessionSummary = new SessionSummary();
+    private static Map<String, FileChangeInfo> fileChangeInfoMap = new HashMap<>();
 
     public static void initializeSessionSummary() {
         sessionSummary = SessionDataManager.getSessionSummaryData();
-        System.out.println("fetched session summary");
+        fileChangeInfoMap = FileAggregateDataManager.getFileChangeInfo();
     }
 
     public static JBList<JLabel> buildCodeTimeLabels() {
@@ -73,7 +78,6 @@ public class TreeItemBuilder {
             @Override
             public void mouseExited(MouseEvent e) {
                 super.mouseExited(e);
-                System.out.println("mouse exited");
                 JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                 lst.clearSelection();
             }
@@ -82,7 +86,6 @@ public class TreeItemBuilder {
             @Override
             public void mouseMoved(MouseEvent e) {
                 super.mouseMoved(e);
-                System.out.println("mouse motion listened");
                 JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                 int row = lst.locationToIndex(e.getPoint());
                 lst.setSelectedIndex(row);
@@ -152,10 +155,12 @@ public class TreeItemBuilder {
     public static MetricTree buildEditorTimeTree() {
         String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
-        return buildTreeItem("Editor time", todayNode, null, null);
+        List<MetricTreeNode> nodes = Arrays.asList(todayNode);
+        return buildTreeItem("Editor time", nodes);
     }
 
     public static MetricTree buildCodeTimeTree() {
+        // build the code time nodes
         String min = SoftwareCoUtils.humanizeMinutes(sessionSummary.getCurrentDayMinutes());
         String avg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getAverageDailyMinutes());
         String globalAvg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getGlobalAverageDailyMinutes());
@@ -163,46 +168,109 @@ public class TreeItemBuilder {
         String avgIconName = sessionSummary.getAverageDailyMinutes() < sessionSummary.getCurrentDayMinutes() ? "bolt.svg" : "bolt-grey.svg";
         MetricTreeNode avgNode = buildChildNode("Your average: " + avg, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvg, "global-grey.svg");
-        return buildTreeItem("Code time", todayNode, avgNode, globalNode);
+        List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
+        return buildTreeItem("Code time", nodes);
     }
 
     public static MetricTree buildLinesAddedTree() {
-        // create the editor time parent
-        MetricTreeNode node = buildParentNode("Lines added");
-        long linesAdded = sessionSummary.getCurrentDayLinesAdded();
-        long avgLinesAdded = sessionSummary.getAverageLinesAdded();
-        long globalAvgLinesAdded = sessionSummary.getGlobalAverageLinesAdded();
+        // create the lines added nodes
+        String linesAdded = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getCurrentDayLinesAdded());
+        String avgLinesAdded = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getAverageLinesAdded());
+        String globalAvgLinesAdded = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageLinesAdded());
         MetricTreeNode todayNode = buildChildNode("Today: " + linesAdded, "rocket.svg");
         String avgIconName = sessionSummary.getAverageLinesAdded() < sessionSummary.getCurrentDayLinesAdded() ? "bolt.svg" : "bolt-grey.svg";
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesAdded, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesAdded, "global-grey.svg");
-        return buildTreeItem("Lines added", todayNode, avgNode, globalNode);
+        List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
+        return buildTreeItem("Lines added", nodes);
     }
 
     public static MetricTree buildLinesRemovedTree() {
-        // create the editor time parent
-        MetricTreeNode node = buildParentNode("Lines removed");
-        long linesRemoved = sessionSummary.getCurrentDayLinesRemoved();
-        long avgLinesRemoved = sessionSummary.getAverageLinesRemoved();
-        long globalAvgLinesRemoved = sessionSummary.getGlobalAverageLinesAdded();
+        // create the lines removed nodes
+        String linesRemoved = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getCurrentDayLinesRemoved());
+        String avgLinesRemoved = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getAverageLinesRemoved());
+        String globalAvgLinesRemoved = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageLinesAdded());
         MetricTreeNode todayNode = buildChildNode("Today: " + linesRemoved, "rocket.svg");
         String avgIconName = sessionSummary.getAverageLinesRemoved() < sessionSummary.getCurrentDayLinesRemoved() ? "bolt.svg" : "bolt-grey.svg";
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesRemoved, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesRemoved, "global-grey.svg");
-        return buildTreeItem("Lines removed", todayNode, avgNode, globalNode);
+        List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
+        return buildTreeItem("Lines removed", nodes);
     }
 
     public static MetricTree buildKeystrokesTree() {
-        // create the editor time parent
-        MetricTreeNode node = buildParentNode("Keystrokes");
-        long keystrokes = sessionSummary.getCurrentDayKeystrokes();
-        long avgKeystrokes = sessionSummary.getAverageDailyKeystrokes();
-        long globalKeystrokes = sessionSummary.getGlobalAverageDailyKeystrokes();
+        // create the keystrokes nodes
+        String keystrokes = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getCurrentDayKeystrokes());
+        String avgKeystrokes = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getAverageDailyKeystrokes());
+        String globalKeystrokes = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageDailyKeystrokes());
         MetricTreeNode todayNode = buildChildNode("Today: " + keystrokes, "rocket.svg");
         String avgIconName = sessionSummary.getAverageDailyKeystrokes() < sessionSummary.getCurrentDayKeystrokes() ? "bolt.svg" : "bolt-grey.svg";
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgKeystrokes, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalKeystrokes, "global-grey.svg");
-        return buildTreeItem("Keystrokes", todayNode, avgNode, globalNode);
+        List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
+        return buildTreeItem("Keystrokes", nodes);
+    }
+
+    public static MetricTree buildMostEditedFileTree() {
+        if (fileChangeInfoMap.size() == 0) {
+            return null;
+        }
+        // build the most edited files nodes
+        List<MetricTreeNode> nodes = new ArrayList<>();
+        // sort the fileChangeInfoMap based on keystrokes
+        List<Map.Entry<String, FileChangeInfo>> entryList = new ArrayList<Map.Entry<String, FileChangeInfo>>(fileChangeInfoMap.entrySet());
+
+        // natural ASC order
+        Collections.sort(
+                entryList, new Comparator<Map.Entry<String, FileChangeInfo>>() {
+                    @Override
+                    public int compare(Map.Entry<String, FileChangeInfo> entryA,
+                                       Map.Entry<String, FileChangeInfo> entryB) {
+                        Long a = new Long(entryA.getValue().keystrokes);
+                        Long b = new Long(entryB.getValue().keystrokes);
+                        return a.compareTo(b);
+                    }
+                }
+        );
+
+        int count = 0;
+        // go from the end
+        for (int i = entryList.size() - 1; i > 0; i--) {
+            if (count >= 3) {
+                break;
+            }
+            Map.Entry<String, FileChangeInfo> fileChangeInfoEntry = entryList.get(i);
+            String name = fileChangeInfoEntry.getValue().name;
+            if (name == null || name.length() == 0) {
+                Path path = Paths.get(fileChangeInfoEntry.getKey());
+                if (path != null) {
+                    Path fileName = path.getFileName();
+                    name = fileName.toString();
+                }
+            }
+            String label = name + " | " + SoftwareCoUtils.humanizeLongNumbers(fileChangeInfoEntry.getValue().keystrokes);
+            MetricTreeNode editedFileNode = buildChildNode(label, "files.svg");
+            editedFileNode.setData(fileChangeInfoEntry.getValue());
+            nodes.add(editedFileNode);
+            count++;
+        }
+
+        MetricTree topKeystrokesTree = buildTreeItem("Top files by keystrokes", nodes);
+        topKeystrokesTree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                updateSelectionState(e);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                mTree.clearSelection();
+            }
+        });
+        return topKeystrokesTree;
     }
 
     public static MetricTree buildOpenGitChanges() {
@@ -233,21 +301,14 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                MetricTree mTree = (MetricTree)e.getSource();
-                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
-                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
-                TreePath treePath = new TreePath(dfModel.getPathToRoot(mtNode));
-                String id = mtNode.getId();
-                Enumeration<TreePath> expandedDescendants = mTree.getExpandedDescendants(treePath);
-                if (expandedDescendants != null) {
-                    while (expandedDescendants.hasMoreElements()) {
-                        TreePath p = expandedDescendants.nextElement();
+                updateSelectionState(e);
+            }
 
-                        CodeTimeToolWindow.ExpandState expandState =
-                                new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
-                        CodeTimeToolWindow.updateExpandState(id, expandState);
-                    }
-                }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                mTree.clearSelection();
             }
         });
 
@@ -255,7 +316,6 @@ public class TreeItemBuilder {
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {
-                    int row = expandState.path.getPathCount() - 1;
                     tree.expandRow(expandState.path.getPathCount() - 1);
                 }
             }
@@ -294,25 +354,14 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                System.out.println("mouse clicked");
+                updateSelectionState(e);
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
                 MetricTree mTree = (MetricTree)e.getSource();
-
-                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
-                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
-
-                TreePath treePath = new TreePath(dfModel.getPathToRoot(mtNode));
-                String id = mtNode.getId();
-
-                Enumeration<TreePath> expandedDescendants = mTree.getExpandedDescendants(treePath);
-                if (expandedDescendants != null) {
-                    while (expandedDescendants.hasMoreElements()) {
-                        TreePath p = expandedDescendants.nextElement();
-
-                        CodeTimeToolWindow.ExpandState expandState =
-                                new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
-                        CodeTimeToolWindow.updateExpandState(id, expandState);
-                    }
-                }
+                mTree.clearSelection();
             }
         });
 
@@ -320,7 +369,6 @@ public class TreeItemBuilder {
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {
-                    int row = expandState.path.getPathCount() - 1;
                     tree.expandRow(expandState.path.getPathCount() - 1);
                 }
             }
@@ -336,24 +384,24 @@ public class TreeItemBuilder {
         parentNode.setModel(parentNodeModel);
 
         // add the change stat children (insertions and deletions)
-        String insertions = "insertion(s): " + commitChangeStats.getInsertions();
+        String insertions = "insertion(s): " + SoftwareCoUtils.humanizeLongNumbers(commitChangeStats.getInsertions());
         MetricTreeNode insertionsNode = new MetricTreeNode(insertions, "insertions-" + p.getName());
         insertionsNode.setIconName("insertion.svg");
         parentNode.add(insertionsNode);
 
-        String deletions = "deletion(s): " + commitChangeStats.getDeletions();
+        String deletions = "deletion(s): " + SoftwareCoUtils.humanizeLongNumbers(commitChangeStats.getDeletions());
         MetricTreeNode deletionNode = new MetricTreeNode(deletions, "deletions-" + p.getName());
         deletionNode.setIconName("deletion.svg");
         parentNode.add(deletionNode);
 
         if (commitChangeStats.isCommitted()) {
             // add the change stat children (commits and files changed)
-            String commits = "commit(s): " + commitChangeStats.getCommitCount();
+            String commits = "commit(s): " + SoftwareCoUtils.humanizeLongNumbers(commitChangeStats.getCommitCount());
             MetricTreeNode commitsNode = new MetricTreeNode(commits, "commits-" + p.getName());
             commitsNode.setIconName("commit.svg");
             parentNode.add(commitsNode);
 
-            String filesChanged = "Files changed: " + commitChangeStats.getFileCount();
+            String filesChanged = "Files changed: " + SoftwareCoUtils.humanizeLongNumbers(commitChangeStats.getFileCount());
             MetricTreeNode filesChangedNode = new MetricTreeNode(filesChanged, "filecount-" + p.getName());
             filesChangedNode.setIconName("files.svg");
             parentNode.add(filesChangedNode);
@@ -377,24 +425,14 @@ public class TreeItemBuilder {
         return childNode;
     }
 
-    private static void addChildToParent(String childName, MetricTreeNode parentNode) {
-        String id = childName.replaceAll("\\s+", "");
-        MetricTreeNode childNode = new MetricTreeNode(childName, id);
-        parentNode.add(childNode);
-    }
-
-    private static MetricTree buildTreeItem(String parentName, MetricTreeNode todayNode, MetricTreeNode avgNode, MetricTreeNode globalNode) {
+    private static MetricTree buildTreeItem(String parentName, List<MetricTreeNode> nodes) {
 
         String id = parentName.replaceAll("\\s+", "");
         List<CodeTimeToolWindow.ExpandState> expandStates = CodeTimeToolWindow.getExpandStates(id);
 
         MetricTreeNode node = buildParentNode(parentName);
-        node.add(todayNode);
-        if (avgNode != null) {
-            node.add(avgNode);
-        }
-        if (globalNode != null) {
-            node.add(globalNode);
+        for (MetricTreeNode mtNode : nodes) {
+            node.add(mtNode);
         }
 
         DefaultTreeModel model = new DefaultTreeModel(node);
@@ -404,15 +442,8 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                System.out.println("mouse clicked");
-                MetricTree mTree = (MetricTree)e.getSource();
-                DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
-                MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
-                String id = mtNode.getId();
-                // update the expand state map
-                CodeTimeToolWindow.ExpandState expandState =
-                        new CodeTimeToolWindow.ExpandState(mTree.expandState, new TreePath(dfModel.getPathToRoot(mtNode)));
-                CodeTimeToolWindow.updateExpandState(id, expandState);
+                // update the tree expand state and clear the selection
+                updateSelectionState(e);
             }
 
         });
@@ -427,7 +458,6 @@ public class TreeItemBuilder {
         if (expandStates != null && expandStates.size() > 0) {
             for (CodeTimeToolWindow.ExpandState expandState : expandStates) {
                 if (expandState.expand) {
-                    int row = expandState.path.getPathCount() - 1;
                     tree.expandRow(expandState.path.getPathCount() - 1);
                 }
             }
@@ -435,6 +465,35 @@ public class TreeItemBuilder {
             tree.setExpandedState(new TreePath(model.getPathToRoot(node)), false);
         }
         return tree;
+    }
+
+    private static void updateSelectionState(MouseEvent e) {
+        MetricTree mTree = (MetricTree)e.getSource();
+        DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+        MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+        TreePath treePath = new TreePath(dfModel.getPathToRoot(mtNode));
+        String id = mtNode.getId();
+        Enumeration<TreePath> expandedDescendants = mTree.getExpandedDescendants(treePath);
+        if (expandedDescendants != null) {
+            while (expandedDescendants.hasMoreElements()) {
+                TreePath p = expandedDescendants.nextElement();
+
+                CodeTimeToolWindow.ExpandState expandState =
+                        new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
+                CodeTimeToolWindow.updateExpandState(id, expandState);
+            }
+        }
+        if (mTree.getLeadSelectionPath() != null) {
+            MetricTreeNode selectedNode = (MetricTreeNode)mTree.getLeadSelectionPath().getLastPathComponent();
+            if (selectedNode != null) {
+                if (selectedNode.getData() != null && selectedNode.getData() instanceof FileChangeInfo) {
+                    String fsPath = ((FileChangeInfo)selectedNode.getData()).fsPath;
+                    SoftwareCoUtils.launchFile(fsPath);
+                }
+            }
+        }
+
+        mTree.clearSelection();
     }
 
 }

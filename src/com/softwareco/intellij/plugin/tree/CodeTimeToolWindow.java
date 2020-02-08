@@ -139,6 +139,11 @@ public class CodeTimeToolWindow {
         MetricTree keystrokes = TreeItemBuilder.buildKeystrokesTree();
         dataPanel.add(keystrokes, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
+        MetricTree mostEditedFiles = TreeItemBuilder.buildMostEditedFileTree();
+        if (mostEditedFiles != null) {
+            dataPanel.add(mostEditedFiles, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+        }
+
         // add a separator
         separator = TreeItemBuilder.getSeparator();
         // add a separator

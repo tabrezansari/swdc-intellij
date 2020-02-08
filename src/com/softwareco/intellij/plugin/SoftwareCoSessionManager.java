@@ -316,7 +316,7 @@ public class SoftwareCoSessionManager {
                     int options = Messages.showDialog(
                             project,
                             msg,
-                            "Software", new String[]{"Complete setup"},
+                            "Software", new String[]{"Complete setup", "Not now"},
                             0, Messages.getInformationIcon());
                     if (options == 0) {
                         launchLogin();

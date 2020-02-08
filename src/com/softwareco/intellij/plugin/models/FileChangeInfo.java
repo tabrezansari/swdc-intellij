@@ -42,6 +42,9 @@ public class FileChangeInfo {
         this.update_count += 1;
 
         // just set
+        this.syntax = fileInfo.syntax;
+        this.name = fileInfo.name;
+        this.fsPath = fileInfo.fsPath;
         this.lines = fileInfo.lines;
         this.length = fileInfo.length;
     }
