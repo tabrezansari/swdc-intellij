@@ -5,10 +5,12 @@ import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import org.eclipse.aether.SessionData;
 
 import java.util.logging.Logger;
 
@@ -93,12 +95,11 @@ public class WallClockManager {
     public void dispatchStatusViewUpdate() {
         if (!dispatching) {
             dispatching = true;
-            long wcTimeVal = getWcTimeInSeconds();
+
+            SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
             String icon = SoftwareCoUtils.showingStatusText() ? "paw.png" : "clock.png";
-
-            long minutes = wcTimeVal / 60;
-            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(minutes);
+            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(summary.getCurrentDayMinutes());
             SoftwareCoUtils.updateStatusBar(
                     icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
             // refresh the code time tree view

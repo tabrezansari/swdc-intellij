@@ -5,8 +5,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.codehaus.plexus.util.Expand;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
