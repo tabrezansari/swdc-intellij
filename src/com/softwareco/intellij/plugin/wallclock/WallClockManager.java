@@ -10,7 +10,6 @@ import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
-import org.eclipse.aether.SessionData;
 
 import java.util.logging.Logger;
 
@@ -54,7 +53,6 @@ public class WallClockManager {
 
     private void newDayChecker() {
         String currentDay = SoftwareCoSessionManager.getItem("currentDay", "");
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         if (!day.equals(currentDay)) {
             // send the payloads

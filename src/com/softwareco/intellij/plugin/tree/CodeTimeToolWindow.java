@@ -56,7 +56,7 @@ public class CodeTimeToolWindow {
             return;
         }
         refreshing = true;
-        System.out.println("refreshing the tree");
+
         if (win != null) {
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
@@ -69,24 +69,36 @@ public class CodeTimeToolWindow {
 
     public static void updateExpandState(String id, ExpandState expandState) {
         List<ExpandState> expandStates = expandStateMap.get(id);
-        System.out.println("updating the expand state");
-        if (expandStates == null) {
-            expandStates = new ArrayList<>();
-            expandStates.add(expandState);
-        } else {
-            boolean foundIt = false;
-            for (ExpandState existingState : expandStates) {
-                if (existingState.path == expandState.path) {
-                    existingState.expand = expandState.expand;
-                    foundIt = true;
+        if (expandState.expand) {
+            // add it
+            if (expandStates == null) {
+                expandStates = new ArrayList<>();
+                expandStates.add(expandState);
+            }
+        } else if (expandStates != null && expandStates.size() > 0) {
+            // remove it
+            int idx = -1;
+            for (int i = 0; i < expandStates.size(); i++) {
+                ExpandState state = expandStates.get(i);
+                if (state.path.toString().equals(expandState.path.toString())) {
+                    idx = 0;
                     break;
                 }
             }
-            if (!foundIt) {
-                expandStates.add(expandState);
+            if (idx != -1) {
+                expandStates.remove(idx);
             }
         }
-        expandStateMap.put(id, expandStates);
+
+        if (expandStates != null && expandStates.size() == 0) {
+            expandStates = null;
+        }
+
+        if (expandStates == null) {
+            expandStateMap.remove(id);
+        } else {
+            expandStateMap.put(id, expandStates);
+        }
     }
 
     public static List<ExpandState> getExpandStates(String id) {
@@ -98,8 +110,6 @@ public class CodeTimeToolWindow {
      */
     private synchronized void rebuildTreeView() {
         TreeItemBuilder.initializeSessionSummary();
-
-        System.out.println("rebuilding the tree view");
 
         // get vspace component to add at the end
         Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);

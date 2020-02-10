@@ -242,7 +242,7 @@ public class FileManager {
     }
 
     private static String getLocalReadmeFile() {
-        return "codetime.readme.md";
+        return "README.md";
     }
 
     public void openReadmeFile() {

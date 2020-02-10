@@ -255,8 +255,8 @@ public class TreeItemBuilder {
             count++;
         }
 
-        MetricTree topKeystrokesTree = buildTreeItem("Top files by keystrokes", nodes);
-        topKeystrokesTree.addMouseListener(new MouseAdapter() {
+        MetricTree tree = buildTreeItem("Top files by keystrokes", nodes);
+        tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
@@ -270,7 +270,7 @@ public class TreeItemBuilder {
                 mTree.clearSelection();
             }
         });
-        return topKeystrokesTree;
+        return tree;
     }
 
     public static MetricTree buildOpenGitChanges() {
@@ -442,10 +442,15 @@ public class TreeItemBuilder {
             @Override
             public void mouseClicked(MouseEvent e) {
                 super.mouseClicked(e);
-                // update the tree expand state and clear the selection
                 updateSelectionState(e);
             }
 
+            @Override
+            public void mouseExited(MouseEvent e) {
+                super.mouseExited(e);
+                MetricTree mTree = (MetricTree)e.getSource();
+                mTree.clearSelection();
+            }
         });
 
         tree.setCellRenderer(new MetricTreeRenderer());
@@ -482,6 +487,10 @@ public class TreeItemBuilder {
                         new CodeTimeToolWindow.ExpandState(mTree.expandState, p);
                 CodeTimeToolWindow.updateExpandState(id, expandState);
             }
+        } else {
+            // set it to not expanded
+            CodeTimeToolWindow.ExpandState expandState = new CodeTimeToolWindow.ExpandState(false, treePath);
+            CodeTimeToolWindow.updateExpandState(id, expandState);
         }
         if (mTree.getLeadSelectionPath() != null) {
             MetricTreeNode selectedNode = (MetricTreeNode)mTree.getLeadSelectionPath().getLastPathComponent();
