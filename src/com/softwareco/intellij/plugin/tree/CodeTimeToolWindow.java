@@ -67,41 +67,32 @@ public class CodeTimeToolWindow {
         refreshing = false;
     }
 
-    public static void updateExpandState(String id, ExpandState expandState) {
-        List<ExpandState> expandStates = expandStateMap.get(id);
-        if (expandState.expand) {
-            // add it
-            if (expandStates == null) {
-                expandStates = new ArrayList<>();
-                expandStates.add(expandState);
-            }
-        } else if (expandStates != null && expandStates.size() > 0) {
-            // remove it
-            int idx = -1;
-            for (int i = 0; i < expandStates.size(); i++) {
-                ExpandState state = expandStates.get(i);
-                if (state.path.toString().equals(expandState.path.toString())) {
-                    idx = 0;
+    public static void updateExpandState(String id, TreePath path, boolean expanded) {
+        ExpandState state = new ExpandState(expanded, path);
+        List<ExpandState> existingStates = expandStateMap.get(id);
+        if (existingStates == null) {
+            existingStates = new ArrayList<>();
+            existingStates.add(state);
+        } else {
+            boolean foundExisting = false;
+            for (ExpandState s : existingStates) {
+                String pathStr = s.path.toString();
+                String tPathStr = path.toString();
+                if (pathStr.equals(tPathStr)) {
+                    s.expand = expanded;
+                    foundExisting = true;
                     break;
                 }
             }
-            if (idx != -1) {
-                expandStates.remove(idx);
+            if (!foundExisting) {
+                existingStates.add(state);
             }
         }
 
-        if (expandStates != null && expandStates.size() == 0) {
-            expandStates = null;
-        }
-
-        if (expandStates == null) {
-            expandStateMap.remove(id);
-        } else {
-            expandStateMap.put(id, expandStates);
-        }
+        expandStateMap.put(id, existingStates);
     }
 
-    public static List<ExpandState> getExpandStates(String id) {
+    public static List<ExpandState> getExpandState(String id) {
         return expandStateMap.get(id);
     }
 
@@ -147,9 +138,19 @@ public class CodeTimeToolWindow {
         MetricTree keystrokes = TreeItemBuilder.buildKeystrokesTree();
         dataPanel.add(keystrokes, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
-        MetricTree mostEditedFiles = TreeItemBuilder.buildMostEditedFileTree();
-        if (mostEditedFiles != null) {
-            dataPanel.add(mostEditedFiles, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+        MetricTree topKpmFiles = TreeItemBuilder.buildTopKpmFilesTree();
+        if (topKpmFiles != null) {
+            dataPanel.add(topKpmFiles, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+        }
+
+        MetricTree topKeystrokesFiles = TreeItemBuilder.buildTopKeystrokesFilesTree();
+        if (topKeystrokesFiles != null) {
+            dataPanel.add(topKeystrokesFiles, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
+        }
+
+        MetricTree topCodetimeFiles = TreeItemBuilder.buildTopCodeTimeFilesTree();
+        if (topCodetimeFiles != null) {
+            dataPanel.add(topCodetimeFiles, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
         }
 
         // add a separator
@@ -158,8 +159,9 @@ public class CodeTimeToolWindow {
         dataPanel.add(separator, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 1, 0));
 
         // add the commit info
-        MetricTree openChangesTree = TreeItemBuilder.buildOpenGitChanges();
-        MetricTree committedChangesTree = TreeItemBuilder.buildCommittedGitChanges();
+        MetricTree openChangesTree = TreeItemBuilder.buildGitTree("Open changes", "uncommitted");
+        MetricTree committedChangesTree = TreeItemBuilder.buildGitTree("Committed today", "committed");
+
         dataPanel.add(openChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
         dataPanel.add(committedChangesTree, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
