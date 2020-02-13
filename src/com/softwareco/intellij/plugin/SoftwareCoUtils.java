@@ -20,6 +20,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
@@ -645,6 +646,12 @@ public class SoftwareCoUtils {
 
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         launchFile(codeTimeFile);
+
+        EventManager.createCodeTimeEvent(
+                "mouse",
+                "click",
+                "LaunchDashboard"
+        );
     }
 
     private static String getSingleLineResult(List<String> cmd, int maxLen) {
@@ -879,8 +886,8 @@ public class SoftwareCoUtils {
     // the timestamps are all in seconds
     public static class TimesData {
         public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
-        public long now = System.currentTimeMillis() / 1000;
-        public long local_now = now + offset;
+        public long local_now = System.currentTimeMillis() / 1000;
+        public long now = local_now - offset;
         public String timezone = TimeZone.getDefault().getID();
         public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
         public long local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();

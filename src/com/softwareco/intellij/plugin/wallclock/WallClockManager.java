@@ -5,6 +5,7 @@ import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
@@ -60,6 +61,9 @@ public class WallClockManager {
 
             // send the time data
             TimeDataManager.sendOfflineTimeData();
+
+            // send the events data
+            EventManager.sendOfflineEvents();
 
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();
@@ -131,9 +135,8 @@ public class WallClockManager {
         if (wcTimeVal < sessionSeconds) {
             // this will update the status bar and tree view metrics
             setWcTime((sessionSeconds));
-        } else {
-            // just update the tree view metrics
-            CodeTimeToolWindow.refresh();
         }
+        // just update the tree view metrics
+        CodeTimeToolWindow.refresh();
     }
 }

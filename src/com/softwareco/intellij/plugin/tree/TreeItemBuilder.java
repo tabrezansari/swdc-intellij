@@ -7,6 +7,7 @@ import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.CommitChangeStats;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
@@ -264,7 +265,7 @@ public class TreeItemBuilder {
             } else if (sortBy.equals("keystrokes")) {
                 val = SoftwareCoUtils.humanizeLongNumbers(fileChangeInfoEntry.getValue().keystrokes);
             } else if (sortBy.equals("codetime")) {
-                val = SoftwareCoUtils.humanizeMinutes(fileChangeInfoEntry.getValue().duration_seconds);
+                val = SoftwareCoUtils.humanizeMinutes(fileChangeInfoEntry.getValue().duration_seconds / 60);
             }
 
             String label = name + " | " + val;
@@ -487,6 +488,10 @@ public class TreeItemBuilder {
         DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
         MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
         String id = mtNode.getId();
+
+        if (expanded) {
+            EventManager.createCodeTimeEvent("mouse", "click", "TreeViewItemExpand_" + id);
+        }
 
         CodeTimeToolWindow.updateExpandState(id, path, expanded);
     }

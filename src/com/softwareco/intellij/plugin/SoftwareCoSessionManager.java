@@ -11,6 +11,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
+import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -307,7 +308,7 @@ public class SoftwareCoSessionManager {
 
         if (isOnline) {
 
-            String msg = "To see your coding data in Code Time, please log in your account.";
+            String msg = "Finish creating your account to see rich data visualizations.";
             Project project = this.getCurrentProject();
 
             ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -319,7 +320,18 @@ public class SoftwareCoSessionManager {
                             "Software", new String[]{"Complete setup", "Not now"},
                             0, Messages.getInformationIcon());
                     if (options == 0) {
+                        EventManager.createCodeTimeEvent(
+                                "click",
+                                "mouse",
+                                "OnboardPrompt"
+                        );
                         launchLogin();
+                    } else {
+                        EventManager.createCodeTimeEvent(
+                                "close",
+                                "window",
+                                "OnboardPrompt"
+                        );
                     }
                 }
             });
@@ -332,6 +344,11 @@ public class SoftwareCoSessionManager {
     }
 
     public void statusBarClickHandler(MouseEvent mouseEvent, String id) {
+        EventManager.createCodeTimeEvent(
+                "mouse",
+                "click",
+                "ShowTreeView"
+        );
         CodeTimeToolWindowFactory.openToolWindow();
     }
 
@@ -373,5 +390,11 @@ public class SoftwareCoSessionManager {
     public static void launchWebDashboard() {
         String url = SoftwareCoUtils.launch_url + "/login";
         BrowserUtil.browse(url);
+
+        EventManager.createCodeTimeEvent(
+                "mouse",
+                "click",
+                "LaunchWebDashboard"
+        );
     }
 }

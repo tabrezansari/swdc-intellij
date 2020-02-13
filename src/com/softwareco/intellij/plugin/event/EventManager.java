@@ -1,16 +1,9 @@
 package com.softwareco.intellij.plugin.event;
 
-import com.google.gson.JsonArray;
-import com.google.gson.reflect.TypeToken;
-import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.CodeTimeEvent;
-
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EventManager {
 
@@ -22,17 +15,6 @@ public class EventManager {
             file += "/events.json";
         }
         return file;
-    }
-
-    private static List<CodeTimeEvent> getTimeDataList() {
-        JsonArray jsonArr = FileManager.getFileContentAsJsonArray(getPluginEventsFile());
-        Type listType = new TypeToken<List<CodeTimeEvent>>() {}.getType();
-        List<CodeTimeEvent> list = SoftwareCo.gson.fromJson(jsonArr, listType);
-        if (list == null) {
-            list = new ArrayList<>();
-        }
-
-        return list;
     }
 
     public static void createCodeTimeEvent(String type, String name, String description) {

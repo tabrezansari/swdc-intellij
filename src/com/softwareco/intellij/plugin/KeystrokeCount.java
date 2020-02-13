@@ -9,6 +9,7 @@ import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -253,7 +254,7 @@ public class KeystrokeCount {
         FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
 
         // refresh the code time tree view
-        CodeTimeToolWindow.refresh();
+        WallClockManager.getInstance().dispatchStatusViewUpdate();
     }
 
     public int getKeystrokes() {

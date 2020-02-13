@@ -154,14 +154,10 @@ public class SoftwareCo implements ApplicationComponent {
         SoftwareCoUtils.sendHeartbeat("HOURLY");
 
         SoftwareCoRepoManager repoMgr = SoftwareCoRepoManager.getInstance();
-        new Thread(() -> {
-            try {
-                Thread.sleep(60000);
-                repoMgr.getHistoricalCommits(getRootPath());
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }).start();
+        repoMgr.getHistoricalCommits(getRootPath());
+
+        // send the events data
+        EventManager.sendOfflineEvents();
     }
 
     private void initializeUserInfo(boolean initializedUser) {
