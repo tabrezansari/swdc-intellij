@@ -40,13 +40,19 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
 
     public void setTooltip(String tooltip) {
         String name = SoftwareCoSessionManager.getItem("name");
-        if (SoftwareCoUtils.pluginName.equals("Code Time") && name != null && !name.equals("")) {
-            if (tooltip != null) {
-                tooltip += " (" + name + ")";
-            } else {
-                tooltip = "Click to see more from Code Time (" + name + ")";
-            }
+
+        if (tooltip == null) {
+            tooltip = "Code time today. Click to see more from Code Time.";
         }
+
+        if (tooltip.lastIndexOf(".") != tooltip.length() - 1) {
+            tooltip += ".";
+        }
+
+        if (name != null) {
+            tooltip += " Logged in as " + name;
+        }
+
         this.tooltip = tooltip;
     }
 

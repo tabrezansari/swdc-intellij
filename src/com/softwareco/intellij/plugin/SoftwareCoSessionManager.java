@@ -12,6 +12,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -366,6 +368,15 @@ public class SoftwareCoSessionManager {
                     System.err.println(e);
                 }
             }).start();
+        } else {
+            // prompt they've completed the setup
+            ApplicationManager.getApplication().invokeLater(new Runnable() {
+                public void run() {
+                    // ask to download the PM
+                    Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
+                }
+            });
+            SessionSummary summary = SessionDataManager.fetchSessionSummary();
         }
     }
 

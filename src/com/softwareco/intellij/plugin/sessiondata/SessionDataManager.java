@@ -64,10 +64,10 @@ public class SessionDataManager {
         return summary;
     }
 
-    public static SessionSummary fetchSessionSummary(boolean forceSummaryFetch) {
+    public static SessionSummary fetchSessionSummary() {
         SessionSummary summary = getSessionSummaryData();
 
-        if (SoftwareCoSessionManager.isServerOnline() && forceSummaryFetch) {
+        if (SoftwareCoSessionManager.isServerOnline()) {
             String sessionsApi = "/sessions/summary";
 
             // make an async call to get the kpm info
@@ -96,7 +96,15 @@ public class SessionDataManager {
                 }
 
                 Type type = new TypeToken<SessionSummary>() {}.getType();
-                summary = SoftwareCo.gson.fromJson(jsonObj, type);
+                SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
+
+                if (fetchedSummary.getCurrentDayMinutes() < summary.getCurrentDayMinutes()) {
+                    // continue using the current summary
+                    summary.cloneNonCurrentMetrics(fetchedSummary);
+                } else {
+                    // clone all
+                    summary.clone(fetchedSummary);
+                }
 
                 // save the file
                 FileManager.writeData(getSessionDataSummaryFile(), summary);

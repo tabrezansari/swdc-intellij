@@ -27,6 +27,37 @@ public class SessionSummary {
     private long globalAverageLinesAdded = 0L;
     private long globalAverageLinesRemoved = 0L;
 
+    public void clone(SessionSummary in) {
+        this.currentDayMinutes = in.getCurrentDayMinutes();
+        this.currentDayKeystrokes = in.getCurrentDayKeystrokes();
+        this.currentDayKpm = in.getCurrentDayKpm();
+        this.currentDayLinesAdded = in.getCurrentDayLinesAdded();
+        this.currentDayLinesRemoved = in.getCurrentDayLinesRemoved();
+        this.cloneNonCurrentMetrics(in);
+    }
+
+    public void cloneNonCurrentMetrics(SessionSummary in) {
+        this.averageDailyMinutes = in.getAverageDailyMinutes();
+        this.averageDailyKeystrokes = in.getAverageDailyKeystrokes();
+        this.averageDailyKpm = in.getAverageDailyKpm();
+        this.averageLinesAdded = in.getAverageLinesAdded();
+        this.averageLinesRemoved = in.getAverageLinesAdded();
+        this.timePercent = in.getTimePercent();
+        this.volumePercent = in.getVolumePercent();
+        this.velocityPercent = in.getVelocityPercent();
+        this.liveshareMinutes = in.getLiveshareMinutes();
+        this.latestPayloadTimestampEndUtc = in.getLatestPayloadTimestampEndUtc();
+        this.latestPayloadTimestamp = in.getLatestPayloadTimestamp();
+        this.lastUpdatedToday = in.isLastUpdatedToday();
+        this.inFlow = in.isInFlow();
+        this.dailyMinutesGoal = in.getDailyMinutesGoal();
+        this.globalAverageSeconds = in.getGlobalAverageSeconds();
+        this.globalAverageDailyMinutes = in.getGlobalAverageDailyMinutes();
+        this.globalAverageDailyKeystrokes = in.getGlobalAverageDailyKeystrokes();
+        this.globalAverageLinesAdded = in.getGlobalAverageLinesAdded();
+        this.globalAverageLinesRemoved = in.getGlobalAverageLinesRemoved();
+    }
+
     public long getCurrentDayMinutes() {
         return currentDayMinutes;
     }

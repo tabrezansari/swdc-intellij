@@ -103,7 +103,7 @@ public class WallClockManager {
             String icon = SoftwareCoUtils.showingStatusText() ? "paw.png" : "clock.png";
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(summary.getCurrentDayMinutes());
             SoftwareCoUtils.updateStatusBar(
-                    icon, currentDayTimeStr, "Code time today vs. your daily average. Click to see more from Code Time");
+                    icon, currentDayTimeStr, "Code time today. Click to see more from Code Time.");
             // refresh the code time tree view
             CodeTimeToolWindow.refresh();
         }
@@ -137,6 +137,6 @@ public class WallClockManager {
             setWcTime((sessionSeconds));
         }
         // just update the tree view metrics
-        CodeTimeToolWindow.refresh();
+        dispatchStatusViewUpdate();
     }
 }

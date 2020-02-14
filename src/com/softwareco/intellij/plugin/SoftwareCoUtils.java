@@ -359,11 +359,13 @@ public class SoftwareCoUtils {
 
     public static void updateStatusBar(final String kpmIcon, final String kpmMsg,
                                         final String tooltip) {
+
         if ( showStatusText ) {
             lastMsg = kpmMsg;
-            lastTooltip = tooltip;
         }
+        lastTooltip = tooltip;
 
+        // build the status bar text information
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             public void run() {
                 ProjectManager pm = ProjectManager.getInstance();
@@ -597,7 +599,7 @@ public class SoftwareCoUtils {
         String todayStr = formatDay.format(new Date());
         dashboardContent += getSectionHeader("Today (" + todayStr + ")");
 
-        SessionSummary summary = SessionDataManager.fetchSessionSummary(false);
+        SessionSummary summary = SessionDataManager.fetchSessionSummary();
         if (summary != null) {
             long currentDayMinutes = summary.getCurrentDayMinutes();
 

@@ -183,7 +183,7 @@ public class SoftwareCo implements ApplicationComponent {
 
                 SoftwareCoUtils.getUserStatus();
                 // the initial summary fetch should force an api fetch
-                SessionDataManager.fetchSessionSummary(true);
+                SessionDataManager.fetchSessionSummary();
             }
             catch (Exception e){
                 System.err.println(e);
