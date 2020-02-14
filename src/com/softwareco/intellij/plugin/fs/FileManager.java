@@ -2,6 +2,7 @@ package com.softwareco.intellij.plugin.fs;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
@@ -9,6 +10,7 @@ import com.intellij.openapi.preview.PreviewManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.text.MarkdownUtil;
 import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
@@ -22,6 +24,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -241,25 +244,19 @@ public class FileManager {
         }
     }
 
-    private static String getLocalReadmeFile() {
-        return "README.md";
-    }
-
     public void openReadmeFile() {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
             return;
         }
         // Getting Resource as file object
-        URL url = getClass().getResource("/com/softwareco/intellij/plugin/assets/" + getLocalReadmeFile());
+        URL url = getClass().getResource("/com/softwareco/intellij/plugin/assets/README.md");
         File f = new File(url.getFile());
 
         VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
         // TODO: figure out how to show it with only the preview window
-        // OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
-        FileEditorManagerEx fileEdMgr = FileEditorManagerEx.getInstanceEx(p);
-        fileEdMgr.updateFilePresentation(vFile);
-        fileEdMgr.openFile(vFile, true);
-        // FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(p);
+        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
+        fileEditorManager.openEditor(descriptor, true);
     }
 }

@@ -33,7 +33,7 @@ public class CodeTimeToolWindow {
 
         System.out.println("initializing the tool window");
 
-        this.rebuildTreeView();
+        this.rebuildTreeView(true);
 
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         codetimeWindowContent.setBackground((Color) null);
@@ -60,7 +60,7 @@ public class CodeTimeToolWindow {
         if (win != null) {
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
-                    win.rebuildTreeView();
+                    win.rebuildTreeView(false);
                 }
             });
         }
@@ -99,8 +99,8 @@ public class CodeTimeToolWindow {
     /**
      * Build the Tree
      */
-    private synchronized void rebuildTreeView() {
-        TreeItemBuilder.initializeSessionSummary();
+    private synchronized void rebuildTreeView(boolean initializing) {
+        TreeItemBuilder.initializeSessionSummary(initializing);
 
         // get vspace component to add at the end
         Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);

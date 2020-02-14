@@ -33,9 +33,12 @@ public class TreeItemBuilder {
     private static SessionSummary sessionSummary = new SessionSummary();
     private static Map<String, FileChangeInfo> fileChangeInfoMap = new HashMap<>();
 
-    public static void initializeSessionSummary() {
+    private static boolean expandInitNodes = false;
+
+    public static void initializeSessionSummary(boolean initializing) {
         sessionSummary = SessionDataManager.getSessionSummaryData();
         fileChangeInfoMap = FileAggregateDataManager.getFileChangeInfo();
+        expandInitNodes = initializing;
     }
 
     public static JBList<JLabel> buildCodeTimeLabels() {
@@ -159,7 +162,7 @@ public class TreeItemBuilder {
         String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode);
-        return buildTreeItem("Editor time", nodes);
+        return buildTreeItem("Editor time", nodes, true);
     }
 
     public static MetricTree buildCodeTimeTree() {
@@ -172,7 +175,7 @@ public class TreeItemBuilder {
         MetricTreeNode avgNode = buildChildNode("Your average: " + avg, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvg, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
-        return buildTreeItem("Code time", nodes);
+        return buildTreeItem("Code time", nodes, true);
     }
 
     public static MetricTree buildLinesAddedTree() {
@@ -185,7 +188,7 @@ public class TreeItemBuilder {
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesAdded, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesAdded, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
-        return buildTreeItem("Lines added", nodes);
+        return buildTreeItem("Lines added", nodes, false);
     }
 
     public static MetricTree buildLinesRemovedTree() {
@@ -198,7 +201,7 @@ public class TreeItemBuilder {
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesRemoved, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesRemoved, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
-        return buildTreeItem("Lines removed", nodes);
+        return buildTreeItem("Lines removed", nodes, false);
     }
 
     public static MetricTree buildKeystrokesTree() {
@@ -211,7 +214,7 @@ public class TreeItemBuilder {
         MetricTreeNode avgNode = buildChildNode("Your average: " + avgKeystrokes, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average: " + globalKeystrokes, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
-        return buildTreeItem("Keystrokes", nodes);
+        return buildTreeItem("Keystrokes", nodes, false);
     }
 
     public static MetricTree buildTopKeystrokesFilesTree() {
@@ -275,7 +278,7 @@ public class TreeItemBuilder {
             count++;
         }
 
-        return buildTreeItem(parentName, nodes);
+        return buildTreeItem(parentName, nodes, false);
     }
 
     public static MetricTree buildGitTree(String name, String filterBy) {
@@ -408,7 +411,7 @@ public class TreeItemBuilder {
         return childNode;
     }
 
-    private static MetricTree buildTreeItem(String parentName, List<MetricTreeNode> nodes) {
+    private static MetricTree buildTreeItem(String parentName, List<MetricTreeNode> nodes, boolean isDefaultOpen) {
 
         String id = parentName.replaceAll("\\s+", "");
         List<CodeTimeToolWindow.ExpandState> expandStates = CodeTimeToolWindow.getExpandState(id);
@@ -474,6 +477,9 @@ public class TreeItemBuilder {
                     tree.collapseRow(i);
                 }
             }
+        } else if (expandInitNodes && isDefaultOpen) {
+            tree.setExpandedState(p, true);
+            CodeTimeToolWindow.updateExpandState(id, p, true);
         } else {
             tree.setExpandedState(p, false);
         }

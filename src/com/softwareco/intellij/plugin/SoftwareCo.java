@@ -26,7 +26,6 @@ import java.util.logging.Logger;
 
 /**
  * Intellij Plugin Application
- * ....
  */
 public class SoftwareCo implements ApplicationComponent {
 

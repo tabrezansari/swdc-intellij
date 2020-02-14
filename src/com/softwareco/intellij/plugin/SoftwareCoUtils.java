@@ -438,13 +438,7 @@ public class SoftwareCoUtils {
         } else if (minutes > 60) {
             float hours = (float)minutes / 60;
             try {
-                if (hours % 1 == 0) {
-                    // don't return a number with 2 decimal place precision
-                    str = String.format("%.0f", hours) + " hrs";
-                } else {
-                    // hours = Math.round(hours * 10) / 10;
-                    str = String.format("%.1f", hours) + " hrs";
-                }
+                str = String.format("%.1f", hours) + " hrs";
             } catch (Exception e) {
                 str = String.format("%s hrs", String.valueOf(Math.round(hours)));
             }

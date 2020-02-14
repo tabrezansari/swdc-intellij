@@ -41,13 +41,22 @@ public class SessionDataManager {
             clearSessionSummaryData();
             jsonObj = FileManager.getFileContentAsJson(getSessionDataSummaryFile());
         }
-        JsonElement val = jsonObj.get("lastUpdatedToday");
-        if (val != null) {
+        JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
+        if (lastUpdatedToday != null) {
             // make sure it's a boolean and not a number
-            if (!val.getAsJsonPrimitive().isBoolean()) {
+            if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
                 // set it to boolean
-                boolean newVal = val.getAsInt() == 0 ? false : true;
+                boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
                 jsonObj.addProperty("lastUpdatedToday", newVal);
+            }
+        }
+        JsonElement inFlow = jsonObj.get("inFlow");
+        if (inFlow != null) {
+            // make sure it's a boolean and not a number
+            if (!inFlow.getAsJsonPrimitive().isBoolean()) {
+                // set it to boolean
+                boolean newVal = inFlow.getAsInt() == 0 ? false : true;
+                jsonObj.addProperty("inFlow", newVal);
             }
         }
         Type type = new TypeToken<SessionSummary>() {}.getType();
@@ -66,15 +75,26 @@ public class SessionDataManager {
                     sessionsApi, HttpGet.METHOD_NAME, null);
             if (resp.isOk()) {
                 JsonObject jsonObj = resp.getJsonObj();
-                JsonElement val = jsonObj.get("lastUpdatedToday");
-                if (val != null) {
+
+                JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
+                if (lastUpdatedToday != null) {
                     // make sure it's a boolean and not a number
-                    if (!val.getAsJsonPrimitive().isBoolean()) {
+                    if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
                         // set it to boolean
-                        boolean newVal = val.getAsInt() == 0 ? false : true;
+                        boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
                         jsonObj.addProperty("lastUpdatedToday", newVal);
                     }
                 }
+                JsonElement inFlow = jsonObj.get("inFlow");
+                if (inFlow != null) {
+                    // make sure it's a boolean and not a number
+                    if (!inFlow.getAsJsonPrimitive().isBoolean()) {
+                        // set it to boolean
+                        boolean newVal = inFlow.getAsInt() == 0 ? false : true;
+                        jsonObj.addProperty("inFlow", newVal);
+                    }
+                }
+
                 Type type = new TypeToken<SessionSummary>() {}.getType();
                 summary = SoftwareCo.gson.fromJson(jsonObj, type);
 
