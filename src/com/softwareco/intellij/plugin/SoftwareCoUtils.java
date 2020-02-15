@@ -882,8 +882,8 @@ public class SoftwareCoUtils {
     // the timestamps are all in seconds
     public static class TimesData {
         public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
-        public long local_now = System.currentTimeMillis() / 1000;
-        public long now = local_now - offset;
+        public long now = System.currentTimeMillis() / 1000;
+        public long local_now = now + offset;
         public String timezone = TimeZone.getDefault().getID();
         public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
         public long local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
@@ -899,7 +899,7 @@ public class SoftwareCoUtils {
     public static String getTodayInStandardFormat() {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
-        String day = formatDay.format(new Date(timesData.local_now * 1000));
+        String day = formatDay.format(new Date(timesData.now * 1000));
         return day;
     }
 
