@@ -899,7 +899,7 @@ public class SoftwareCoUtils {
     public static String getTodayInStandardFormat() {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
-        String day = formatDay.format(new Date(timesData.now * 1000));
+        String day = formatDay.format(new Date(timesData.local_now * 1000));
         return day;
     }
 
