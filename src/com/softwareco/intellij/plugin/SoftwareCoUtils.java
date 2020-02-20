@@ -599,7 +599,7 @@ public class SoftwareCoUtils {
         String todayStr = formatDay.format(new Date());
         dashboardContent += getSectionHeader("Today (" + todayStr + ")");
 
-        SessionSummary summary = SessionDataManager.fetchSessionSummary();
+        SessionSummary summary = SessionDataManager.getSessionSummaryData();
         if (summary != null) {
             long currentDayMinutes = summary.getCurrentDayMinutes();
 

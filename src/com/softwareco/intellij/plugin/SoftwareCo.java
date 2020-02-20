@@ -18,7 +18,6 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.util.logging.Logger;
@@ -182,8 +181,6 @@ public class SoftwareCo implements ApplicationComponent {
                 setupEventListeners();
 
                 SoftwareCoUtils.getUserStatus();
-                // the initial summary fetch should force an api fetch
-                SessionDataManager.fetchSessionSummary();
             }
             catch (Exception e){
                 System.err.println(e);

@@ -8,7 +8,6 @@ import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
-import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.nio.file.Path;
@@ -169,6 +168,9 @@ public class KeystrokeCount {
                 fileInfoData.local_end = timesData.local_now;
             }
         }
+
+        // set the latest payload timestamp utc so help with session time calculations
+        SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
     }
 
     // update each source with it's true amount of keystrokes

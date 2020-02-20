@@ -12,8 +12,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -376,7 +374,6 @@ public class SoftwareCoSessionManager {
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
                 }
             });
-            SessionSummary summary = SessionDataManager.fetchSessionSummary();
         }
     }
 

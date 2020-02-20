@@ -7,14 +7,12 @@ import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.SoftwareResponse;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
-import org.apache.http.client.methods.HttpGet;
 
 import java.lang.reflect.Type;
 
@@ -61,67 +59,6 @@ public class SessionDataManager {
         }
         Type type = new TypeToken<SessionSummary>() {}.getType();
         SessionSummary summary = SoftwareCo.gson.fromJson(jsonObj, type);
-        return summary;
-    }
-
-    public static SessionSummary fetchSessionSummary() {
-        SessionSummary summary = getSessionSummaryData();
-
-        if (SoftwareCoSessionManager.isServerOnline()) {
-            String sessionsApi = "/sessions/summary";
-
-            // make an async call to get the kpm info
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(
-                    sessionsApi, HttpGet.METHOD_NAME, null);
-            if (resp.isOk()) {
-                JsonObject jsonObj = resp.getJsonObj();
-
-                JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
-                if (lastUpdatedToday != null) {
-                    // make sure it's a boolean and not a number
-                    if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
-                        // set it to boolean
-                        boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
-                        jsonObj.addProperty("lastUpdatedToday", newVal);
-                    }
-                }
-                JsonElement inFlow = jsonObj.get("inFlow");
-                if (inFlow != null) {
-                    // make sure it's a boolean and not a number
-                    if (!inFlow.getAsJsonPrimitive().isBoolean()) {
-                        // set it to boolean
-                        boolean newVal = inFlow.getAsInt() == 0 ? false : true;
-                        jsonObj.addProperty("inFlow", newVal);
-                    }
-                }
-
-                Type type = new TypeToken<SessionSummary>() {}.getType();
-                SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
-
-                if (fetchedSummary.getCurrentDayMinutes() < summary.getCurrentDayMinutes()) {
-                    // continue using the current summary
-                    summary.cloneNonCurrentMetrics(fetchedSummary);
-                } else {
-                    // clone all
-                    summary.clone(fetchedSummary);
-                }
-
-                // save the file
-                FileManager.writeData(getSessionDataSummaryFile(), summary);
-
-                // check if we need to update the latestPayloadTimestampEndUtc
-                long currentTs = SoftwareCoSessionManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
-                if (summary.getLatestPayloadTimestamp() > currentTs) {
-                    SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", summary.getLatestPayloadTimestamp());
-                }
-            }
-        }
-
-        // update the wallclock time if it's
-        // lagging behind the newly gathered current day seconds
-        long session_seconds = summary.getCurrentDayMinutes() * 60;
-        WallClockManager.getInstance().updateBasedOnSessionSeconds(session_seconds);
-
         return summary;
     }
 

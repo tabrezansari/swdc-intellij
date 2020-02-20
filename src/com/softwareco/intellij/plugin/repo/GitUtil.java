@@ -17,7 +17,7 @@ public class GitUtil {
         if (results != null) {
             for (String line : results) {
                 line = line.trim();
-                if (line.indexOf("insertion") != -1 && line.indexOf("deletion") != -1) {
+                if (line.indexOf("insertion") != -1 || line.indexOf("deletion") != -1) {
                     String[] parts = line.split(" ");
                     // the 1st element is the number of files changed
                     int fileCount = Integer.parseInt(parts[0]);
