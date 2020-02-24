@@ -84,7 +84,6 @@ public class WallClockManager {
             // refresh the tree
             CodeTimeToolWindow.refresh();
 
-            // ask the user to login one time only
             new Thread(() -> {
                 try {
                     Thread.sleep(1000 * 60);
