@@ -18,7 +18,7 @@ import java.lang.reflect.Type;
 
 public class SessionDataManager {
 
-    private static String getSessionDataSummaryFile() {
+    public static String getSessionDataSummaryFile() {
         String file = SoftwareCoSessionManager.getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
             file += "\\sessionSummary.json";

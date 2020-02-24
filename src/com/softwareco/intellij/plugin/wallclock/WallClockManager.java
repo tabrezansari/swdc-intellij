@@ -1,17 +1,21 @@
 package com.softwareco.intellij.plugin.wallclock;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
-import com.softwareco.intellij.plugin.AsyncManager;
-import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
-import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.*;
 import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import org.apache.http.client.methods.HttpGet;
 
+import java.lang.reflect.Type;
 import java.util.logging.Logger;
 
 public class WallClockManager {
@@ -79,6 +83,66 @@ public class WallClockManager {
 
             // refresh the tree
             CodeTimeToolWindow.refresh();
+
+            // ask the user to login one time only
+            new Thread(() -> {
+                try {
+                    Thread.sleep(1000 * 60);
+                    this.updateSessionSummaryFromServer();
+                }
+                catch (Exception e){
+                    System.err.println(e);
+                }
+            }).start();
+        }
+    }
+
+    public void updateSessionSummaryFromServer() {
+        SessionSummary summary = SessionDataManager.getSessionSummaryData();
+
+        String jwt = SoftwareCoSessionManager.getItem("jwt");
+        String api = "/sessions/summary";
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
+        if (resp.isOk()) {
+            JsonObject jsonObj = resp.getJsonObj();
+
+            JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
+            if (lastUpdatedToday != null) {
+                // make sure it's a boolean and not a number
+                if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
+                    // set it to boolean
+                    boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
+                    jsonObj.addProperty("lastUpdatedToday", newVal);
+                }
+            }
+            JsonElement inFlow = jsonObj.get("inFlow");
+            if (inFlow != null) {
+                // make sure it's a boolean and not a number
+                if (!inFlow.getAsJsonPrimitive().isBoolean()) {
+                    // set it to boolean
+                    boolean newVal = inFlow.getAsInt() == 0 ? false : true;
+                    jsonObj.addProperty("inFlow", newVal);
+                }
+            }
+
+            Type type = new TypeToken<SessionSummary>() {}.getType();
+            SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
+
+            boolean updateCurrents =
+                    summary.getCurrentDayMinutes() < fetchedSummary.getCurrentDayMinutes()
+                            ? true
+                            : false;
+
+            if (updateCurrents) {
+                // clone all
+                summary.clone(fetchedSummary);
+            } else {
+                // continue using the current summary
+                summary.cloneNonCurrentMetrics(fetchedSummary);
+            }
+
+            // save the file
+            FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
         }
     }
 

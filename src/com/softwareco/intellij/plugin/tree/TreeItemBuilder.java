@@ -25,6 +25,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.List;
 
@@ -32,6 +33,7 @@ public class TreeItemBuilder {
 
     private static SessionSummary sessionSummary = new SessionSummary();
     private static Map<String, FileChangeInfo> fileChangeInfoMap = new HashMap<>();
+    private static String dayStr = "";
 
     private static boolean expandInitNodes = false;
 
@@ -39,6 +41,9 @@ public class TreeItemBuilder {
         sessionSummary = SessionDataManager.getSessionSummaryData();
         fileChangeInfoMap = FileAggregateDataManager.getFileChangeInfo();
         expandInitNodes = initializing;
+
+        SimpleDateFormat formatDay = new SimpleDateFormat("EEE");
+        dayStr = formatDay.format(new Date());
     }
 
     public static JBList<JLabel> buildCodeTimeLabels() {
@@ -172,8 +177,8 @@ public class TreeItemBuilder {
         String globalAvg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getGlobalAverageDailyMinutes());
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
         String avgIconName = sessionSummary.getAverageDailyMinutes() < sessionSummary.getCurrentDayMinutes() ? "bolt.svg" : "bolt-grey.svg";
-        MetricTreeNode avgNode = buildChildNode("Your average: " + avg, avgIconName);
-        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvg, "global-grey.svg");
+        MetricTreeNode avgNode = buildChildNode("Your average (" + dayStr + "): " + avg, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average (" + dayStr + "): " + globalAvg, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
         return buildTreeItem("Code time", nodes, true);
     }
@@ -185,8 +190,8 @@ public class TreeItemBuilder {
         String globalAvgLinesAdded = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageLinesAdded());
         MetricTreeNode todayNode = buildChildNode("Today: " + linesAdded, "rocket.svg");
         String avgIconName = sessionSummary.getAverageLinesAdded() < sessionSummary.getCurrentDayLinesAdded() ? "bolt.svg" : "bolt-grey.svg";
-        MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesAdded, avgIconName);
-        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesAdded, "global-grey.svg");
+        MetricTreeNode avgNode = buildChildNode("Your average (" + dayStr + "): " + avgLinesAdded, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average (" + dayStr + "): " + globalAvgLinesAdded, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
         return buildTreeItem("Lines added", nodes, false);
     }
@@ -198,8 +203,8 @@ public class TreeItemBuilder {
         String globalAvgLinesRemoved = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageLinesAdded());
         MetricTreeNode todayNode = buildChildNode("Today: " + linesRemoved, "rocket.svg");
         String avgIconName = sessionSummary.getAverageLinesRemoved() < sessionSummary.getCurrentDayLinesRemoved() ? "bolt.svg" : "bolt-grey.svg";
-        MetricTreeNode avgNode = buildChildNode("Your average: " + avgLinesRemoved, avgIconName);
-        MetricTreeNode globalNode = buildChildNode("Global average: " + globalAvgLinesRemoved, "global-grey.svg");
+        MetricTreeNode avgNode = buildChildNode("Your average (" + dayStr + "): " + avgLinesRemoved, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average (" + dayStr + "): " + globalAvgLinesRemoved, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
         return buildTreeItem("Lines removed", nodes, false);
     }
@@ -211,8 +216,8 @@ public class TreeItemBuilder {
         String globalKeystrokes = SoftwareCoUtils.humanizeLongNumbers(sessionSummary.getGlobalAverageDailyKeystrokes());
         MetricTreeNode todayNode = buildChildNode("Today: " + keystrokes, "rocket.svg");
         String avgIconName = sessionSummary.getAverageDailyKeystrokes() < sessionSummary.getCurrentDayKeystrokes() ? "bolt.svg" : "bolt-grey.svg";
-        MetricTreeNode avgNode = buildChildNode("Your average: " + avgKeystrokes, avgIconName);
-        MetricTreeNode globalNode = buildChildNode("Global average: " + globalKeystrokes, "global-grey.svg");
+        MetricTreeNode avgNode = buildChildNode("Your average (" + dayStr + "): " + avgKeystrokes, avgIconName);
+        MetricTreeNode globalNode = buildChildNode("Global average (" + dayStr + "): " + globalKeystrokes, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
         return buildTreeItem("Keystrokes", nodes, false);
     }

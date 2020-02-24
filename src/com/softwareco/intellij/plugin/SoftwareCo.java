@@ -202,7 +202,7 @@ public class SoftwareCo implements ApplicationComponent {
         asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
 
         // start the wallclock
-        WallClockManager.getInstance();
+        WallClockManager.getInstance().updateSessionSummaryFromServer();
     }
 
     protected void sendInstallPayload() {
