@@ -44,20 +44,39 @@ public class SoftwareCo implements ApplicationComponent {
     public SoftwareCo() {
     }
 
+    private static IdeaPluginDescriptor getIdeaPluginDescriptor() {
+        IdeaPluginDescriptor[] desriptors = PluginManager.getPlugins();
+        if (desriptors != null && desriptors.length > 0) {
+            for (int i = 0; i < desriptors.length; i++) {
+                IdeaPluginDescriptor descriptor = desriptors[i];
+                if (descriptor.getPluginId().getIdString().equals("com.softwareco.intellij.plugin")) {
+                    return descriptor;
+                }
+            }
+        }
+        return null;
+    }
+
     public static String getVersion() {
         if (SoftwareCoUtils.VERSION == null) {
-            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin"));
-
-            SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
+            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
+            if (pluginDescriptor != null) {
+                SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
+            } else {
+                return "1.0.2";
+            }
         }
         return SoftwareCoUtils.VERSION;
     }
 
     public static String getPluginName() {
         if (SoftwareCoUtils.pluginName == null) {
-            IdeaPluginDescriptor pluginDescriptor = PluginManager.getPlugin(PluginId.getId("com.softwareco.intellij.plugin"));
-
-            SoftwareCoUtils.pluginName = pluginDescriptor.getName();
+            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
+            if (pluginDescriptor != null) {
+                SoftwareCoUtils.pluginName = pluginDescriptor.getName();
+            } else {
+                return "Code Time";
+            }
         }
         return SoftwareCoUtils.pluginName;
     }
@@ -72,14 +91,8 @@ public class SoftwareCo implements ApplicationComponent {
                 if (retry_counter == 0) {
                     SoftwareCoUtils.showOfflinePrompt(true);
                 }
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(check_online_interval_ms);
-                        initComponent();
-                    } catch (Exception e) {
-                        System.err.println(e);
-                    }
-                }).start();
+                final Runnable service = () -> initComponent();
+                AsyncManager.getInstance().executeOnceInSeconds(service, 60 * 10);
             } else {
                 getPluginName();
                 // create the anon user
@@ -89,14 +102,8 @@ public class SoftwareCo implements ApplicationComponent {
                     if (retry_counter == 0) {
                         SoftwareCoUtils.showOfflinePrompt(true);
                     }
-                    new Thread(() -> {
-                        try {
-                            Thread.sleep(check_online_interval_ms);
-                            initComponent();
-                        } catch (Exception e) {
-                            System.err.println(e);
-                        }
-                    }).start();
+                    final Runnable service = () -> initComponent();
+                    AsyncManager.getInstance().executeOnceInSeconds(service, 60 * 10);
                 } else {
                     initializePlugin(true);
                 }
@@ -165,15 +172,8 @@ public class SoftwareCo implements ApplicationComponent {
             this.sendInstallPayload();
 
             // ask the user to login one time only
-            new Thread(() -> {
-                try {
-                    Thread.sleep(5000);
-                    sessionMgr.showLoginPrompt();
-                }
-                catch (Exception e){
-                    System.err.println(e);
-                }
-            }).start();
+            final Runnable service = () -> sessionMgr.showLoginPrompt();
+            AsyncManager.getInstance().executeOnceInSeconds(service, 5);
         }
 
         new Thread(() -> {

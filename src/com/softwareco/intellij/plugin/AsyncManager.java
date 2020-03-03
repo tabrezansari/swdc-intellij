@@ -1,19 +1,17 @@
 package com.softwareco.intellij.plugin;
 
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class AsyncManager {
 
     private static AsyncManager instance = null;
     public static final Logger log = Logger.getLogger("AsyncManager");
 
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private List<String> names = new ArrayList<>();
     private List<Future<?>> futures = new ArrayList<>();
@@ -35,6 +33,10 @@ public class AsyncManager {
                     service, delayBeforeExecute, interval, TimeUnit.SECONDS);
             futures.add(future);
         }
+    }
+
+    public void executeOnceInSeconds(Runnable service, long delayInSeconds) {
+        scheduler.schedule(service, delayInSeconds, TimeUnit.SECONDS);
     }
 
     public void destroyServices() {

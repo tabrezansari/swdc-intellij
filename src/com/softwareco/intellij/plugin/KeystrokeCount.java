@@ -117,14 +117,8 @@ public class KeystrokeCount {
             this.timezone = timesData.timezone;
 
             // start the keystroke processor 1 minute timer
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000 * 60);
-                    this.processKeystrokes();
-                } catch (Exception e) {
-                    System.err.println(e);
-                }
-            }).start();
+            final Runnable service = () -> this.processKeystrokes();
+            AsyncManager.getInstance().executeOnceInSeconds(service, 60);
         }
 
         // create one and return the one just created

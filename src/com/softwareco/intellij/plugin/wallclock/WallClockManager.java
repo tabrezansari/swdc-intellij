@@ -84,15 +84,8 @@ public class WallClockManager {
             // refresh the tree
             CodeTimeToolWindow.refresh();
 
-            new Thread(() -> {
-                try {
-                    Thread.sleep(1000 * 60);
-                    this.updateSessionSummaryFromServer();
-                }
-                catch (Exception e){
-                    System.err.println(e);
-                }
-            }).start();
+            final Runnable service = () -> updateSessionSummaryFromServer();
+            AsyncManager.getInstance().executeOnceInSeconds(service, 60);
         }
     }
 
@@ -142,6 +135,8 @@ public class WallClockManager {
 
             // save the file
             FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
+
+            this.dispatchStatusViewUpdate();
         }
     }
 

@@ -13,6 +13,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
+import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -321,15 +322,15 @@ public class SoftwareCoSessionManager {
                             0, Messages.getInformationIcon());
                     if (options == 0) {
                         EventManager.createCodeTimeEvent(
-                                "click",
                                 "mouse",
+                                "click",
                                 "OnboardPrompt"
                         );
                         launchLogin();
                     } else {
                         EventManager.createCodeTimeEvent(
-                                "close",
                                 "window",
+                                "close",
                                 "OnboardPrompt"
                         );
                     }
@@ -357,21 +358,16 @@ public class SoftwareCoSessionManager {
 
         if (!userStatus.loggedIn && retryCount > 0) {
             final int newRetryCount = retryCount - 1;
-            new Thread(() -> {
-                try {
-                    Thread.sleep(10000);
-                    lazilyFetchUserStatus(newRetryCount);
-                }
-                catch (Exception e){
-                    System.err.println(e);
-                }
-            }).start();
+
+            final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);
+            AsyncManager.getInstance().executeOnceInSeconds(service, 10);
         } else {
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
+                    WallClockManager.getInstance().updateSessionSummaryFromServer();
                 }
             });
         }
@@ -384,15 +380,8 @@ public class SoftwareCoSessionManager {
         url += "/onboarding?token=" + jwt;
         BrowserUtil.browse(url);
 
-        new Thread(() -> {
-            try {
-                Thread.sleep(10000);
-                lazilyFetchUserStatus(12);
-            }
-            catch (Exception e){
-                System.err.println(e);
-            }
-        }).start();
+        final Runnable service = () -> lazilyFetchUserStatus(20);
+        AsyncManager.getInstance().executeOnceInSeconds(service, 10);
     }
 
     public static void launchWebDashboard() {
