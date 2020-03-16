@@ -8,6 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.SoftwareCo;
+import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.SoftwareResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -15,6 +16,7 @@ import org.apache.http.client.methods.HttpPost;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
@@ -243,12 +245,35 @@ public class FileManager {
         }
         // Getting Resource as file object
         URL url = getClass().getResource("/com/softwareco/intellij/plugin/assets/README.md");
-        File f = new File(url.getFile());
 
+        String fileContent = getFileContent(url.getFile());
+
+        String readmeFile = SoftwareCoSessionManager.getReadmeFile();
+        File f = new File(readmeFile);
+        if (!f.exists()) {
+            Writer writer = null;
+            // write the summary content
+            try {
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(new File(readmeFile)), StandardCharsets.UTF_8));
+                writer.write(fileContent);
+            } catch (IOException ex) {
+                // Report
+            } finally {
+                try {
+                    writer.close();
+                } catch (Exception ex) {/*ignore*/}
+            }
+        }
         VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
-        // TODO: figure out how to show it with only the preview window
-        FileEditorManager fileEditorManager = FileEditorManager.getInstance(p);
         OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
-        fileEditorManager.openEditor(descriptor, true);
+        FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+
+        // possible way of opening an asset file but it doesn't work in prod, only in debug
+//        VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
+//        // TODO: figure out how to show it with only the preview window
+//        FileEditorManager fileEditorManager = FileEditorManager.getInstance(p);
+//        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
+//        fileEditorManager.openEditor(descriptor, true);
     }
 }

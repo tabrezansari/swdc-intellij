@@ -61,6 +61,16 @@ public class SoftwareCoSessionManager {
         return dashboardFile;
     }
 
+    public static String getReadmeFile() {
+        String file = getSoftwareDir(true);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\jetbrainsCt_README.md";
+        } else {
+            file += "/jetbrainsCt_README.md";
+        }
+        return file;
+    }
+
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
         if (SoftwareCoUtils.isWindows()) {
