@@ -11,7 +11,6 @@ import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -39,7 +38,6 @@ public class SoftwareCo implements ApplicationComponent {
     private AsyncManager asyncManager = AsyncManager.getInstance();
 
     private static int retry_counter = 0;
-    private static long check_online_interval_ms = 1000 * 60 * 10;
 
     public SoftwareCo() {
     }
