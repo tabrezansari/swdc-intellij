@@ -210,6 +210,10 @@ public class SoftwareCoSessionManager {
                         }
                     }
 
+                    // fetch the sessions/summary in 70 seconds
+                    final Runnable service = () -> WallClockManager.getInstance().updateSessionSummaryFromServer();
+                    AsyncManager.getInstance().executeOnceInSeconds(service, 70);
+
                 } else {
                     log.info("Code Time: No offline data to send");
                 }

@@ -85,7 +85,7 @@ public class WallClockManager {
             CodeTimeToolWindow.refresh();
 
             final Runnable service = () -> updateSessionSummaryFromServer();
-            AsyncManager.getInstance().executeOnceInSeconds(service, 60);
+            AsyncManager.getInstance().executeOnceInSeconds(service, 70);
         }
     }
 
@@ -120,18 +120,10 @@ public class WallClockManager {
             Type type = new TypeToken<SessionSummary>() {}.getType();
             SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
 
-            boolean updateCurrents =
-                    summary.getCurrentDayMinutes() < fetchedSummary.getCurrentDayMinutes()
-                            ? true
-                            : false;
+            // clone all
+            summary.clone(fetchedSummary);
 
-            if (updateCurrents) {
-                // clone all
-                summary.clone(fetchedSummary);
-            } else {
-                // continue using the current summary
-                summary.cloneNonCurrentMetrics(fetchedSummary);
-            }
+            updateBasedOnSessionSeconds(fetchedSummary.getCurrentDayMinutes() * 60);
 
             // save the file
             FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
@@ -194,7 +186,5 @@ public class WallClockManager {
             // this will update the status bar and tree view metrics
             setWcTime((sessionSeconds));
         }
-        // just update the tree view metrics
-        dispatchStatusViewUpdate();
     }
 }

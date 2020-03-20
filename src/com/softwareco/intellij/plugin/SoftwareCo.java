@@ -197,7 +197,7 @@ public class SoftwareCo implements ApplicationComponent {
 
         // every 30 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 30);
+        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 15);
 
         // start the wallclock
         WallClockManager.getInstance().updateSessionSummaryFromServer();
