@@ -17,6 +17,7 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.util.logging.Logger;
@@ -172,6 +173,8 @@ public class SoftwareCo implements ApplicationComponent {
             // ask the user to login one time only
             final Runnable service = () -> sessionMgr.showLoginPrompt();
             AsyncManager.getInstance().executeOnceInSeconds(service, 5);
+
+            FileManager.getInstance().openReadmeFile();
         }
 
         new Thread(() -> {

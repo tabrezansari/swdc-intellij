@@ -93,7 +93,7 @@ public class WallClockManager {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
         String jwt = SoftwareCoSessionManager.getItem("jwt");
-        String api = "/sessions/summary";
+        String api = "/sessions/summary?refresh=true";
         SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
         if (resp.isOk()) {
             JsonObject jsonObj = resp.getJsonObj();
