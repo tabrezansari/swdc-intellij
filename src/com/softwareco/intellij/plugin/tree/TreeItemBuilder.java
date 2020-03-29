@@ -1,5 +1,6 @@
 package com.softwareco.intellij.plugin.tree;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.util.IconLoader;
@@ -593,6 +594,11 @@ public class TreeItemBuilder {
                 if (selectedNode.getData() != null && selectedNode.getData() instanceof FileChangeInfo) {
                     String fsPath = ((FileChangeInfo) selectedNode.getData()).fsPath;
                     SoftwareCoUtils.launchFile(fsPath);
+                } else if (selectedNode.getPath() != null && selectedNode.getData() instanceof String &&
+                    String.valueOf(selectedNode.getData()).indexOf("http") != -1) {
+                    // launch the url
+                    String url = String.valueOf(selectedNode.getData());
+                    BrowserUtil.browse(url);
                 }
             }
         }

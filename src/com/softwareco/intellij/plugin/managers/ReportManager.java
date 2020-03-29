@@ -23,7 +23,7 @@ public class ReportManager {
     private static int TABLE_WIDTH = 80;
 
     private static SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
-    private static SimpleDateFormat formatDayYear = new SimpleDateFormat("EEE, MMM d YYYY");
+    private static SimpleDateFormat formatDayYear = new SimpleDateFormat("MMM d, YYYY");
 
     public static String getProjectContributorSummaryFile() {
         String file = SoftwareCoSessionManager.getSoftwareDir(true);
@@ -67,8 +67,8 @@ public class ReportManager {
             sb.append("\n");
 
             // YESTERDAY
-            projectDate = formatDayYear.format(timesData.local_start_of_yesterday_date);
-            sb.append(getRightAlignedTableHeader("Today (" + projectDate + ")"));
+            String yesterday = formatDayYear.format(timesData.local_start_of_yesterday_date);
+            sb.append(getRightAlignedTableHeader("Yesterday (" + yesterday + ")"));
             sb.append(getColumnHeaders(Arrays.asList("Metric", "You", "All Contributors")));
             sb.append(getRowNumberData("Commits", usersYesterdaysCommits.getCommitCount(), contribYesterdaysCommits.getCommitCount()));
             sb.append(getRowNumberData("Files changed", usersYesterdaysCommits.getFileCount(), contribYesterdaysCommits.getFileCount()));
@@ -77,8 +77,8 @@ public class ReportManager {
             sb.append("\n");
 
             // THIS WEEK
-            projectDate = formatDayYear.format(timesData.local_start_of_week_date);
-            sb.append(getRightAlignedTableHeader("Today (" + projectDate + ")"));
+            String startOfWeek = formatDayYear.format(timesData.local_start_of_week_date);
+            sb.append(getRightAlignedTableHeader("This week (" + startOfWeek + " to " + projectDate + ")"));
             sb.append(getColumnHeaders(Arrays.asList("Metric", "You", "All Contributors")));
             sb.append(getRowNumberData("Commits", usersThisWeeksCommits.getCommitCount(), contribThisWeeksCommits.getCommitCount()));
             sb.append(getRowNumberData("Files changed", usersThisWeeksCommits.getFileCount(), contribThisWeeksCommits.getFileCount()));
