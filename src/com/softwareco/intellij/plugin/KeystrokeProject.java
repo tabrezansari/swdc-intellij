@@ -6,6 +6,7 @@ package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonObject;
 import com.softwareco.intellij.plugin.models.ResourceInfo;
+import com.softwareco.intellij.plugin.repo.GitUtil;
 
 public class KeystrokeProject {
 
@@ -17,7 +18,7 @@ public class KeystrokeProject {
     public KeystrokeProject(String name, String directory) {
         this.name = name;
         this.directory = directory;
-        ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(directory);
+        ResourceInfo resourceInfo = GitUtil.getResourceInfo(directory);
         if (resourceInfo != null) {
             this.resource.setIdentifier(resourceInfo.getIdentifier());
             this.resource.setTag(resourceInfo.getTag());

@@ -48,7 +48,7 @@ public class TreeItemBuilder {
     public static JBList<JLabel> buildContributorTitle() {
         Project p = SoftwareCoUtils.getFirstActiveProject();
         if (p != null) {
-            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(p.getBasePath());
+            ResourceInfo resourceInfo = GitUtil.getResourceInfo(p.getBasePath());
             if (resourceInfo != null) {
                 DefaultListModel listModel = new DefaultListModel();
                 JLabel label = new JLabel();
@@ -344,7 +344,7 @@ public class TreeItemBuilder {
         if (p != null) {
             String repoUrl = GitUtil.getRepoUrlLink(p.getBasePath());
 
-            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(p.getBasePath());
+            ResourceInfo resourceInfo = GitUtil.getResourceInfo(p.getBasePath());
             List<MetricTree> contributors = new ArrayList<>();
             if (resourceInfo != null && resourceInfo.getMembers().size() > 0) {
                 for (TeamMember member: resourceInfo.getMembers()) {
@@ -378,7 +378,7 @@ public class TreeItemBuilder {
                 if (filterBy.equals("uncommitted")) {
                     commitChangeStats = GitUtil.getUncommitedChanges(p.getBasePath());
                 } else {
-                    commitChangeStats = GitUtil.getTodaysCommits(p.getBasePath());
+                    commitChangeStats = GitUtil.getTodaysCommits(p.getBasePath(), null);
                 }
                 MetricTreeNode node = buildGitChangeNode(p, commitChangeStats);
 

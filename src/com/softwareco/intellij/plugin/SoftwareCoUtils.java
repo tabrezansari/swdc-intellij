@@ -24,13 +24,10 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
-import com.softwareco.intellij.plugin.models.ResourceInfo;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.models.TeamMember;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -48,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
+import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -80,23 +78,20 @@ public class SoftwareCoUtils {
 
     private final static int EOF = -1;
 
-    private static boolean fetchingResourceInfo = false;
     private static boolean loggedInCacheState = false;
 
     private static boolean appAvailable = true;
     private static boolean showStatusText = true;
-    private static String lastMsg = "";
-    private static String lastTooltip = "";
 
     private static int lastDayOfMonth = 0;
 
     private static int DASHBOARD_LABEL_WIDTH = 25;
     private static int DASHBOARD_VALUE_WIDTH = 25;
-    private static int MARKER_WIDTH = 4;
 
     private static String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
+    private static long DAYS_IN_SECONDS = 60 * 60 * 24;
 
     static {
         // initialize the HttpClient
@@ -360,13 +355,7 @@ public class SoftwareCoUtils {
         return null;
     }
 
-    public static void updateStatusBar(final String kpmIcon, final String kpmMsg,
-                                        final String tooltip) {
-
-        if ( showStatusText ) {
-            lastMsg = kpmMsg;
-        }
-        lastTooltip = tooltip;
+    public static void updateStatusBar(final String kpmIcon, final String kpmMsg, final String tooltip) {
 
         // build the status bar text information
         ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -495,12 +484,7 @@ public class SoftwareCoUtils {
         }
     }
 
-    public static List<String> getCommandResult(List<String> cmdList, String dir) {
-        String[] args = Arrays.copyOf(cmdList.toArray(), cmdList.size(), String[].class);
-        return getCommandResultForCmd(args, dir);
-    }
-
-    public static List<String> getCommandResultForCmd(String[] args, String dir) {
+    public static List<String> getResultsForCommandArgs(String[] args, String dir) {
         List<String> results = new ArrayList<>();
         String result = runCommand(args, dir);
         if (result == null || result.trim().length() == 0) {
@@ -520,64 +504,6 @@ public class SoftwareCoUtils {
             count += n;
         }
         return count;
-    }
-
-    // get the git resource config information
-    public static ResourceInfo getResourceInfo(String projectDir) {
-        ResourceInfo resourceInfo = new ResourceInfo();
-
-        // is the project dir avail?
-        if (projectDir != null && !projectDir.equals("")) {
-            try {
-                String[] branchCmd = { "git", "symbolic-ref", "--short", "HEAD" };
-                String branch = runCommand(branchCmd, projectDir);
-
-                String[] identifierCmd = { "git", "config", "--get", "remote.origin.url" };
-                String identifier = runCommand(identifierCmd, projectDir);
-
-                String[] emailCmd = { "git", "config", "user.email" };
-                String email = runCommand(emailCmd, projectDir);
-
-                String[] tagCmd = { "git", "describe", "--all" };
-                String tag = runCommand(tagCmd, projectDir);
-
-                if (StringUtils.isNotBlank(branch) && StringUtils.isNotBlank(identifier)) {
-                    resourceInfo.setBranch(branch);
-                    resourceInfo.setTag(tag);
-                    resourceInfo.setEmail(email);
-                    resourceInfo.setIdentifier(identifier);
-                }
-
-                // get the users
-                List<TeamMember> members = new ArrayList<>();
-                String[] listUsers = { "git", "log", "--pretty=%an,%ae" };
-                List<String> results = getCommandResultForCmd(listUsers, projectDir);
-                Set<String> emailSet = new HashSet<>();
-                if (results != null && results.size() > 0) {
-                    // add them
-                    for (int i = 0; i < results.size(); i++) {
-                        String[] info = results.get(i).split(",");
-                        if (info != null && info.length == 2) {
-                            String name = info[0];
-                            String teamEmail = info[1];
-                            if (!emailSet.contains(teamEmail)) {
-                                TeamMember member = new TeamMember();
-                                member.setEmail(teamEmail);
-                                member.setName(name);
-                                member.setIdentifier(identifier);
-                                members.add(member);
-                                emailSet.add(teamEmail);
-                            }
-                        }
-                    }
-                }
-                resourceInfo.setMembers(members);
-            } catch (Exception e) {
-                //
-            }
-        }
-
-        return resourceInfo;
     }
 
     public static void launchSoftwareTopForty() {
@@ -884,6 +810,16 @@ public class SoftwareCoUtils {
         });
     }
 
+    public static Date atStartOfWeek() {
+        Calendar cal = Calendar.getInstance();
+        // clear the units
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return atStartOfDay(cal.getTime());
+    }
+
     public static Date atStartOfDay(Date date) {
         LocalDateTime localDateTime = dateToLocalDateTime(date);
         LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
@@ -911,8 +847,14 @@ public class SoftwareCoUtils {
         public long local_now = now + offset;
         public String timezone = TimeZone.getDefault().getID();
         public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+        public long local_start_yesterday = local_start_day - DAYS_IN_SECONDS;
+        public Date local_start_of_week_date = atStartOfWeek();
+        public Date local_start_of_yesterday_date = new Date(local_start_yesterday * 1000);
+        public Date local_start_today_date = new Date(local_start_day * 1000);
+        public long local_start_of_week = local_start_of_week_date.toInstant().getEpochSecond();
         public long local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
         public long utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
+
     }
 
 

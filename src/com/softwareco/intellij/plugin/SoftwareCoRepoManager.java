@@ -3,6 +3,7 @@ package com.softwareco.intellij.plugin;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.softwareco.intellij.plugin.models.ResourceInfo;
+import com.softwareco.intellij.plugin.repo.GitUtil;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -30,7 +31,7 @@ public class SoftwareCoRepoManager {
     }
 
     public JsonObject getLatestCommit(String projectDir) {
-        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        ResourceInfo resource = GitUtil.getResourceInfo(projectDir);
         if (resource != null && resource.getIdentifier() != null) {
             String identifier = resource.getIdentifier();
             String tag = resource.getTag();
@@ -63,7 +64,7 @@ public class SoftwareCoRepoManager {
     }
 
     public void getHistoricalCommits(String projectDir) {
-        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        ResourceInfo resource = GitUtil.getResourceInfo(projectDir);
         if (resource != null && resource.getIdentifier() != null) {
             String identifier = resource.getIdentifier();
             String tag = resource.getTag();
@@ -72,7 +73,7 @@ public class SoftwareCoRepoManager {
 
             JsonObject latestCommit = getLatestCommit(projectDir);
 
-            String sinceOption = null;
+            String sinceOption = "";
             if (latestCommit != null && latestCommit.has("timestamp")) {
                 long unixTs = latestCommit.get("timestamp").getAsLong();
                 sinceOption = "--since=" + unixTs;
@@ -81,22 +82,12 @@ public class SoftwareCoRepoManager {
             }
 
             String authorOption = "--author=" + email;
-            List<String> cmdList = new ArrayList<String>();
-            cmdList.add("git");
-            cmdList.add("log");
-            cmdList.add("--stat");
-            cmdList.add("--pretty=COMMIT:%H,%ct,%cI,%s");
-            cmdList.add(authorOption);
-            if (sinceOption != null) {
-                cmdList.add(sinceOption);
-            }
 
-            // String[] commitHistoryCmd = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", authorOption};
+            String[] cmdList = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", authorOption, sinceOption};
 
-            String[] commitHistoryCmd = Arrays.copyOf(cmdList.toArray(), cmdList.size(), String[].class);
-            String historyContent = SoftwareCoUtils.runCommand(commitHistoryCmd, projectDir);
+            List<String> results = SoftwareCoUtils.getResultsForCommandArgs(cmdList, projectDir);
 
-            if (historyContent == null || historyContent.isEmpty()) {
+            if (results == null || results.size() == 0) {
                 return;
             }
 
@@ -106,97 +97,96 @@ public class SoftwareCoRepoManager {
             // split the content
             JsonArray commits = new JsonArray();
             JsonObject commit = null;
-            String[] historyContentList = historyContent.split("\n");
-            if (historyContentList != null && historyContentList.length > 0) {
-                for (String line : historyContentList) {
-                    line = line.trim();
-                    if (line.indexOf("COMMIT:") == 0) {
-                        line = line.substring("COMMIT:".length());
-                        if (commit != null) {
-                            commits.add(commit);
-                        }
-                        // split by comma
-                        String[] commitInfos = line.split(",");
-                        if (commitInfos != null && commitInfos.length > 3) {
-                            String commitId = commitInfos[0].trim();
-                            if (latestCommitId != null && commitId.equals(latestCommitId)) {
-                                commit = null;
-                                // go to the next one
-                                continue;
-                            }
-                            long timestamp = Long.valueOf(commitInfos[1].trim());
-                            String date = commitInfos[2].trim();
-                            String message = commitInfos[3].trim();
-                            commit = new JsonObject();
-                            commit.addProperty("commitId", commitId);
-                            commit.addProperty("timestamp", timestamp);
-                            commit.addProperty("date", date);
-                            commit.addProperty("message", message);
-                            JsonObject sftwTotalsObj = new JsonObject();
-                            sftwTotalsObj.addProperty("insertions", 0);
-                            sftwTotalsObj.addProperty("deletions", 0);
-                            JsonObject changesObj = new JsonObject();
-                            changesObj.add("__sftwTotal__", sftwTotalsObj);
-                            commit.add("changes", changesObj);
-                        }
-                    } else if (commit != null && line.indexOf("|") != -1) {
-                        line = line.replaceAll("\\s+"," ");
-                        String[] lineInfos = line.split("|");
 
-                        if (lineInfos != null && lineInfos.length > 1) {
-                            String file = lineInfos[0].trim();
-                            String metricsLine = lineInfos[1].trim();
-                            String[] metricInfos = metricsLine.split(" ");
-                            if (metricInfos != null && metricInfos.length > 1) {
-                                String addAndDeletes = metricInfos[1].trim();
-                                // count the number of plus signs and negative signs to find
-                                // out how many additions and deletions per file
-                                int len = addAndDeletes.length();
-                                int lastPlusIdx = addAndDeletes.lastIndexOf("+");
-                                int insertions = 0;
-                                int deletions = 0;
-                                if (lastPlusIdx != -1) {
-                                    insertions = lastPlusIdx + 1;
-                                    deletions = len - insertions;
-                                } else if (len > 0) {
-                                    // all deletions
-                                    deletions = len;
-                                }
-                                JsonObject fileChanges = new JsonObject();
-                                fileChanges.addProperty("insertions", insertions);
-                                fileChanges.addProperty("deletions", deletions);
-                                JsonObject changesObj = commit.get("changes").getAsJsonObject();
-                                changesObj.add(file, fileChanges);
-
-                                JsonObject swftTotalsObj = changesObj.get("__sftwTotal__").getAsJsonObject();
-                                int insertionTotal = swftTotalsObj.get("insertions").getAsInt() + insertions;
-                                int deletionsTotal = swftTotalsObj.get("deletions").getAsInt() + deletions;
-                                swftTotalsObj.addProperty("insertions", insertionTotal);
-                                swftTotalsObj.addProperty("deletions", deletionsTotal);
-                            }
-                        }
+            for (String line : results) {
+                line = line.trim();
+                if (line.indexOf("COMMIT:") == 0) {
+                    line = line.substring("COMMIT:".length());
+                    if (commit != null) {
+                        commits.add(commit);
                     }
-                }
-
-                if (commit != null) {
-                    commits.add(commit);
-                }
-
-                if (commits != null && commits.size() > 0) {
-                    // send it in batches of 25
-                    JsonArray batch = new JsonArray();
-                    for (int i = 0; i < commits.size(); i++) {
-                        batch.add(commits.get(i));
-                        if (i > 0 && i % 25 == 0) {
-                            this.processCommits(batch, identifier, tag, branch);
-                            batch = new JsonArray();
+                    // split by comma
+                    String[] commitInfos = line.split(",");
+                    if (commitInfos != null && commitInfos.length > 3) {
+                        String commitId = commitInfos[0].trim();
+                        if (latestCommitId != null && commitId.equals(latestCommitId)) {
+                            commit = null;
+                            // go to the next one
+                            continue;
                         }
+                        long timestamp = Long.valueOf(commitInfos[1].trim());
+                        String date = commitInfos[2].trim();
+                        String message = commitInfos[3].trim();
+                        commit = new JsonObject();
+                        commit.addProperty("commitId", commitId);
+                        commit.addProperty("timestamp", timestamp);
+                        commit.addProperty("date", date);
+                        commit.addProperty("message", message);
+                        JsonObject sftwTotalsObj = new JsonObject();
+                        sftwTotalsObj.addProperty("insertions", 0);
+                        sftwTotalsObj.addProperty("deletions", 0);
+                        JsonObject changesObj = new JsonObject();
+                        changesObj.add("__sftwTotal__", sftwTotalsObj);
+                        commit.add("changes", changesObj);
                     }
-                    if (batch.size() > 0) {
-                        this.processCommits(batch, identifier, tag, branch);
+                } else if (commit != null && line.indexOf("|") != -1) {
+                    line = line.replaceAll("\\s+"," ");
+                    String[] lineInfos = line.split("|");
+
+                    if (lineInfos != null && lineInfos.length > 1) {
+                        String file = lineInfos[0].trim();
+                        String metricsLine = lineInfos[1].trim();
+                        String[] metricInfos = metricsLine.split(" ");
+                        if (metricInfos != null && metricInfos.length > 1) {
+                            String addAndDeletes = metricInfos[1].trim();
+                            // count the number of plus signs and negative signs to find
+                            // out how many additions and deletions per file
+                            int len = addAndDeletes.length();
+                            int lastPlusIdx = addAndDeletes.lastIndexOf("+");
+                            int insertions = 0;
+                            int deletions = 0;
+                            if (lastPlusIdx != -1) {
+                                insertions = lastPlusIdx + 1;
+                                deletions = len - insertions;
+                            } else if (len > 0) {
+                                // all deletions
+                                deletions = len;
+                            }
+                            JsonObject fileChanges = new JsonObject();
+                            fileChanges.addProperty("insertions", insertions);
+                            fileChanges.addProperty("deletions", deletions);
+                            JsonObject changesObj = commit.get("changes").getAsJsonObject();
+                            changesObj.add(file, fileChanges);
+
+                            JsonObject swftTotalsObj = changesObj.get("__sftwTotal__").getAsJsonObject();
+                            int insertionTotal = swftTotalsObj.get("insertions").getAsInt() + insertions;
+                            int deletionsTotal = swftTotalsObj.get("deletions").getAsInt() + deletions;
+                            swftTotalsObj.addProperty("insertions", insertionTotal);
+                            swftTotalsObj.addProperty("deletions", deletionsTotal);
+                        }
                     }
                 }
             }
+
+            if (commit != null) {
+                commits.add(commit);
+            }
+
+            if (commits != null && commits.size() > 0) {
+                // send it in batches of 25
+                JsonArray batch = new JsonArray();
+                for (int i = 0; i < commits.size(); i++) {
+                    batch.add(commits.get(i));
+                    if (i > 0 && i % 25 == 0) {
+                        this.processCommits(batch, identifier, tag, branch);
+                        batch = new JsonArray();
+                    }
+                }
+                if (batch.size() > 0) {
+                    this.processCommits(batch, identifier, tag, branch);
+                }
+            }
+
         }
     }
 
@@ -237,7 +227,7 @@ public class SoftwareCoRepoManager {
     }
 
     public void processRepoMembersInfo(final String projectDir) {
-        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        ResourceInfo resource = GitUtil.getResourceInfo(projectDir);
         if (resource != null && resource.getIdentifier() != null) {
 
             if (resource.getMembers().size() > 0) {

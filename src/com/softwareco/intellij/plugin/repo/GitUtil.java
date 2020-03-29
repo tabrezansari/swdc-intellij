@@ -5,10 +5,13 @@ import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.CommitChangeStats;
 import com.softwareco.intellij.plugin.models.CommitInfo;
 import com.softwareco.intellij.plugin.models.ResourceInfo;
+import com.softwareco.intellij.plugin.models.TeamMember;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class GitUtil {
 
@@ -42,7 +45,7 @@ public class GitUtil {
         return changeStats;
     }
 
-    public static CommitChangeStats getChangeStats(List<String> cmdList, String projectDir, boolean committedChanges) {
+    public static CommitChangeStats getChangeStats(String[] cmdList, String projectDir, boolean committedChanges) {
         CommitChangeStats changeStats = new CommitChangeStats(committedChanges);
 
         if (projectDir == null) {
@@ -58,7 +61,7 @@ public class GitUtil {
          for multiple files it will look like this...
          7 files changed, 137 insertions(+), 55 deletions(-)
          */
-        List<String> resultList = SoftwareCoUtils.getCommandResult(cmdList, projectDir);
+        List<String> resultList = SoftwareCoUtils.getResultsForCommandArgs(cmdList, projectDir);
 
         if (resultList == null || resultList.size() == 0) {
             // something went wrong, but don't try to parse a null or undefined str
@@ -78,35 +81,127 @@ public class GitUtil {
             return changeStats;
         }
 
-        List<String> cmdList = new ArrayList<String>();
-        cmdList.add("git");
-        cmdList.add("diff");
-        cmdList.add("--stat");
+        String[] cmdList = {"git", "diff", "--stat"};
 
         return getChangeStats(cmdList, projectDir, false);
     }
 
-    public static CommitChangeStats getTodaysCommits(String projectDir) {
+    // get the git resource config information
+    public static ResourceInfo getResourceInfo(String projectDir) {
+        ResourceInfo resourceInfo = new ResourceInfo();
+
+        // is the project dir avail?
+        if (projectDir != null && !projectDir.equals("")) {
+            try {
+                String[] branchCmd = { "git", "symbolic-ref", "--short", "HEAD" };
+                String branch = SoftwareCoUtils.runCommand(branchCmd, projectDir);
+
+                String[] identifierCmd = { "git", "config", "--get", "remote.origin.url" };
+                String identifier = SoftwareCoUtils.runCommand(identifierCmd, projectDir);
+
+                String[] emailCmd = { "git", "config", "user.email" };
+                String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
+
+                String[] tagCmd = { "git", "describe", "--all" };
+                String tag = SoftwareCoUtils.runCommand(tagCmd, projectDir);
+
+                if (StringUtils.isNotBlank(branch) && StringUtils.isNotBlank(identifier)) {
+                    resourceInfo.setBranch(branch);
+                    resourceInfo.setTag(tag);
+                    resourceInfo.setEmail(email);
+                    resourceInfo.setIdentifier(identifier);
+                }
+
+                // get the users
+                List<TeamMember> members = new ArrayList<>();
+                String[] listUsers = { "git", "log", "--pretty=%an,%ae" };
+                List<String> results = SoftwareCoUtils.getResultsForCommandArgs(listUsers, projectDir);
+                Set<String> emailSet = new HashSet<>();
+                if (results != null && results.size() > 0) {
+                    // add them
+                    for (int i = 0; i < results.size(); i++) {
+                        String[] info = results.get(i).split(",");
+                        if (info != null && info.length == 2) {
+                            String name = info[0];
+                            String teamEmail = info[1];
+                            if (!emailSet.contains(teamEmail)) {
+                                TeamMember member = new TeamMember();
+                                member.setEmail(teamEmail);
+                                member.setName(name);
+                                member.setIdentifier(identifier);
+                                members.add(member);
+                                emailSet.add(teamEmail);
+                            }
+                        }
+                    }
+                }
+                resourceInfo.setMembers(members);
+            } catch (Exception e) {
+                //
+            }
+        }
+
+        return resourceInfo;
+    }
+
+    public static String getUsersEmail(String projectDir) {
+        String[] emailCmd = { "git", "config", "user.email" };
+        String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
+        return email;
+    }
+
+    public static CommitChangeStats getTodaysCommits(String projectDir, String email) {
         CommitChangeStats changeStats = new CommitChangeStats(true);
 
         if (projectDir == null) {
             return changeStats;
         }
 
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        long starOfDay = timesData.local_start_day;
+        return getCommitsForRange("today", projectDir, email);
+    }
 
-        ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(projectDir);
+    public static CommitChangeStats getYesterdaysCommits(String projectDir, String email) {
+        CommitChangeStats changeStats = new CommitChangeStats(true);
 
-        List<String> cmdList = new ArrayList<String>();
-        cmdList.add("git");
-        cmdList.add("log");
-        cmdList.add("--stat");
-        cmdList.add("--pretty=COMMIT:%H,%ct,%cI,%s");
-        cmdList.add("--since=" + starOfDay);
-        if (resourceInfo != null && resourceInfo.getEmail() != null && !resourceInfo.getEmail().isEmpty()) {
-            cmdList.add("--author=" + resourceInfo.getEmail());
+        if (projectDir == null) {
+            return changeStats;
         }
+
+        return getCommitsForRange("yesterday", projectDir, email);
+    }
+
+    public static CommitChangeStats getThisWeeksCommits(String projectDir, String email) {
+        CommitChangeStats changeStats = new CommitChangeStats(true);
+
+        if (projectDir == null) {
+            return changeStats;
+        }
+
+        return getCommitsForRange("thisWeek", projectDir, email);
+    }
+
+    public static CommitChangeStats getCommitsForRange(String rangeType, String projectDir, String email) {
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        long startOfRange = 0l;
+        if (rangeType == "today") {
+            startOfRange = timesData.local_start_day;
+        } else if (rangeType == "yesterday") {
+            startOfRange = timesData.local_start_yesterday;
+        } else if (rangeType == "thisWeek") {
+            startOfRange = timesData.local_start_of_week;
+        }
+
+        String authorArg = "";
+        if (email == null || email.equals("")) {
+            ResourceInfo resourceInfo = getResourceInfo(projectDir);
+            if (resourceInfo != null && resourceInfo.getEmail() != null && !resourceInfo.getEmail().isEmpty()) {
+                authorArg = "--author=" + resourceInfo.getEmail();
+            }
+        } else {
+            authorArg = "--author=" + email;
+        }
+
+        String[] cmdList = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", "--since=" + startOfRange, authorArg};
 
         return getChangeStats(cmdList, projectDir, true);
     }
@@ -115,7 +210,7 @@ public class GitUtil {
         String[] cmdList = { "git", "config", "--get", "remote.origin.url" };
 
         // should only be a result of 1
-        List<String> resultList = SoftwareCoUtils.getCommandResultForCmd(cmdList, projectDir);
+        List<String> resultList = SoftwareCoUtils.getResultsForCommandArgs(cmdList, projectDir);
         String url = resultList != null && resultList.size() > 0 ? resultList.get(0) : null;
         if (url != null) {
             url = url.substring(0, url.lastIndexOf(".git"));
@@ -128,21 +223,17 @@ public class GitUtil {
             return null;
         }
         if (email == null) {
-            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(projectDir);
+            ResourceInfo resourceInfo = getResourceInfo(projectDir);
             email = resourceInfo != null ? resourceInfo.getEmail() : null;
         }
         CommitInfo commitInfo = new CommitInfo();
-        List<String> cmdList = new ArrayList<String>();
-        cmdList.add("git");
-        cmdList.add("log");
-        cmdList.add("--pretty=%H,%s");
-        if (email != null) {
-            cmdList.add("--author=" + email);
-        }
-        cmdList.add("--max-count=1");
+
+        String authorArg = (email != null) ? "--author=" + email : "";
+
+        String[] cmdList = { "git", "log", "--pretty=%H,%s", authorArg, "--max-count=1" };
 
         // should only be a result of 1
-        List<String> resultList = SoftwareCoUtils.getCommandResult(cmdList, projectDir);
+        List<String> resultList = SoftwareCoUtils.getResultsForCommandArgs(cmdList, projectDir);
         if (resultList != null && resultList.size() > 0) {
             String[] parts = resultList.get(0).split(",");
             if (parts != null && parts.length == 2) {
