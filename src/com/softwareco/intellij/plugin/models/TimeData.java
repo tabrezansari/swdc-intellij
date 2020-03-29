@@ -1,5 +1,7 @@
 package com.softwareco.intellij.plugin.models;
 
+import com.softwareco.intellij.plugin.KeystrokeProject;
+
 public class TimeData {
 
     private long timestamp = 0L;
@@ -8,6 +10,7 @@ public class TimeData {
     private long session_seconds = 0L;
     private long file_seconds = 0L;
     private String day = "";
+    private KeystrokeProject project = null;
 
     public void clone(TimeData td) {
         this.timestamp = td.timestamp;
@@ -16,6 +19,11 @@ public class TimeData {
         this.session_seconds = td.session_seconds;
         this.file_seconds = td.file_seconds;
         this.day = td.day;
+        if (td.getProject() != null) {
+            this.project = new KeystrokeProject(td.getProject().getName(), td.getProject().getDirectory());
+        } else {
+            this.project = new KeystrokeProject("Unnamed", "Untitled");
+        }
     }
 
     public long getTimestamp() {
@@ -64,5 +72,13 @@ public class TimeData {
 
     public void setDay(String day) {
         this.day = day;
+    }
+
+    public KeystrokeProject getProject() {
+        return project;
+    }
+
+    public void setProject(KeystrokeProject project) {
+        this.project = project;
     }
 }

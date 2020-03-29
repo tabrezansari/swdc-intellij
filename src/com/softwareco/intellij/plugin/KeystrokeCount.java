@@ -4,10 +4,12 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
+import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
+import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.nio.file.Path;
@@ -100,6 +102,7 @@ public class KeystrokeCount {
         public long local_start = 0;
         public long local_end = 0;
         public long duration_seconds = 0;
+        public long cumulative_editor_seconds = 0;
         public String fsPath = "";
         public String name = "";
     }
@@ -152,6 +155,15 @@ public class KeystrokeCount {
     }
 
     public void endUnendedFiles() {
+
+        String dir = this.project.getDirectory();
+        TimeData td = TimeDataManager.getTodayTimeDataSummary(dir);
+
+        long editorSeconds = 60;
+        if (td != null && td.getEditor_seconds() > 0) {
+            editorSeconds = td.getEditor_seconds();
+        }
+
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         Map<String, FileInfo> fileInfoDataSet = this.source;
         for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
@@ -161,10 +173,8 @@ public class KeystrokeCount {
                 fileInfoData.end = timesData.now;
                 fileInfoData.local_end = timesData.local_now;
             }
+            fileInfoData.cumulative_editor_seconds = editorSeconds;
         }
-
-        // set the latest payload timestamp utc so help with session time calculations
-        SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
     }
 
     // update each source with it's true amount of keystrokes
@@ -251,6 +261,10 @@ public class KeystrokeCount {
 
         // refresh the code time tree view
         WallClockManager.getInstance().dispatchStatusViewUpdate();
+
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        // set the latest payload timestamp utc so help with session time calculations
+        SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
     }
 
     public int getKeystrokes() {

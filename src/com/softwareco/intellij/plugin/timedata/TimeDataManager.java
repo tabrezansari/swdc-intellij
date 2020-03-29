@@ -2,6 +2,8 @@ package com.softwareco.intellij.plugin.timedata;
 
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.openapi.project.Project;
+import com.softwareco.intellij.plugin.KeystrokeProject;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
@@ -34,37 +36,29 @@ public class TimeDataManager {
         FileManager.writeData(getTimeDataSummaryFile(), tdList);
     }
 
-    public static void updateTimeDataSummary(long editorSeconds, long sessionSeconds, long fileSeconds) {
-
+    public static void updateEditorSeconds(long editorSeconds) {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        String day = SoftwareCoUtils.getTodayInStandardFormat();
-
-        List<TimeData> timeDataList = getTimeDataList();
-
-        // replace the current one that is found
-        boolean foundIt = false;
-        for (TimeData timeData : timeDataList) {
-            if (timeData.getDay().equals(day)) {
-                timeData.setEditor_seconds(editorSeconds);
-                timeData.setFile_seconds(fileSeconds);
-                timeData.setSession_seconds(sessionSeconds);
-                foundIt = true;
-                break;
-            }
+        Project activeProject = SoftwareCoUtils.getFirstActiveProject();
+        if (activeProject != null) {
+            TimeData td = getTodayTimeDataSummary(activeProject.getBasePath());
+            td.setEditor_seconds(td.getEditor_seconds() + editorSeconds);
+            td.setTimestamp_local(timesData.local_now);
+            saveTimeDataSummaryToDisk(td);
         }
-        if (!foundIt) {
-            TimeData td = new TimeData();
-            td.setDay(day);
-            td.setEditor_seconds(editorSeconds);
-            td.setFile_seconds(fileSeconds);
+    }
+
+    public static void incrementSessionAndFileSeconds(long minutesSincePayload) {
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        Project activeProject = SoftwareCoUtils.getFirstActiveProject();
+        if (activeProject != null) {
+            TimeData td = getTodayTimeDataSummary(activeProject.getBasePath());
+
+            long sessionSeconds = minutesSincePayload * 60;
             td.setSession_seconds(sessionSeconds);
-            td.setTimestamp(timesData.utc_end_day);
-            td.setTimestamp_local(timesData.local_end_day);
-            timeDataList.add(td);
+            td.setFile_seconds(td.getFile_seconds() + 60);
+
+            saveTimeDataSummaryToDisk(td);
         }
-
-
-        FileManager.writeData(getTimeDataSummaryFile(), timeDataList);
     }
 
     private static List<TimeData> getTimeDataList() {
@@ -81,37 +75,74 @@ public class TimeDataManager {
      * Get the current time data info that is saved on disk. If not found create an empty one.
      * @return
      */
-    public static TimeData getTodayTimeDataSummary() {
+    public static TimeData getTodayTimeDataSummary(String directory) {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
 
-        TimeData td = null;
 
         List<TimeData> timeDataList = getTimeDataList();
 
         if (timeDataList != null && timeDataList.size() > 0) {
             for (TimeData timeData : timeDataList) {
-                if (timeData.getDay().equals(day)) {
-                    td = new TimeData();
-                    td.clone(timeData);
-                    break;
+                if (timeData.getDay().equals(day) && timeData.getProject().getDirectory().equals(directory)) {
+                    // return it
+                    return timeData;
                 }
             }
         }
 
-        if (td == null) {
-            td = new TimeData();
-            td.setDay(day);
-            if (timeDataList == null) {
-                timeDataList = new ArrayList<>();
-            }
-            timeDataList.add(td);
-            FileManager.writeData(getTimeDataSummaryFile(), timeDataList);
-        }
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        Project p = SoftwareCoUtils.getProjectForPath(directory);
 
+        TimeData td = new TimeData();
+        td.setDay(day);
+        td.setTimestamp_local(timesData.local_now);
+        td.setTimestamp(timesData.now);
+        if (p != null) {
+            td.setProject(new KeystrokeProject(directory, directory));
+        } else {
+            td.setProject(new KeystrokeProject(p.getName(), p.getBasePath()));
+        }
+        if (timeDataList == null) {
+            timeDataList = new ArrayList<>();
+        }
+        timeDataList.add(td);
+        // write it then return it
+        FileManager.writeData(getTimeDataSummaryFile(), timeDataList);
         return td;
     }
 
     public static void sendOfflineTimeData() {
         FileManager.sendBatchData("/data/time", getTimeDataSummaryFile());
+    }
+
+    private static void saveTimeDataSummaryToDisk(TimeData timeData) {
+        if (timeData.getProject() == null) {
+            // set it
+            Project p = SoftwareCoUtils.getFirstActiveProject();
+            if (p != null) {
+                timeData.setProject(new KeystrokeProject(p.getName(), p.getBasePath()));
+            } else {
+                timeData.setProject(new KeystrokeProject("Unammed", "Untitled"));
+            }
+        }
+        String dir = timeData.getProject().getDirectory();
+
+        // get the list and add or update it
+        List<TimeData> timeDataList = getTimeDataList();
+
+        // new list to save
+        List<TimeData> listToSave = new ArrayList<>();
+        listToSave.add(timeData);
+
+        if (timeDataList != null && timeDataList.size() > 0) {
+            for (TimeData td : timeDataList) {
+                if (td.getProject() != null &&
+                        !td.getProject().getDirectory().equals(dir)) {
+                    listToSave.add(td);
+                }
+            }
+        }
+
+        FileManager.writeData(getTimeDataSummaryFile(), listToSave);
     }
 }

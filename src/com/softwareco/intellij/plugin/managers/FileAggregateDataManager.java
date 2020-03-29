@@ -1,4 +1,4 @@
-package com.softwareco.intellij.plugin.aggdata;
+package com.softwareco.intellij.plugin.managers;
 
 
 import com.google.gson.JsonObject;

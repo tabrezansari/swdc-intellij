@@ -2,6 +2,7 @@ package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.softwareco.intellij.plugin.models.ResourceInfo;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -29,14 +30,11 @@ public class SoftwareCoRepoManager {
     }
 
     public JsonObject getLatestCommit(String projectDir) {
-        JsonObject resource = SoftwareCoUtils.getResourceInfo(projectDir);
-        if (resource != null && resource.has("identifier")) {
-            String identifier = resource.get("identifier").getAsString();
-            String tag = (resource.has("tag")) ? resource.get("tag").getAsString() : "";
-            String branch = (resource.has("branch")) ? resource.get("branch").getAsString() : "";
-
-            String repoKey = this.buildRepoKey(identifier, branch, tag);
-
+        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        if (resource != null && resource.getIdentifier() != null) {
+            String identifier = resource.getIdentifier();
+            String tag = resource.getTag();
+            String branch = resource.getBranch();
 
             try {
                 String encodedIdentifier = URLEncoder.encode(identifier, "UTF-8");
@@ -65,13 +63,12 @@ public class SoftwareCoRepoManager {
     }
 
     public void getHistoricalCommits(String projectDir) {
-        JsonObject resource = SoftwareCoUtils.getResourceInfo(projectDir);
-        if (resource != null && resource.has("identifier")) {
-            String identifier = resource.get("identifier").getAsString();
-            String tag = (resource.has("tag")) ? resource.get("tag").getAsString() : "";
-            String branch = (resource.has("branch")) ? resource.get("branch").getAsString() : "";
-            String email = (resource.has("email")) ? resource.get("email").getAsString() : "";
-            String repoKey = this.buildRepoKey(identifier, branch, tag);
+        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        if (resource != null && resource.getIdentifier() != null) {
+            String identifier = resource.getIdentifier();
+            String tag = resource.getTag();
+            String branch = resource.getBranch();
+            String email = resource.getEmail();
 
             JsonObject latestCommit = getLatestCommit(projectDir);
 
@@ -240,45 +237,17 @@ public class SoftwareCoRepoManager {
     }
 
     public void processRepoMembersInfo(final String projectDir) {
-        JsonObject resource = SoftwareCoUtils.getResourceInfo(projectDir);
-        if (resource != null && resource.has("identifier")) {
-            String identifier = resource.get("identifier").getAsString();
-            String tag = (resource.has("tag")) ? resource.get("tag").getAsString() : "";
-            String branch = (resource.has("branch")) ? resource.get("branch").getAsString(): "";
+        ResourceInfo resource = SoftwareCoUtils.getResourceInfo(projectDir);
+        if (resource != null && resource.getIdentifier() != null) {
 
-            String[] identifierCmd = { "git", "log", "--pretty=%an,%ae" };
-            String devOutput = SoftwareCoUtils.runCommand(identifierCmd, projectDir);
-
-            // split the output
-            String[] devList = devOutput.split("\n");
-            JsonArray members = new JsonArray();
-            Map<String, String> memberMap = new HashMap<>();
-            if (devList != null && devList.length > 0) {
-                for (String line : devList) {
-                    line = line.trim();
-                    String[] parts = line.split(",");
-                    if (parts != null && parts.length > 1) {
-                        String name = parts[0].trim();
-                        String email = parts[1].trim();
-                        if (!memberMap.containsKey(email)) {
-                            memberMap.put(email, name);
-                            JsonObject json = new JsonObject();
-                            json.addProperty("email", email);
-                            json.addProperty("name", name);
-                            members.add(json);
-                        }
-                    }
-                }
-            }
-
-            if (members.size() > 0) {
+            if (resource.getMembers().size() > 0) {
                 // send the members
                 try {
                     JsonObject repoData = new JsonObject();
-                    repoData.add("members", members);
-                    repoData.addProperty("identifier", identifier);
-                    repoData.addProperty("tag", tag);
-                    repoData.addProperty("branch", branch);
+                    repoData.add("members", resource.getJsonMembers());
+                    repoData.addProperty("identifier", resource.getIdentifier());
+                    repoData.addProperty("tag", resource.getTag());
+                    repoData.addProperty("branch", resource.getBranch());
                     String repoDataStr = repoData.toString();
                     JsonObject responseData = SoftwareCoUtils.makeApiCall(
                                     "/repo/members", HttpPost.METHOD_NAME, repoDataStr).getJsonObj();

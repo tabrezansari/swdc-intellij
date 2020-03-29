@@ -3,7 +3,8 @@ package com.softwareco.intellij.plugin.repo;
 
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.CommitChangeStats;
-import com.softwareco.intellij.plugin.models.RepoInfo;
+import com.softwareco.intellij.plugin.models.CommitInfo;
+import com.softwareco.intellij.plugin.models.ResourceInfo;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -17,7 +18,8 @@ public class GitUtil {
         if (results != null) {
             for (String line : results) {
                 line = line.trim();
-                if (line.indexOf("insertion") != -1 || line.indexOf("deletion") != -1) {
+                if (line.indexOf("changed") != -1 &&
+                        (line.indexOf("insertion") != -1 || line.indexOf("deletion") != -1)) {
                     String[] parts = line.split(" ");
                     // the 1st element is the number of files changed
                     int fileCount = Integer.parseInt(parts[0]);
@@ -94,7 +96,7 @@ public class GitUtil {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         long starOfDay = timesData.local_start_day;
 
-        RepoInfo repoInfo = getResourceInfo(projectDir);
+        ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(projectDir);
 
         List<String> cmdList = new ArrayList<String>();
         cmdList.add("git");
@@ -102,42 +104,55 @@ public class GitUtil {
         cmdList.add("--stat");
         cmdList.add("--pretty=COMMIT:%H,%ct,%cI,%s");
         cmdList.add("--since=" + starOfDay);
-        if (repoInfo != null && repoInfo.getEmail() != null && !repoInfo.getEmail().isEmpty()) {
-            cmdList.add("--author=" + repoInfo.getEmail());
+        if (resourceInfo != null && resourceInfo.getEmail() != null && !resourceInfo.getEmail().isEmpty()) {
+            cmdList.add("--author=" + resourceInfo.getEmail());
         }
 
         return getChangeStats(cmdList, projectDir, true);
-    };
+    }
 
-    public static RepoInfo getResourceInfo(String projectDir) {
-        RepoInfo repoInfo = new RepoInfo();
+    public static String getRepoUrlLink(String projectDir) {
+        String[] cmdList = { "git", "config", "--get", "remote.origin.url" };
 
+        // should only be a result of 1
+        List<String> resultList = SoftwareCoUtils.getCommandResultForCmd(cmdList, projectDir);
+        String url = resultList != null && resultList.size() > 0 ? resultList.get(0) : null;
+        if (url != null) {
+            url = url.substring(0, url.lastIndexOf(".git"));
+        }
+        return url;
+    }
+
+    public static CommitInfo getLastCommitInfo(String projectDir, String email) {
         if (projectDir == null) {
-            return repoInfo;
+            return null;
         }
+        if (email == null) {
+            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(projectDir);
+            email = resourceInfo != null ? resourceInfo.getEmail() : null;
+        }
+        CommitInfo commitInfo = new CommitInfo();
+        List<String> cmdList = new ArrayList<String>();
+        cmdList.add("git");
+        cmdList.add("log");
+        cmdList.add("--pretty=%H,%s");
+        if (email != null) {
+            cmdList.add("--author=" + email);
+        }
+        cmdList.add("--max-count=1");
 
-        try {
-            String[] branchCmd = { "git", "symbolic-ref", "--short", "HEAD" };
-            String branch = SoftwareCoUtils.runCommand(branchCmd, projectDir);
-
-            String[] identifierCmd = { "git", "config", "--get", "remote.origin.url" };
-            String identifier = SoftwareCoUtils.runCommand(identifierCmd, projectDir);
-
-            String[] emailCmd = { "git", "config", "user.email" };
-            String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
-
-            String[] tagCmd = { "git", "describe", "--all" };
-            String tag = SoftwareCoUtils.runCommand(tagCmd, projectDir);
-
-            if (StringUtils.isNotBlank(branch) && StringUtils.isNotBlank(identifier)) {
-                repoInfo.setBranch(branch);
-                repoInfo.setIdentifier(identifier);
-                repoInfo.setEmail(email);
-                repoInfo.setTag(tag);
+        // should only be a result of 1
+        List<String> resultList = SoftwareCoUtils.getCommandResult(cmdList, projectDir);
+        if (resultList != null && resultList.size() > 0) {
+            String[] parts = resultList.get(0).split(",");
+            if (parts != null && parts.length == 2) {
+                commitInfo.setCommitId(parts[0]);
+                commitInfo.setComment(parts[1]);
+                commitInfo.setEmail(email);
             }
-        } catch (Exception e) {
-            //
         }
-        return repoInfo;
-    };
+
+        return commitInfo;
+    }
+
 }

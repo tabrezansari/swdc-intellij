@@ -5,11 +5,10 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
 import com.softwareco.intellij.plugin.*;
-import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
@@ -61,7 +60,7 @@ public class WallClockManager {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         if (!day.equals(currentDay)) {
             // send the payloads
-            SoftwareCoSessionManager.getInstance().sendOfflineData();
+            SoftwareCoSessionManager.getInstance().sendOfflineData(true);
 
             // send the time data
             TimeDataManager.sendOfflineTimeData();
@@ -84,12 +83,12 @@ public class WallClockManager {
             // refresh the tree
             CodeTimeToolWindow.refresh();
 
-            final Runnable service = () -> updateSessionSummaryFromServer();
+            final Runnable service = () -> updateSessionSummaryFromServer(false);
             AsyncManager.getInstance().executeOnceInSeconds(service, 70);
         }
     }
 
-    public void updateSessionSummaryFromServer() {
+    public void updateSessionSummaryFromServer(boolean isNewDay) {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
         String jwt = SoftwareCoSessionManager.getItem("jwt");
@@ -137,11 +136,11 @@ public class WallClockManager {
         if (isActive) {
             long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
             SoftwareCoSessionManager.setNumericItem("wctime", wctime);
-            dispatchStatusViewUpdate();
 
             // update the json time data file
-            updateTimeData();
+            TimeDataManager.updateEditorSeconds(SECONDS_INCREMENT);
         }
+        dispatchStatusViewUpdate();
     }
 
     public void dispatchStatusViewUpdate() {
@@ -171,13 +170,6 @@ public class WallClockManager {
     public void setWcTime(long seconds) {
         SoftwareCoSessionManager.setNumericItem("wctime", seconds);
         updateWallClockTime();
-    }
-
-    private void updateTimeData() {
-        long editorSeconds = getWcTimeInSeconds();
-        TimeData td = TimeDataManager.getTodayTimeDataSummary();
-
-        TimeDataManager.updateTimeDataSummary(editorSeconds, td.getSession_seconds(), td.getFile_seconds());
     }
 
     public void updateBasedOnSessionSeconds(long sessionSeconds) {

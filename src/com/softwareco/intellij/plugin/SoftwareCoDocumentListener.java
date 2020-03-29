@@ -14,6 +14,7 @@ public class SoftwareCoDocumentListener implements DocumentListener {
 
     @Override
     public void beforeDocumentChange(DocumentEvent documentEvent) {
+        //
     }
 
     @Override

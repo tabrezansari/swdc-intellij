@@ -7,7 +7,6 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import java.nio.file.Files;
@@ -26,7 +25,6 @@ public class SoftwareCoEventManager {
 
     private KeystrokeManager keystrokeMgr = KeystrokeManager.getInstance();
     private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
-    AtomicBoolean flag = new AtomicBoolean(true);
 
     public static SoftwareCoEventManager getInstance() {
         if (instance == null) {
@@ -180,26 +178,6 @@ public class SoftwareCoEventManager {
     public void initializeKeystrokeObjectGraph(String fileName, String projectName, String projectFilepath) {
         // initialize it in case it's not initialized yet
         initializeKeystrokeCount(projectName, fileName, projectFilepath);
-
-        KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
-
-        //
-        // Make sure we have the project name and directory info
-        if(flag.get()) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(60000);
-                    flag.set(true);
-                    LOG.info("Code Time: Reset Flag for project check");
-                } catch (Exception e) {
-                    System.err.println(e);
-                }
-            }).start();
-
-            updateKeystrokeProject(projectName, fileName, keystrokeCount);
-            flag.set(false);
-            LOG.info("Code Time: Update project name & directory");
-        }
     }
 
     private void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {

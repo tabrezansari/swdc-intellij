@@ -71,20 +71,15 @@ public class SessionDataManager {
 
         long sessionSeconds = summary.getCurrentDayMinutes() * 60;
         wcMgr.updateBasedOnSessionSeconds(sessionSeconds);
-        long editorSeconds = wcMgr.getWcTimeInSeconds();
 
         summary.setCurrentDayKeystrokes(summary.getCurrentDayKeystrokes() + aggregate.keystrokes);
         summary.setCurrentDayLinesAdded(summary.getCurrentDayLinesAdded() + aggregate.linesAdded);
         summary.setCurrentDayLinesRemoved(summary.getCurrentDayLinesRemoved() + aggregate.linesRemoved);
 
-        // get the current time data and update
-        TimeData td = TimeDataManager.getTodayTimeDataSummary();
-        long fileSeconds = td.getFile_seconds() + 60;
-
         // save the file
         FileManager.writeData(getSessionDataSummaryFile(), summary);
 
-        TimeDataManager.updateTimeDataSummary(editorSeconds, sessionSeconds, fileSeconds);
+        TimeDataManager.incrementSessionAndFileSeconds(incrementMinutes);
     }
 
     private static long getMinutesSinceLastPayload() {

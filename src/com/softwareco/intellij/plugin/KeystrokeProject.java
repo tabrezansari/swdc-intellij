@@ -5,17 +5,26 @@
 package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonObject;
+import com.softwareco.intellij.plugin.models.ResourceInfo;
 
 public class KeystrokeProject {
 
     private String name;
     private String directory;
     private String identifier;
-    private JsonObject resource = new JsonObject();
+    private ResourceInfo resource = new ResourceInfo();
 
     public KeystrokeProject(String name, String directory) {
         this.name = name;
         this.directory = directory;
+        ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(directory);
+        if (resourceInfo != null) {
+            this.resource.setIdentifier(resourceInfo.getIdentifier());
+            this.resource.setTag(resourceInfo.getTag());
+            this.resource.setBranch(resourceInfo.getBranch());
+            this.resource.setEmail(resourceInfo.getEmail());
+            this.identifier = resourceInfo.getIdentifier();
+        }
     }
 
     public void resetData() {
@@ -44,12 +53,12 @@ public class KeystrokeProject {
 
     public String getIdentifier() { return identifier; }
 
-    public void updateResource(JsonObject resource) {
+    public void updateResource(ResourceInfo resource) {
         this.resource = resource;
     }
 
     public boolean hasResource() {
-        return this.resource != null && this.resource.has("identifier");
+        return this.resource != null && !this.resource.getIdentifier().isEmpty();
     }
 
     public String getResource() {

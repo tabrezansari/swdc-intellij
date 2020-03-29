@@ -6,12 +6,11 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.aggdata.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
-import com.softwareco.intellij.plugin.models.CommitChangeStats;
-import com.softwareco.intellij.plugin.models.FileChangeInfo;
-import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.managers.ReportManager;
+import com.softwareco.intellij.plugin.models.*;
 import com.softwareco.intellij.plugin.repo.GitUtil;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
@@ -44,6 +43,60 @@ public class TreeItemBuilder {
 
         SimpleDateFormat formatDay = new SimpleDateFormat("EEE");
         dayStr = formatDay.format(new Date());
+    }
+
+    public static JBList<JLabel> buildContributorTitle() {
+        Project p = SoftwareCoUtils.getFirstActiveProject();
+        if (p != null) {
+            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(p.getBasePath());
+            if (resourceInfo != null) {
+                DefaultListModel listModel = new DefaultListModel();
+                JLabel label = new JLabel();
+
+                Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/icons8-github.svg");
+                label.setIcon(icon);
+                label.setText(resourceInfo.getIdentifier());
+                label.setName("contributor_title");
+                listModel.add(0, label);
+
+                JBList<JLabel> jbList = new JBList<>(listModel);
+                jbList.setCellRenderer(new ListRenderer());
+                jbList.setVisibleRowCount(1);
+                jbList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+                jbList.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        super.mouseClicked(e);
+
+                        JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                        JLabel lbl = lst.getSelectedValue();
+                        if (lbl.getName().equals("contributor_title")) {
+                            ReportManager.displayProjectContributorSummaryDashboard(lbl.getText());
+                        }
+                    }
+
+                    @Override
+                    public void mouseExited(MouseEvent e) {
+                        super.mouseExited(e);
+                        JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                        lst.clearSelection();
+                    }
+                });
+                jbList.addMouseMotionListener(new MouseMotionAdapter() {
+                    @Override
+                    public void mouseMoved(MouseEvent e) {
+                        super.mouseMoved(e);
+                        JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                        int row = lst.locationToIndex(e.getPoint());
+                        lst.setSelectedIndex(row);
+                    }
+                });
+                jbList.updateUI();
+
+                return jbList;
+            }
+        }
+        return null;
     }
 
     public static JBList<JLabel> buildCodeTimeLabels() {
@@ -284,6 +337,31 @@ public class TreeItemBuilder {
         }
 
         return buildTreeItem(parentName, nodes, false);
+    }
+
+    public static List<MetricTree> buildContributorUsers() {
+        Project p = SoftwareCoUtils.getFirstActiveProject();
+        if (p != null) {
+            String repoUrl = GitUtil.getRepoUrlLink(p.getBasePath());
+
+            ResourceInfo resourceInfo = SoftwareCoUtils.getResourceInfo(p.getBasePath());
+            List<MetricTree> contributors = new ArrayList<>();
+            if (resourceInfo != null && resourceInfo.getMembers().size() > 0) {
+                for (TeamMember member: resourceInfo.getMembers()) {
+                    // get the user's last commit
+                    CommitInfo commitInfo = GitUtil.getLastCommitInfo(p.getBasePath(), member.getEmail());
+                    String commitUrl = repoUrl + "/commit/" + commitInfo.getCommitId();
+
+                    MetricTreeNode commitUrlNode = buildChildNode(commitInfo.getComment(), "commit.svg");
+                    commitUrlNode.setData(commitUrl);
+                    List<MetricTreeNode> nodes = Arrays.asList(commitUrlNode);
+                    MetricTree mTree = buildTreeItem(member.getName(), nodes, false);
+                    contributors.add(mTree);
+                }
+            }
+            return contributors;
+        }
+        return null;
     }
 
     public static MetricTree buildGitTree(String name, String filterBy) {

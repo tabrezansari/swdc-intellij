@@ -11,14 +11,11 @@ import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.util.messages.MessageBus;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.util.logging.Logger;
 
@@ -147,19 +144,26 @@ public class SoftwareCo implements ApplicationComponent {
     private void sendOfflineDataRunner() {
         new Thread(() -> {
             try {
-                SoftwareCoSessionManager.getInstance().sendOfflineData();
+                SoftwareCoSessionManager.getInstance().sendOfflineData(false);
             } catch (Exception e) {
                 System.err.println(e);
             }
         }).start();
     }
 
-    private void processHourlyJobs() {
+    private void processRepoTasks() {
+        Project p = SoftwareCoUtils.getFirstActiveProject();
+        if (p != null) {
+            SoftwareCoRepoManager repoMgr = SoftwareCoRepoManager.getInstance();
+            repoMgr.getHistoricalCommits(p.getBasePath());
+
+            repoMgr.processRepoMembersInfo(p.getBasePath());
+        }
+
+    }
+
+    private void processHourlyTasks() {
         SoftwareCoUtils.sendHeartbeat("HOURLY");
-
-        SoftwareCoRepoManager repoMgr = SoftwareCoRepoManager.getInstance();
-        repoMgr.getHistoricalCommits(getRootPath());
-
         // send the events data
         EventManager.sendOfflineEvents();
     }
@@ -188,10 +192,10 @@ public class SoftwareCo implements ApplicationComponent {
             }
         }).start();
 
-        // every hour
-        final Runnable hourlyRunner = () -> this.processHourlyJobs();
+        // every 20 min
+        final Runnable repoTaskRunner = () -> this.processRepoTasks();
         asyncManager.scheduleService(
-                hourlyRunner, "hourlyJobsRunner", 45, 60 * 60);
+                repoTaskRunner, "repoTaskRunner", 90, 60 * 20);
 
         // every 35 minutes
         final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
@@ -202,8 +206,9 @@ public class SoftwareCo implements ApplicationComponent {
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
         asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 15);
 
-        // start the wallclock
-        WallClockManager.getInstance().updateSessionSummaryFromServer();
+        // every hour
+        final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();
+        asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunning", 120, 60 * 60);
     }
 
     protected void sendInstallPayload() {
@@ -217,32 +222,13 @@ public class SoftwareCo implements ApplicationComponent {
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 
-    protected String getRootPath() {
-        Project[] projects = ProjectManager.getInstance().getOpenProjects();
-        if (projects != null && projects.length > 0) {
-            return projects[0].getBasePath();
-        }
-        return null;
-    }
-
-    public static Project getActiveProject() {
-        Project[] projects = ProjectManager.getInstance().getOpenProjects();
-        if (projects != null && projects.length > 0) {
-            return projects[0];
-        }
-        return null;
-    }
-
     private void setupEventListeners() {
         ApplicationManager.getApplication().invokeLater(() -> {
 
-            // save file
-            MessageBus bus = ApplicationManager.getApplication().getMessageBus();
-            connection = bus.connect();
-            connection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
-
             // edit document
-            EditorFactory.getInstance().getEventMulticaster().addDocumentListener(new SoftwareCoDocumentListener());
+            EditorFactory.getInstance().getEventMulticaster().addDocumentListener(
+                    new SoftwareCoDocumentListener(), this::disposeComponent);
+
         });
     }
 

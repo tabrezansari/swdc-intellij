@@ -6,7 +6,7 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.softwareco.intellij.plugin.SoftwareCo;
+import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class CodeTimeToolWindowFactory implements ToolWindowFactory {
@@ -20,7 +20,7 @@ public class CodeTimeToolWindowFactory implements ToolWindowFactory {
     }
 
     public static void openToolWindow() {
-        Project project = SoftwareCo.getActiveProject();
+        Project project = SoftwareCoUtils.getFirstActiveProject();
         if (project != null) {
             ToolWindowManager.getInstance(project).getToolWindow("Code Time").show(null);
         }

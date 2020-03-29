@@ -9,6 +9,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -22,7 +24,9 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.event.EventManager;
 import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.models.ResourceInfo;
 import com.softwareco.intellij.plugin.models.SessionSummary;
+import com.softwareco.intellij.plugin.models.TeamMember;
 import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
@@ -77,7 +81,6 @@ public class SoftwareCoUtils {
     private final static int EOF = -1;
 
     private static boolean fetchingResourceInfo = false;
-    private static JsonObject lastResourceInfo = new JsonObject();
     private static boolean loggedInCacheState = false;
 
     private static boolean appAvailable = true;
@@ -94,31 +97,6 @@ public class SoftwareCoUtils {
     private static String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
-    // jwt_from_apptoken_call
-    public static String jwt = null;
-
-    // Spotify variables
-    private static String CLIENT_ID = null;
-    private static String CLIENT_SECRET = null;
-    private static String ACCESS_TOKEN = null;
-    private static String REFRESH_TOKEN = null;
-    private static String userStatus = null;
-    private static boolean spotifyCacheState = false;
-    public static String defaultbtn = "play";
-    public static String spotifyUserId = null;
-    public static List<String> playlistids = new ArrayList<>();
-    public static String currentPlaylistId = null;
-    public static List<String> playlistTracks = new ArrayList<>();
-    public static String currentTrackId = null;
-    public static String currentTrackName = null;
-    public static List<String> spotifyDeviceIds = new ArrayList<>();
-    public static String currentDeviceId = null;
-    public static String currentDeviceName = null;
-    public static int playerCounter = 0;
-    public static String spotifyStatus = "Not Connected";
-
-    // Slack variables
-    private static boolean slackCacheState = false;
 
     static {
         // initialize the HttpClient
@@ -145,6 +123,31 @@ public class SoftwareCoUtils {
         cmd.add("hostname");
         String hostname = getSingleLineResult(cmd, 1);
         return hostname;
+    }
+
+    public static Project getFirstActiveProject() {
+        Project[] projects = ProjectManager.getInstance().getOpenProjects();
+        if (projects != null && projects.length > 0) {
+            return projects[0];
+        }
+        Editor[] editors = EditorFactory.getInstance().getAllEditors();
+        if (editors != null && editors.length > 0) {
+            return editors[0].getProject();
+        }
+        return null;
+    }
+
+    public static Project getProjectForPath(String path) {
+        Editor[] editors = EditorFactory.getInstance().getAllEditors();
+        if (editors != null && editors.length > 0) {
+            for (int i = 0; i < editors.length; i++) {
+                Editor editor = editors[i];
+                if (path.indexOf(editor.getProject().getBasePath()) != -1) {
+                    return editor.getProject();
+                }
+            }
+        }
+        return null;
     }
 
     public static String getUserHomeDir() {
@@ -494,6 +497,10 @@ public class SoftwareCoUtils {
 
     public static List<String> getCommandResult(List<String> cmdList, String dir) {
         String[] args = Arrays.copyOf(cmdList.toArray(), cmdList.size(), String[].class);
+        return getCommandResultForCmd(args, dir);
+    }
+
+    public static List<String> getCommandResultForCmd(String[] args, String dir) {
         List<String> results = new ArrayList<>();
         String result = runCommand(args, dir);
         if (result == null || result.trim().length() == 0) {
@@ -516,13 +523,8 @@ public class SoftwareCoUtils {
     }
 
     // get the git resource config information
-    public static JsonObject getResourceInfo(String projectDir) {
-        if (fetchingResourceInfo) {
-            return null;
-        }
-
-        fetchingResourceInfo = true;
-        lastResourceInfo = new JsonObject();
+    public static ResourceInfo getResourceInfo(String projectDir) {
+        ResourceInfo resourceInfo = new ResourceInfo();
 
         // is the project dir avail?
         if (projectDir != null && !projectDir.equals("")) {
@@ -540,19 +542,42 @@ public class SoftwareCoUtils {
                 String tag = runCommand(tagCmd, projectDir);
 
                 if (StringUtils.isNotBlank(branch) && StringUtils.isNotBlank(identifier)) {
-                    lastResourceInfo.addProperty("identifier", identifier);
-                    lastResourceInfo.addProperty("branch", branch);
-                    lastResourceInfo.addProperty("email", email);
-                    lastResourceInfo.addProperty("tag", tag);
+                    resourceInfo.setBranch(branch);
+                    resourceInfo.setTag(tag);
+                    resourceInfo.setEmail(email);
+                    resourceInfo.setIdentifier(identifier);
                 }
+
+                // get the users
+                List<TeamMember> members = new ArrayList<>();
+                String[] listUsers = { "git", "log", "--pretty=%an,%ae" };
+                List<String> results = getCommandResultForCmd(listUsers, projectDir);
+                Set<String> emailSet = new HashSet<>();
+                if (results != null && results.size() > 0) {
+                    // add them
+                    for (int i = 0; i < results.size(); i++) {
+                        String[] info = results.get(i).split(",");
+                        if (info != null && info.length == 2) {
+                            String name = info[0];
+                            String teamEmail = info[1];
+                            if (!emailSet.contains(teamEmail)) {
+                                TeamMember member = new TeamMember();
+                                member.setEmail(teamEmail);
+                                member.setName(name);
+                                member.setIdentifier(identifier);
+                                members.add(member);
+                                emailSet.add(teamEmail);
+                            }
+                        }
+                    }
+                }
+                resourceInfo.setMembers(members);
             } catch (Exception e) {
                 //
             }
         }
 
-        fetchingResourceInfo = false;
-
-        return lastResourceInfo;
+        return resourceInfo;
     }
 
     public static void launchSoftwareTopForty() {

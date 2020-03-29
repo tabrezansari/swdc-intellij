@@ -152,7 +152,7 @@ public class SoftwareCoSessionManager {
         }
     }
 
-    public void sendOfflineData() {
+    public void sendOfflineData(boolean isNewDay) {
         final String dataStoreFile = getSoftwareDataStoreFile();
         File f = new File(dataStoreFile);
 
@@ -211,7 +211,7 @@ public class SoftwareCoSessionManager {
                     }
 
                     // fetch the sessions/summary in 70 seconds
-                    final Runnable service = () -> WallClockManager.getInstance().updateSessionSummaryFromServer();
+                    final Runnable service = () -> WallClockManager.getInstance().updateSessionSummaryFromServer(isNewDay);
                     AsyncManager.getInstance().executeOnceInSeconds(service, 70);
 
                 } else {
@@ -381,7 +381,8 @@ public class SoftwareCoSessionManager {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
-                    WallClockManager.getInstance().updateSessionSummaryFromServer();
+
+                    SoftwareCoSessionManager.getInstance().sendOfflineData(false);
                 }
             });
         }
