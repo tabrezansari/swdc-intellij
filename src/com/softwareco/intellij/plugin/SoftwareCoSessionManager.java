@@ -12,6 +12,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.event.EventManager;
+import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpGet;
@@ -293,7 +294,7 @@ public class SoftwareCoSessionManager {
                 String content = new String(encoded, Charset.defaultCharset());
                 if (content != null) {
                     // json parse it
-                    data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
+                    data = SoftwareCo.jsonParser.parse(FileManager.cleanJsonString(content)).getAsJsonObject();
                 }
             } catch (Exception e) {
                 log.warning("Code Time: Error trying to read and parse: " + e.getMessage());

@@ -14,7 +14,6 @@ import com.softwareco.intellij.plugin.SoftwareResponse;
 import org.apache.http.client.methods.HttpPost;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -94,7 +93,7 @@ public class FileManager {
                 String content = new String(encoded, Charset.forName("UTF-8"));
                 if (content != null) {
                     // json parse it
-                    data = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
+                    data = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonObject();
                 }
             } catch (Exception e) {
                 log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
@@ -114,11 +113,11 @@ public class FileManager {
                 if (content != null) {
                     // json parse it
                     try {
-                        jsonArray = SoftwareCo.jsonParser.parse(content).getAsJsonArray();
+                        jsonArray = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonArray();
                     } catch (Exception e1) {
                         // maybe it's a json object, return it within a json array if this succeeds
                         try {
-                            JsonObject obj = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
+                            JsonObject obj = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonObject();
                             jsonArray = new JsonArray();
                             jsonArray.add(obj);
                         } catch (Exception e2) {
@@ -362,5 +361,10 @@ public class FileManager {
                 "We recently released a new beta plugin, Music Time for VS Code, which helps you find your most productive songs for coding. You can learn more [here](https://www.software.com).\n" +
                 "\n" +
                 "Have any questions? Please email us at [support@software.com](mailto:support@software.com) and we’ll get back to you as soon as we can.\n";
+    }
+
+    public static String cleanJsonString(String data) {
+        data = data.replace("/\r\n/g", "").replace("/\n/g", "").trim();
+        return data;
     }
 }
