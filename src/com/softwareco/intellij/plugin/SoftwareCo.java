@@ -173,10 +173,6 @@ public class SoftwareCo implements ApplicationComponent {
             // send an initial plugin payload
             this.sendInstallPayload();
 
-            // ask the user to login one time only
-            final Runnable service = () -> sessionMgr.showLoginPrompt();
-            AsyncManager.getInstance().executeOnceInSeconds(service, 5);
-
             FileManager.getInstance().openReadmeFile();
         }
 

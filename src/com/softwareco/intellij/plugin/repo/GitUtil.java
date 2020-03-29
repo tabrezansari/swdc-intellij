@@ -2,16 +2,10 @@ package com.softwareco.intellij.plugin.repo;
 
 
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.models.CommitChangeStats;
-import com.softwareco.intellij.plugin.models.CommitInfo;
-import com.softwareco.intellij.plugin.models.ResourceInfo;
-import com.softwareco.intellij.plugin.models.TeamMember;
+import com.softwareco.intellij.plugin.models.*;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class GitUtil {
 
@@ -135,6 +129,10 @@ public class GitUtil {
                         }
                     }
                 }
+
+                // sort the members in alphabetical order
+                members = sortByEmail(members);
+
                 resourceInfo.setMembers(members);
             } catch (Exception e) {
                 //
@@ -142,6 +140,20 @@ public class GitUtil {
         }
 
         return resourceInfo;
+    }
+
+    private static List<TeamMember> sortByEmail(List<TeamMember> members) {
+        List<TeamMember> entryList = new ArrayList<TeamMember>(members);
+        // natural ASC order
+        Collections.sort(
+                entryList, new Comparator<TeamMember>() {
+                    @Override
+                    public int compare(TeamMember entryA, TeamMember entryB) {
+                        return entryA.getName().toLowerCase().compareTo(entryB.getName().toLowerCase());
+                    }
+                }
+        );
+        return entryList;
     }
 
     public static String getUsersEmail(String projectDir) {

@@ -13,7 +13,7 @@ public class SoftwareLoginAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        SoftwareCoSessionManager.launchLogin();
+        SoftwareCoSessionManager.launchLogin("software");
     }
 
     @Override

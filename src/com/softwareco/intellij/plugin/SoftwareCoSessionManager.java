@@ -318,41 +318,6 @@ public class SoftwareCoSessionManager {
         return null;
     }
 
-    public void showLoginPrompt() {
-        boolean isOnline = isServerOnline();
-
-        if (isOnline) {
-
-            String msg = "Finish creating your account to see rich data visualizations.";
-            Project project = this.getCurrentProject();
-
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    // ask to download the PM
-                    int options = Messages.showDialog(
-                            project,
-                            msg,
-                            "Software", new String[]{"Complete setup", "Not now"},
-                            0, Messages.getInformationIcon());
-                    if (options == 0) {
-                        EventManager.createCodeTimeEvent(
-                                "mouse",
-                                "click",
-                                "OnboardPrompt"
-                        );
-                        launchLogin();
-                    } else {
-                        EventManager.createCodeTimeEvent(
-                                "window",
-                                "close",
-                                "OnboardPrompt"
-                        );
-                    }
-                }
-            });
-        }
-    }
-
     public static String generateToken() {
         String uuid = UUID.randomUUID().toString();
         return uuid.replace("-", "");
@@ -388,11 +353,20 @@ public class SoftwareCoSessionManager {
         }
     }
 
-    public static void launchLogin() {
-        String url = SoftwareCoUtils.launch_url;
+    public static void launchLogin(String loginType) {
         String jwt = getItem("jwt");
 
-        url += "/onboarding?token=" + jwt;
+        String url = "";
+        if (loginType == null || loginType.equals("software") || loginType.equals("email")) {
+            url = SoftwareCoUtils.launch_url + "/email-signup?token=" + jwt + "&plugin=codetime&auth=software";
+        } else if (loginType.equals("google")) {
+            url = SoftwareCoUtils.api_endpoint + "/auth/google?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
+        } else if (loginType.equals("github")) {
+            url = SoftwareCoUtils.api_endpoint + "/auth/github?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
+        }
+
+        SoftwareCoSessionManager.setItem("authType", loginType);
+
         BrowserUtil.browse(url);
 
         final Runnable service = () -> lazilyFetchUserStatus(20);

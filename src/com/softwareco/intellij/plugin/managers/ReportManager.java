@@ -87,7 +87,7 @@ public class ReportManager {
             sb.append("\n");
 
         } else {
-            sb.append("No project available");
+            sb.append("Project information not found");
         }
 
         // write the summary content

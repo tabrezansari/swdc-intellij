@@ -108,6 +108,9 @@ public class CodeTimeToolWindow {
         dataPanel.removeAll();
         dataPanel.setBackground((Color) null);
 
+        JBList<JLabel> signupLabels = TreeItemBuilder.buildSignupLabels();
+        dataPanel.add(signupLabels, gridConstraints(dataPanel.getComponentCount(), 1, 2, 0, 3, 0));
+
         JBList<JLabel> labels = TreeItemBuilder.buildCodeTimeLabels();
 
         // add the top labels

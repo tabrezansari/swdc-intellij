@@ -100,6 +100,60 @@ public class TreeItemBuilder {
         return null;
     }
 
+    public static JBList<JLabel> buildSignupLabels() {
+        DefaultListModel listModel = new DefaultListModel();
+
+        JBList<JLabel> jbList = new JBList<>(listModel);
+        jbList.setCellRenderer(new ListRenderer());
+        jbList.setVisibleRowCount(1);
+        jbList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        String name = SoftwareCoSessionManager.getItem("name");
+        if (name == null || name.equals("")) {
+            listModel.add(0, buildSignupLabel("google"));
+            listModel.add(1, buildSignupLabel("github"));
+            listModel.add(2, buildSignupLabel("email"));
+
+            jbList.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    super.mouseClicked(e);
+
+                    JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                    JLabel lbl = lst.getSelectedValue();
+                    if (lbl.getName().equals("signup-google")) {
+                        SoftwareCoSessionManager.launchLogin("google");
+                    } else if (lbl.getName().equals("signup-github")) {
+                        SoftwareCoSessionManager.launchLogin("github");
+                    } else if (lbl.getName().equals("signup-email")) {
+                        SoftwareCoSessionManager.launchLogin("software");
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    super.mouseExited(e);
+                    JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                    lst.clearSelection();
+                }
+            });
+            jbList.addMouseMotionListener(new MouseMotionAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    super.mouseMoved(e);
+                    JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
+                    int row = lst.locationToIndex(e.getPoint());
+                    lst.setSelectedIndex(row);
+                }
+            });
+        } else {
+            listModel.add(0, buildLoggedInLabel());
+        }
+        jbList.updateUI();
+
+        return jbList;
+    }
+
     public static JBList<JLabel> buildCodeTimeLabels() {
         DefaultListModel listModel = new DefaultListModel();
 
@@ -125,7 +179,7 @@ public class TreeItemBuilder {
                     // if they're not logged in, launch the onboarding
                     boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
                     if (!isLoggedIn) {
-                        SoftwareCoSessionManager.launchLogin();
+                        SoftwareCoSessionManager.launchLogin("software");
                     } else {
                         SoftwareCoSessionManager.launchWebDashboard();
                     }
@@ -161,6 +215,45 @@ public class TreeItemBuilder {
         return jbList;
     }
 
+    private static JLabel buildSignupLabel(String type) {
+        JLabel label = new JLabel();
+        String iconName = "envelope.svg";
+        String text = "Sign up with email";
+        if (type.equals("google")) {
+            iconName = "icons8-google.svg";
+            text = "Sign up with Google";
+        } else if (type.equals("github")) {
+            iconName = "icons8-github.svg";
+            text = "Sign up with GitHub";
+        }
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
+        label.setIcon(icon);
+        label.setText(text);
+        label.setName("signup-" + type);
+        return label;
+    }
+
+    private static JLabel buildLoggedInLabel() {
+        JLabel label = new JLabel();
+        String authType = SoftwareCoSessionManager.getItem("authType");
+        String name = SoftwareCoSessionManager.getItem("name");
+        String tooltip = name != null ? "Connected as " + name : "";
+        String iconName = "envelope.svg";
+        String text = "Connected using email";
+        if (authType != null && authType.equals("google")) {
+            iconName = "icons8-google.svg";
+            text = "Connected using Google";
+        } else if (authType != null && authType.equals("github")) {
+            iconName = "icons8-github.svg";
+            text = "Connected using GitHub";
+        }
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
+        label.setIcon(icon);
+        label.setText(text);
+        label.setName("connected-" + authType);
+        return label;
+    }
+
     private static JLabel buildWebDashboardLabel() {
         JLabel label = new JLabel();
         Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw.png");
@@ -174,7 +267,7 @@ public class TreeItemBuilder {
         JLabel label = new JLabel();
         Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/dashboard.png");
         label.setIcon(icon);
-        label.setText("Generate dashboard");
+        label.setText("View summary");
         label.setName("editordashboard");
         return label;
     }
