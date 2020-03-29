@@ -810,14 +810,22 @@ public class SoftwareCoUtils {
         });
     }
 
-    public static Date atStartOfWeek() {
+    public static Date atStartOfWeek(long local_now) {
+        // find out how many days to go back
+        int daysBack = 0;
         Calendar cal = Calendar.getInstance();
-        // clear the units
-        cal.set(Calendar.HOUR_OF_DAY, 0);
-        cal.set(Calendar.MINUTE, 0);
-        cal.set(Calendar.SECOND, 0);
-        cal.set(Calendar.MILLISECOND, 0);
-        return atStartOfDay(cal.getTime());
+        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+            while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+                daysBack++;
+            }
+        } else {
+            daysBack = 7;
+        }
+
+        long startOfDayInSec = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+        long startOfWeekInSec = startOfDayInSec - (DAYS_IN_SECONDS * daysBack);
+
+        return new Date(startOfWeekInSec * 1000);
     }
 
     public static Date atStartOfDay(Date date) {
@@ -848,7 +856,7 @@ public class SoftwareCoUtils {
         public String timezone = TimeZone.getDefault().getID();
         public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
         public long local_start_yesterday = local_start_day - DAYS_IN_SECONDS;
-        public Date local_start_of_week_date = atStartOfWeek();
+        public Date local_start_of_week_date = atStartOfWeek(local_now);
         public Date local_start_of_yesterday_date = new Date(local_start_yesterday * 1000);
         public Date local_start_today_date = new Date(local_start_day * 1000);
         public long local_start_of_week = local_start_of_week_date.toInstant().getEpochSecond();

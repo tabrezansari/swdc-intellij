@@ -201,7 +201,10 @@ public class GitUtil {
             authorArg = "--author=" + email;
         }
 
-        String[] cmdList = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", "--since=" + startOfRange, authorArg};
+        // set the until to now
+        String untilArg = "--until=" + timesData.local_now;
+
+        String[] cmdList = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", "--since=" + startOfRange, untilArg, authorArg};
 
         return getChangeStats(cmdList, projectDir, true);
     }

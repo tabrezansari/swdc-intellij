@@ -224,6 +224,7 @@ public class ReportManager {
             }
         }
         sb.append("\n");
+        sb.append(getBorder(TABLE_WIDTH));
         return sb.toString();
     }
 
