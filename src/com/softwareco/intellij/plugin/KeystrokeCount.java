@@ -157,11 +157,15 @@ public class KeystrokeCount {
     public void endUnendedFiles() {
 
         String dir = this.project.getDirectory();
+
+        long incrementMinutes = SessionDataManager.getMinutesSinceLastPayload();
+        TimeDataManager.incrementSessionAndFileSeconds(incrementMinutes);
+
         TimeData td = TimeDataManager.getTodayTimeDataSummary(dir);
 
         long editorSeconds = 60;
-        if (td != null && td.getEditor_seconds() > 0) {
-            editorSeconds = td.getEditor_seconds();
+        if (td != null) {
+            editorSeconds = Math.max(td.getEditor_seconds(), td.getSession_seconds());
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
@@ -204,8 +208,6 @@ public class KeystrokeCount {
     public void processKeystrokes() {
         if (this.hasData()) {
 
-            SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
-
             // end the file end times.
             this.endUnendedFiles();
 
@@ -215,7 +217,7 @@ public class KeystrokeCount {
             final String payload = SoftwareCo.gson.toJson(this);
 
             // store to send later
-            sessionMgr.storePayload(payload);
+            SoftwareCoSessionManager.getInstance().storePayload(payload);
         }
 
         this.resetData();

@@ -815,8 +815,10 @@ public class SoftwareCoUtils {
         int daysBack = 0;
         Calendar cal = Calendar.getInstance();
         if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
-            while (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+            int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
+            while (dayOfWeek != Calendar.SUNDAY) {
                 daysBack++;
+                dayOfWeek -= 1;
             }
         } else {
             daysBack = 7;

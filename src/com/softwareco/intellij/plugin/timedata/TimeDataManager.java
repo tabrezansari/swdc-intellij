@@ -43,6 +43,11 @@ public class TimeDataManager {
             TimeData td = getTodayTimeDataSummary(activeProject.getBasePath());
             td.setEditor_seconds(td.getEditor_seconds() + editorSeconds);
             td.setTimestamp_local(timesData.local_now);
+
+            td.setEditor_seconds(Math.max(
+                    td.getEditor_seconds(),
+                    td.getSession_seconds()));
+
             saveTimeDataSummaryToDisk(td);
         }
     }
@@ -56,6 +61,13 @@ public class TimeDataManager {
             long sessionSeconds = minutesSincePayload * 60;
             td.setSession_seconds(sessionSeconds);
             td.setFile_seconds(td.getFile_seconds() + 60);
+
+            td.setEditor_seconds(Math.max(
+                    td.getEditor_seconds(),
+                    td.getSession_seconds()));
+            td.setFile_seconds(Math.min(
+                    td.getFile_seconds(),
+                    td.getSession_seconds()));
 
             saveTimeDataSummaryToDisk(td);
         }
@@ -77,7 +89,6 @@ public class TimeDataManager {
      */
     public static TimeData getTodayTimeDataSummary(String directory) {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
-
 
         List<TimeData> timeDataList = getTimeDataList();
 

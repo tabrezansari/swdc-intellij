@@ -10,8 +10,6 @@ import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.timedata.TimeDataManager;
 import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.lang.reflect.Type;
@@ -78,11 +76,9 @@ public class SessionDataManager {
 
         // save the file
         FileManager.writeData(getSessionDataSummaryFile(), summary);
-
-        TimeDataManager.incrementSessionAndFileSeconds(incrementMinutes);
     }
 
-    private static long getMinutesSinceLastPayload() {
+    public static long getMinutesSinceLastPayload() {
         long minutesSinceLastPayload = 1;
         long lastPayloadEnd = SoftwareCoSessionManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
         if (lastPayloadEnd > 0) {
