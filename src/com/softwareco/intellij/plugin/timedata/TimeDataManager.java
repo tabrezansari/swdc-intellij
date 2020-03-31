@@ -22,9 +22,9 @@ public class TimeDataManager {
     private static String getTimeDataSummaryFile() {
         String file = SoftwareCoSessionManager.getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
-            file += "\\timeDataSummary.json";
+            file += "\\projectTimeData.json";
         } else {
-            file += "/timeDataSummary.json";
+            file += "/projectTimeData.json";
         }
         return file;
     }
@@ -40,24 +40,25 @@ public class TimeDataManager {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         Project activeProject = SoftwareCoUtils.getFirstActiveProject();
         if (activeProject != null) {
-            TimeData td = getTodayTimeDataSummary(activeProject.getBasePath());
-            td.setEditor_seconds(td.getEditor_seconds() + editorSeconds);
-            td.setTimestamp_local(timesData.local_now);
+            KeystrokeProject project = new KeystrokeProject(activeProject.getName(), activeProject.getBasePath());
+            TimeData td = getTodayTimeDataSummary(project);
+            if (td != null) {
+                td.setEditor_seconds(td.getEditor_seconds() + editorSeconds);
+                td.setTimestamp_local(timesData.local_now);
 
-            td.setEditor_seconds(Math.max(
-                    td.getEditor_seconds(),
-                    td.getSession_seconds()));
+                td.setEditor_seconds(Math.max(
+                        td.getEditor_seconds(),
+                        td.getSession_seconds()));
 
-            saveTimeDataSummaryToDisk(td);
+                saveTimeDataSummaryToDisk(td);
+            }
         }
     }
 
-    public static void incrementSessionAndFileSeconds(long minutesSincePayload) {
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Project activeProject = SoftwareCoUtils.getFirstActiveProject();
-        if (activeProject != null) {
-            TimeData td = getTodayTimeDataSummary(activeProject.getBasePath());
+    public static void incrementSessionAndFileSeconds(KeystrokeProject project, long minutesSincePayload) {
 
+        TimeData td = getTodayTimeDataSummary(project);
+        if (td != null) {
             long sessionSeconds = minutesSincePayload * 60;
             td.setSession_seconds(sessionSeconds);
             td.setFile_seconds(td.getFile_seconds() + 60);
@@ -87,14 +88,17 @@ public class TimeDataManager {
      * Get the current time data info that is saved on disk. If not found create an empty one.
      * @return
      */
-    public static TimeData getTodayTimeDataSummary(String directory) {
+    public static TimeData getTodayTimeDataSummary(KeystrokeProject p) {
+        if (p == null || p.getDirectory() == null) {
+            return null;
+        }
         String day = SoftwareCoUtils.getTodayInStandardFormat();
 
         List<TimeData> timeDataList = getTimeDataList();
 
         if (timeDataList != null && timeDataList.size() > 0) {
             for (TimeData timeData : timeDataList) {
-                if (timeData.getDay().equals(day) && timeData.getProject().getDirectory().equals(directory)) {
+                if (timeData.getDay().equals(day) && timeData.getProject().getDirectory().equals(p.getDirectory())) {
                     // return it
                     return timeData;
                 }
@@ -102,20 +106,17 @@ public class TimeDataManager {
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Project p = SoftwareCoUtils.getProjectForPath(directory);
 
         TimeData td = new TimeData();
         td.setDay(day);
         td.setTimestamp_local(timesData.local_now);
         td.setTimestamp(timesData.now);
-        if (p != null) {
-            td.setProject(new KeystrokeProject(directory, directory));
-        } else {
-            td.setProject(new KeystrokeProject(p.getName(), p.getBasePath()));
-        }
+        td.setProject(p.clone());
+
         if (timeDataList == null) {
             timeDataList = new ArrayList<>();
         }
+
         timeDataList.add(td);
         // write it then return it
         FileManager.writeData(getTimeDataSummaryFile(), timeDataList);
@@ -123,37 +124,36 @@ public class TimeDataManager {
     }
 
     public static void sendOfflineTimeData() {
-        FileManager.sendBatchData("/data/time", getTimeDataSummaryFile());
+        FileManager.sendJsonArrayData(getTimeDataSummaryFile(), "/data/time");
     }
 
     private static void saveTimeDataSummaryToDisk(TimeData timeData) {
-        if (timeData.getProject() == null) {
-            // set it
-            Project p = SoftwareCoUtils.getFirstActiveProject();
-            if (p != null) {
-                timeData.setProject(new KeystrokeProject(p.getName(), p.getBasePath()));
-            } else {
-                timeData.setProject(new KeystrokeProject("Unammed", "Untitled"));
-            }
+        if (timeData == null) {
+            return;
         }
         String dir = timeData.getProject().getDirectory();
 
-        // get the list and add or update it
+        // get the existing list
         List<TimeData> timeDataList = getTimeDataList();
 
         // new list to save
         List<TimeData> listToSave = new ArrayList<>();
+        // add it to the new list
         listToSave.add(timeData);
 
         if (timeDataList != null && timeDataList.size() > 0) {
             for (TimeData td : timeDataList) {
                 if (td.getProject() != null &&
+                        !td.getDay().equals(timeData.getDay()) &&
                         !td.getProject().getDirectory().equals(dir)) {
+                    // add it back to the list to save. it doesn't match the
+                    // incoming timeData and day, and the project is also available
                     listToSave.add(td);
                 }
             }
         }
 
+        // write it all
         FileManager.writeData(getTimeDataSummaryFile(), listToSave);
     }
 }

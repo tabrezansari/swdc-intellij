@@ -29,6 +29,6 @@ public class EventManager {
     }
 
     public static void sendOfflineEvents() {
-        FileManager.sendBatchData("/data/event", getPluginEventsFile());
+        FileManager.sendBatchData(getPluginEventsFile(), "/data/event");
     }
 }

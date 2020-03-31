@@ -141,6 +141,29 @@ public class FileManager {
         }
     }
 
+
+    public static void sendJsonArrayData(String file, String api) {
+        File f = new File(file);
+        if (f.exists()) {
+            try {
+                JsonArray jsonArr = FileManager.getFileContentAsJsonArray(file);
+                String payloadData = SoftwareCo.gson.toJson(jsonArr);
+                SoftwareResponse resp =
+                        SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
+                if (!resp.isOk()) {
+                    // add these back to the offline file
+                    log.info("Code Time: Unable to send array data: " + resp.getErrorMessage());
+                }
+                // delete the file
+                deleteFile(file);
+            } catch (Exception e) {
+                log.info("Code Time: Unable to send array data: " + e.getMessage());
+                // delete the file
+                deleteFile(file);
+            }
+        }
+    }
+
     public static void sendBatchData(String file, String api) {
         File f = new File(file);
         if (f.exists()) {

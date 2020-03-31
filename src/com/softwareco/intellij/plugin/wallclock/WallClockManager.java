@@ -120,14 +120,12 @@ public class WallClockManager {
             SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
 
             // clone all
-            summary.clone(fetchedSummary);
+            summary.clone(fetchedSummary, isNewDay);
 
             updateBasedOnSessionSeconds(fetchedSummary.getCurrentDayMinutes() * 60);
 
             // save the file
             FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
-
-            this.dispatchStatusViewUpdate();
         }
     }
 

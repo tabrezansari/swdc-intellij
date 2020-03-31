@@ -154,14 +154,13 @@ public class KeystrokeCount {
         }
     }
 
+    // end unended file payloads and add the cumulative editor seconds
     public void endUnendedFiles() {
 
-        String dir = this.project.getDirectory();
-
         long incrementMinutes = SessionDataManager.getMinutesSinceLastPayload();
-        TimeDataManager.incrementSessionAndFileSeconds(incrementMinutes);
+        TimeDataManager.incrementSessionAndFileSeconds(this.project, incrementMinutes);
 
-        TimeData td = TimeDataManager.getTodayTimeDataSummary(dir);
+        TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);
 
         long editorSeconds = 60;
         if (td != null) {

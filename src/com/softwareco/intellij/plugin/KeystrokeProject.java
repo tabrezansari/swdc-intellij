@@ -28,6 +28,15 @@ public class KeystrokeProject {
         }
     }
 
+    public KeystrokeProject clone() {
+        KeystrokeProject p = new KeystrokeProject(this.name, this.directory);
+        p.setIdentifier(p.getIdentifier());
+        if (this.resource != null) {
+            p.setResource(this.resource.clone());
+        }
+        return p;
+    }
+
     public void resetData() {
         // intentional for now
     }
@@ -54,16 +63,12 @@ public class KeystrokeProject {
 
     public String getIdentifier() { return identifier; }
 
-    public void updateResource(ResourceInfo resource) {
+    public ResourceInfo getResource() {
+        return resource;
+    }
+
+    public void setResource(ResourceInfo resource) {
         this.resource = resource;
-    }
-
-    public boolean hasResource() {
-        return this.resource != null && !this.resource.getIdentifier().isEmpty();
-    }
-
-    public String getResource() {
-        return SoftwareCo.gson.toJson(resource);
     }
 
     @Override

@@ -13,6 +13,16 @@ public class ResourceInfo {
     private String email = "";
     private List<TeamMember> members = new ArrayList<>();
 
+    public ResourceInfo clone() {
+        ResourceInfo info = new ResourceInfo();
+        info.setIdentifier(this.identifier);
+        info.setBranch(this.branch);
+        info.setTag(this.tag);
+        info.setEmail(this.email);
+        info.setMembers(this.members);
+        return info;
+    }
+
     public String getIdentifier() {
         return identifier;
     }
