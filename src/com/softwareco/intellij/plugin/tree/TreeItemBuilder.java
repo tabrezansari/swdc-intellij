@@ -256,7 +256,7 @@ public class TreeItemBuilder {
 
     private static JLabel buildWebDashboardLabel() {
         JLabel label = new JLabel();
-        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw.png");
+        Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/paw-grey.png");
         label.setIcon(icon);
         label.setText("See advanced metrics");
         label.setName("webdashboard");

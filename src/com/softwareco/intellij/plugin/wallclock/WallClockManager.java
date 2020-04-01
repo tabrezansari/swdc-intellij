@@ -147,7 +147,7 @@ public class WallClockManager {
 
             SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
-            String icon = SoftwareCoUtils.showingStatusText() ? "paw.png" : "clock.png";
+            String icon = SoftwareCoUtils.showingStatusText() ? "paw-grey.png" : "clock.png";
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(summary.getCurrentDayMinutes());
             SoftwareCoUtils.updateStatusBar(
                     icon, currentDayTimeStr, "Code time today. Click to see more from Code Time.");

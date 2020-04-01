@@ -206,7 +206,7 @@
 
   <extensions defaultExtensionNs="com.intellij">
     <postStartupActivity implementation="com.softwareco.intellij.plugin.PluginPostStartupActivity"/>
-    <toolWindow anchor="left" secondary="true" factoryClass="com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory" icon="/com/softwareco/intellij/plugin/assets/software-paw.png" id="Code Time"/>
+    <toolWindow anchor="left" secondary="true" factoryClass="com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory" icon="/com/softwareco/intellij/plugin/assets/paw-grey-rotated.png" id="Code Time"/>
   </extensions>
 
   <actions>
