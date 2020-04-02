@@ -80,7 +80,7 @@ public class SessionDataManager {
 
     public static long getMinutesSinceLastPayload() {
         long minutesSinceLastPayload = 1;
-        long lastPayloadEnd = SoftwareCoSessionManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
+        long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
         if (lastPayloadEnd > 0) {
             SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
             long diffInSec = timesData.now - lastPayloadEnd;

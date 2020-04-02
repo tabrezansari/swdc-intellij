@@ -17,6 +17,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.logging.Logger;
 
@@ -24,22 +25,33 @@ public class FileManager {
 
     public static final Logger log = Logger.getLogger("FileManager");
 
-    private static FileManager instance = null;
+    private static JsonObject sessionJson = null;
 
-
-    public static FileManager getInstance() {
-        if (instance == null) {
-            synchronized (log) {
-                if (instance == null) {
-                    instance = new FileManager();
-                }
-            }
+    public static String getSoftwareDir(boolean autoCreate) {
+        String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
+        if (SoftwareCoUtils.isWindows()) {
+            softwareDataDir += "\\.software";
+        } else {
+            softwareDataDir += "/.software";
         }
-        return instance;
+
+        File f = new File(softwareDataDir);
+        if (autoCreate && !f.exists()) {
+            // make the directory
+            f.mkdirs();
+        }
+
+        return softwareDataDir;
     }
 
-    private FileManager() {
-        //
+    public static String getSoftwareSessionFile(boolean autoCreate) {
+        String file = getSoftwareDir(autoCreate);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\session.json";
+        } else {
+            file += "/session.json";
+        }
+        return file;
     }
 
     public static void writeData(String file, Object o) {
@@ -154,12 +166,8 @@ public class FileManager {
                     // add these back to the offline file
                     log.info("Code Time: Unable to send array data: " + resp.getErrorMessage());
                 }
-                // delete the file
-                deleteFile(file);
             } catch (Exception e) {
                 log.info("Code Time: Unable to send array data: " + e.getMessage());
-                // delete the file
-                deleteFile(file);
             }
         }
     }
@@ -260,7 +268,7 @@ public class FileManager {
         }
     }
 
-    public void openReadmeFile() {
+    public static void openReadmeFile() {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
             return;
@@ -297,7 +305,7 @@ public class FileManager {
 //        fileEditorManager.openEditor(descriptor, true);
     }
 
-    private String getReadmeContent() {
+    private static String getReadmeContent() {
         return "# Code Time\n" +
                 "\n" +
                 "[Code Time](https://www.software.com/code-time) is an open source plugin for automatic programming metrics and time-tracking.\n" +
@@ -389,5 +397,80 @@ public class FileManager {
     public static String cleanJsonString(String data) {
         data = data.replace("/\r\n/g", "").replace("/\n/g", "").trim();
         return data;
+    }
+
+    public static String getItem(String key) {
+        sessionJson = getSoftwareSessionAsJson();
+        if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
+            return sessionJson.get(key).getAsString();
+        }
+        return null;
+    }
+
+    public static String getItem(String key, String defaultVal) {
+        sessionJson = getSoftwareSessionAsJson();
+        if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
+            return sessionJson.get(key).getAsString();
+        }
+        if (defaultVal != null) {
+            return defaultVal;
+        }
+        return null;
+    }
+
+    public static void setNumericItem(String key, long val) {
+        sessionJson = getSoftwareSessionAsJson();
+        sessionJson.addProperty(key, val);
+
+        String content = sessionJson.toString();
+
+        String sessionFile = getSoftwareSessionFile(true);
+        saveFileContent(sessionFile, content);
+    }
+
+    public static void setItem(String key, String val) {
+        sessionJson = getSoftwareSessionAsJson();
+        sessionJson.addProperty(key, val);
+
+        String content = sessionJson.toString();
+        String sessionFile = getSoftwareSessionFile(true);
+
+        saveFileContent(sessionFile, content);
+
+    }
+
+    public static long getNumericItem(String key, Long defaultVal) {
+        sessionJson = getSoftwareSessionAsJson();
+        if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
+            return sessionJson.get(key).getAsLong();
+        }
+        return defaultVal.longValue();
+    }
+
+    public static synchronized JsonObject getSoftwareSessionAsJson() {
+        if (sessionJson == null) {
+
+            String sessionFile = getSoftwareSessionFile(true);
+            File f = new File(sessionFile);
+            if (f.exists()) {
+                try {
+                    Path p = Paths.get(sessionFile);
+
+                    byte[] encoded = Files.readAllBytes(p);
+                    String content = new String(encoded, Charset.defaultCharset());
+                    if (content != null) {
+                        // json parse it
+                        sessionJson = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
+                    }
+
+                } catch (Exception e) {
+                    log.warning("Code Time: Error trying to read and json parse the session file.");
+                }
+            }
+            if (sessionJson == null) {
+                sessionJson = new JsonObject();
+            }
+        }
+        return sessionJson;
     }
 }

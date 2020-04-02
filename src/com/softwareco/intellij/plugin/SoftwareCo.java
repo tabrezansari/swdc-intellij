@@ -173,7 +173,7 @@ public class SoftwareCo implements ApplicationComponent {
             // send an initial plugin payload
             this.sendInstallPayload();
 
-            FileManager.getInstance().openReadmeFile();
+            FileManager.openReadmeFile();
         }
 
         new Thread(() -> {

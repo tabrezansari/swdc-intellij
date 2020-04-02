@@ -108,7 +108,7 @@ public class TreeItemBuilder {
         jbList.setVisibleRowCount(1);
         jbList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
-        String name = SoftwareCoSessionManager.getItem("name");
+        String name = FileManager.getItem("name");
         if (name == null || name.equals("")) {
             listModel.add(0, buildSignupLabel("google"));
             listModel.add(1, buildSignupLabel("github"));
@@ -188,7 +188,7 @@ public class TreeItemBuilder {
                 } else if (lbl.getName().equals("submitfeedback")) {
                     SoftwareCoUtils.submitFeedback();
                 } else if (lbl.getName().equals("learnmore")) {
-                    FileManager.getInstance().openReadmeFile();
+                    FileManager.openReadmeFile();
                 } else if (lbl.getName().equals("togglestatus")) {
                     SoftwareCoUtils.toggleStatusBar();
                 }
@@ -235,8 +235,8 @@ public class TreeItemBuilder {
 
     private static JLabel buildLoggedInLabel() {
         JLabel label = new JLabel();
-        String authType = SoftwareCoSessionManager.getItem("authType");
-        String name = SoftwareCoSessionManager.getItem("name");
+        String authType = FileManager.getItem("authType");
+        String name = FileManager.getItem("name");
         String tooltip = name != null ? "Connected as " + name : "";
         String iconName = "envelope.svg";
         String text = "Connected using email";

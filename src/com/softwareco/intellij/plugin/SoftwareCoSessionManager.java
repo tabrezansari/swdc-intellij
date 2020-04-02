@@ -5,7 +5,6 @@
 package com.softwareco.intellij.plugin;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -20,9 +19,6 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -48,7 +44,7 @@ public class SoftwareCoSessionManager {
     }
 
     public static boolean jwtExists() {
-        String jwt = getItem("jwt");
+        String jwt = FileManager.getItem("jwt");
         return (jwt != null && !jwt.equals("")) ? true : false;
     }
 
@@ -225,83 +221,6 @@ public class SoftwareCoSessionManager {
 
     }
 
-    public static void setNumericItem(String key, long val) {
-        JsonObject jsonObj = getSoftwareSessionAsJson();
-        jsonObj.addProperty(key, val);
-
-        String content = jsonObj.toString();
-
-        String sessionFile = getSoftwareSessionFile(true);
-
-        try {
-            Writer output = new BufferedWriter(new FileWriter(sessionFile));
-            output.write(content);
-            output.close();
-        } catch (Exception e) {
-            log.warning("Code Time: Failed to write the key value pair (" + key + ", " + val + ") into the session, error: " + e.getMessage());
-        }
-    }
-
-    public static long getNumericItem(String key, Long defaultVal) {
-        JsonObject jsonObj = getSoftwareSessionAsJson();
-        if (jsonObj != null && jsonObj.has(key) && !jsonObj.get(key).isJsonNull()) {
-            return jsonObj.get(key).getAsLong();
-        }
-        return defaultVal.longValue();
-    }
-
-    public static void setItem(String key, String val) {
-        JsonObject jsonObj = getSoftwareSessionAsJson();
-        jsonObj.addProperty(key, val);
-
-        String content = jsonObj.toString();
-
-        String sessionFile = getSoftwareSessionFile(true);
-
-        try {
-            Writer output = new BufferedWriter(new FileWriter(sessionFile));
-            output.write(content);
-            output.close();
-        } catch (Exception e) {
-            log.warning("Code Time: Failed to write the key value pair (" + key + ", " + val + ") into the session, error: " + e.getMessage());
-        }
-    }
-
-    public static String getItem(String key, String defaultVal) {
-        String val = getItem(key);
-        if (val == null) {
-            return defaultVal;
-        }
-        return val;
-    }
-
-    public static String getItem(String key) {
-        JsonObject jsonObj = getSoftwareSessionAsJson();
-        if (jsonObj != null && jsonObj.has(key) && !jsonObj.get(key).isJsonNull()) {
-            return jsonObj.get(key).getAsString();
-        }
-        return null;
-    }
-
-    private static JsonObject getSoftwareSessionAsJson() {
-        JsonObject data = null;
-
-        String sessionFile = getSoftwareSessionFile(true);
-        File f = new File(sessionFile);
-        if (f.exists()) {
-            try {
-                byte[] encoded = Files.readAllBytes(Paths.get(sessionFile));
-                String content = new String(encoded, Charset.defaultCharset());
-                if (content != null) {
-                    // json parse it
-                    data = SoftwareCo.jsonParser.parse(FileManager.cleanJsonString(content)).getAsJsonObject();
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
-            }
-        }
-        return (data == null) ? new JsonObject() : data;
-    }
 
     public void deleteFile(String file) {
         File f = new File(file);
@@ -355,7 +274,7 @@ public class SoftwareCoSessionManager {
     }
 
     public static void launchLogin(String loginType) {
-        String jwt = getItem("jwt");
+        String jwt = FileManager.getItem("jwt");
 
         String url = "";
         if (loginType == null || loginType.equals("software") || loginType.equals("email")) {
@@ -366,7 +285,7 @@ public class SoftwareCoSessionManager {
             url = SoftwareCoUtils.api_endpoint + "/auth/github?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
         }
 
-        SoftwareCoSessionManager.setItem("authType", loginType);
+        FileManager.setItem("authType", loginType);
 
         BrowserUtil.browse(url);
 

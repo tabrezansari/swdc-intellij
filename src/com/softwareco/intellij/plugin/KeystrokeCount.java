@@ -4,6 +4,7 @@
  */
 package com.softwareco.intellij.plugin;
 
+import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
@@ -265,7 +266,7 @@ public class KeystrokeCount {
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         // set the latest payload timestamp utc so help with session time calculations
-        SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+        FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
     }
 
     public int getKeystrokes() {

@@ -3,6 +3,7 @@ package com.softwareco.intellij.plugin;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
+import com.softwareco.intellij.plugin.fs.FileManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,7 +40,7 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
     }
 
     public void setTooltip(String tooltip) {
-        String name = SoftwareCoSessionManager.getItem("name");
+        String name = FileManager.getItem("name");
 
         if (tooltip == null) {
             tooltip = "Code time today. Click to see more from Code Time.";

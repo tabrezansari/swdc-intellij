@@ -37,6 +37,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.HttpClientBuilder;
+import sun.net.www.protocol.mailto.MailToURLConnection;
 
 import javax.swing.*;
 import java.io.*;
@@ -681,7 +682,7 @@ public class SoftwareCoUtils {
                 // check if we have any data
                 if (data != null && data.has("jwt")) {
                     String dataJwt = data.get("jwt").getAsString();
-                    SoftwareCoSessionManager.setItem("jwt", dataJwt);
+                    FileManager.setItem("jwt", dataJwt);
                     return dataJwt;
                 }
             }
@@ -690,7 +691,7 @@ public class SoftwareCoUtils {
     }
 
     private static JsonObject getUser(boolean serverIsOnline) {
-        String jwt = SoftwareCoSessionManager.getItem("jwt");
+        String jwt = FileManager.getItem("jwt");
         if (serverIsOnline) {
             String api = "/users/me";
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
@@ -715,15 +716,15 @@ public class SoftwareCoUtils {
     }
 
     private static boolean isLoggedOn(boolean serverIsOnline) {
-        String pluginjwt = SoftwareCoSessionManager.getItem("jwt");
+        String pluginjwt = FileManager.getItem("jwt");
         if (serverIsOnline) {
             JsonObject userObj = getUser(serverIsOnline);
             if (userObj != null && userObj.has("email")) {
                 // check if the email is valid
                 String email = userObj.get("email").getAsString();
                 if (validateEmail(email)) {
-                    SoftwareCoSessionManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
-                    SoftwareCoSessionManager.setItem("name", email);
+                    FileManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
+                    FileManager.setItem("name", email);
                     return true;
                 }
             }
@@ -739,18 +740,18 @@ public class SoftwareCoUtils {
                 // check if we have any data
                 if (state.equals("OK")) {
                     String dataJwt = data.get("jwt").getAsString();
-                    SoftwareCoSessionManager.setItem("jwt", dataJwt);
+                    FileManager.setItem("jwt", dataJwt);
                     String dataEmail = data.get("email").getAsString();
                     if (dataEmail != null) {
-                        SoftwareCoSessionManager.setItem("name", dataEmail);
+                        FileManager.setItem("name", dataEmail);
                     }
                     return true;
                 } else if (state.equals("NOT_FOUND")) {
-                    SoftwareCoSessionManager.setItem("jwt", null);
+                    FileManager.setItem("jwt", null);
                 }
             }
         }
-        SoftwareCoSessionManager.setItem("name", null);
+        FileManager.setItem("name", null);
         return false;
     }
 
@@ -776,7 +777,7 @@ public class SoftwareCoUtils {
 
     public static void sendHeartbeat(String reason) {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-        String jwt = SoftwareCoSessionManager.getItem("jwt");
+        String jwt = FileManager.getItem("jwt");
         if (serverIsOnline && jwt != null) {
 
             long start = Math.round(System.currentTimeMillis() / 1000);

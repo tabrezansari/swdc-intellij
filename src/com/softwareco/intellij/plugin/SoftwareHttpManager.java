@@ -1,5 +1,6 @@
 package com.softwareco.intellij.plugin;
 
+import com.softwareco.intellij.plugin.fs.FileManager;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.*;
@@ -57,7 +58,7 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
             }
 
 
-            String jwtToken = (this.overridingJwt != null) ? this.overridingJwt : SoftwareCoSessionManager.getItem("jwt");
+            String jwtToken = (this.overridingJwt != null) ? this.overridingJwt : FileManager.getItem("jwt");
             // obtain the jwt session token if we have it
             if (jwtToken != null) {
                 req.addHeader("Authorization", jwtToken);

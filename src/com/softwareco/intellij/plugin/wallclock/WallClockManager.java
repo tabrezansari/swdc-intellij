@@ -56,7 +56,7 @@ public class WallClockManager {
     }
 
     private void newDayChecker() {
-        String currentDay = SoftwareCoSessionManager.getItem("currentDay", "");
+        String currentDay = FileManager.getItem("currentDay", "");
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         if (!day.equals(currentDay)) {
             // send the payloads
@@ -75,10 +75,10 @@ public class WallClockManager {
             FileAggregateDataManager.clearFileChangeInfoSummaryData();
 
             // update the current day
-            SoftwareCoSessionManager.setItem("currentDay", day);
+            FileManager.setItem("currentDay", day);
 
             // update the last payload timestamp
-            SoftwareCoSessionManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
+            FileManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
 
             // refresh the tree
             CodeTimeToolWindow.refresh();
@@ -91,7 +91,7 @@ public class WallClockManager {
     public void updateSessionSummaryFromServer(boolean isNewDay) {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
-        String jwt = SoftwareCoSessionManager.getItem("jwt");
+        String jwt = FileManager.getItem("jwt");
         String api = "/sessions/summary?refresh=true";
         SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
         if (resp.isOk()) {
@@ -133,7 +133,7 @@ public class WallClockManager {
         boolean isActive = ApplicationManager.getApplication().isActive();
         if (isActive) {
             long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
-            SoftwareCoSessionManager.setNumericItem("wctime", wctime);
+            FileManager.setNumericItem("wctime", wctime);
 
             // update the json time data file
             TimeDataManager.updateEditorSeconds(SECONDS_INCREMENT);
@@ -162,11 +162,11 @@ public class WallClockManager {
     }
 
     public long getWcTimeInSeconds() {
-        return SoftwareCoSessionManager.getNumericItem("wctime", 0L);
+        return FileManager.getNumericItem("wctime", 0L);
     }
 
     public void setWcTime(long seconds) {
-        SoftwareCoSessionManager.setNumericItem("wctime", seconds);
+        FileManager.setNumericItem("wctime", seconds);
         updateWallClockTime();
     }
 
