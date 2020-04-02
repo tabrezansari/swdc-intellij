@@ -2,6 +2,7 @@ package com.softwareco.intellij.plugin.fs;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -95,54 +96,28 @@ public class FileManager {
         }
     }
 
-    public static JsonObject getFileContentAsJson(String file) {
-        JsonObject data = null;
-
-        File f = new File(file);
-        if (f.exists()) {
-            try {
-                byte[] encoded = Files.readAllBytes(Paths.get(file));
-                String content = new String(encoded, Charset.forName("UTF-8"));
-                if (content != null) {
-                    // json parse it
-                    data = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonObject();
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
-            }
+    public static JsonArray getFileContentAsJsonArray(String file) {
+        JsonParser parser = new JsonParser();
+        try {
+            Object obj = parser.parse(new FileReader(file));
+            JsonArray jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonArray();
+            return jsonArray;
+        } catch (Exception e) {
+            log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
         }
-        return data;
+        return new JsonArray();
     }
 
-    public static JsonArray getFileContentAsJsonArray(String file) {
-        JsonArray jsonArray = null;
-
-        File f = new File(file);
-        if (f.exists()) {
-            try {
-                byte[] encoded = Files.readAllBytes(Paths.get(file));
-                String content = new String(encoded, Charset.forName("UTF-8"));
-                if (content != null) {
-                    // json parse it
-                    try {
-                        jsonArray = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonArray();
-                    } catch (Exception e1) {
-                        // maybe it's a json object, return it within a json array if this succeeds
-                        try {
-                            JsonObject obj = SoftwareCo.jsonParser.parse(cleanJsonString(content)).getAsJsonObject();
-                            jsonArray = new JsonArray();
-                            jsonArray.add(obj);
-                        } catch (Exception e2) {
-                            log.warning("Code Time: Error trying to read and parse: " + e2.getMessage());
-                        }
-                    }
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
-            }
+    public static JsonObject getFileContentAsJson(String file) {
+        JsonParser parser = new JsonParser();
+        try {
+            Object obj = parser.parse(new FileReader(file));
+            JsonObject jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonObject();
+            return jsonArray;
+        } catch (Exception e) {
+            log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
         }
-
-        return jsonArray;
+        return new JsonObject();
     }
 
     public static void deleteFile(String file) {
