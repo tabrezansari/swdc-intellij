@@ -8,13 +8,13 @@ import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
-import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.EventManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.ReportManager;
 import com.softwareco.intellij.plugin.models.*;
 import com.softwareco.intellij.plugin.repo.GitUtil;
-import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.managers.WallClockManager;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
@@ -310,16 +310,16 @@ public class TreeItemBuilder {
         return separator;
     }
 
-    public static MetricTree buildEditorTimeTree() {
-        String min = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
+    public static MetricTree buildEditorTimeTree(CodeTimeSummary codeTimeSummary) {
+        String min = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.codeTimeMinutes);
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode);
-        return buildTreeItem("Editor time", nodes, true);
+        return buildTreeItem("Code time", nodes, true);
     }
 
-    public static MetricTree buildCodeTimeTree() {
+    public static MetricTree buildCodeTimeTree(CodeTimeSummary codeTimeSummary) {
         // build the code time nodes
-        String min = SoftwareCoUtils.humanizeMinutes(sessionSummary.getCurrentDayMinutes());
+        String min = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
         String avg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getAverageDailyMinutes());
         String globalAvg = SoftwareCoUtils.humanizeMinutes(sessionSummary.getGlobalAverageDailyMinutes());
         MetricTreeNode todayNode = buildChildNode("Today: " + min, "rocket.svg");
@@ -327,7 +327,7 @@ public class TreeItemBuilder {
         MetricTreeNode avgNode = buildChildNode("Your average (" + dayStr + "): " + avg, avgIconName);
         MetricTreeNode globalNode = buildChildNode("Global average (" + dayStr + "): " + globalAvg, "global-grey.svg");
         List<MetricTreeNode> nodes = Arrays.asList(todayNode, avgNode, globalNode);
-        return buildTreeItem("Code time", nodes, true);
+        return buildTreeItem("Active code time", nodes, true);
     }
 
     public static MetricTree buildLinesAddedTree() {

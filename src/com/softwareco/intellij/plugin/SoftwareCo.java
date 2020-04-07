@@ -13,8 +13,9 @@ import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
-import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.EventManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
+import com.softwareco.intellij.plugin.managers.WallClockManager;
 
 import java.util.logging.Logger;
 
@@ -167,6 +168,7 @@ public class SoftwareCo implements ApplicationComponent {
         EventManager.sendOfflineEvents();
     }
 
+    // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
         if (initializedUser) {
@@ -204,12 +206,15 @@ public class SoftwareCo implements ApplicationComponent {
         // every hour
         final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();
         asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunning", 120, 60 * 60);
+
+        // initialize the wallclock manager
+        WallClockManager.getInstance();
     }
 
     protected void sendInstallPayload() {
         KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
         String fileName = "Untitled";
-        eventMgr.initializeKeystrokeObjectGraph(fileName, "Unnamed", "");
+        eventMgr.initializeKeystrokeObjectGraph(fileName, "Unnamed", "Untitled");
         KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
         fileInfo.add = fileInfo.add + 1;
         fileInfo.netkeys = fileInfo.add - fileInfo.delete;

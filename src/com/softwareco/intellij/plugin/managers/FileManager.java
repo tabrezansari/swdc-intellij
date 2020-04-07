@@ -1,4 +1,4 @@
-package com.softwareco.intellij.plugin.fs;
+package com.softwareco.intellij.plugin.managers;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;

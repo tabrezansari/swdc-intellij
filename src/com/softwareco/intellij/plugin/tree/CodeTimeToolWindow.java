@@ -5,6 +5,8 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
+import com.softwareco.intellij.plugin.managers.TimeDataManager;
+import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
@@ -102,6 +104,8 @@ public class CodeTimeToolWindow {
     private synchronized void rebuildTreeView(boolean initializing) {
         TreeItemBuilder.initializeSessionSummary(initializing);
 
+        CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
+
         // get vspace component to add at the end
         Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);
 
@@ -122,11 +126,11 @@ public class CodeTimeToolWindow {
 
         // add the metric nodes
         // editor time
-        MetricTree editorTime = TreeItemBuilder.buildEditorTimeTree();
+        MetricTree editorTime = TreeItemBuilder.buildEditorTimeTree(codeTimeSummary);
         dataPanel.add(editorTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
         // code time
-        MetricTree codeTime = TreeItemBuilder.buildCodeTimeTree();
+        MetricTree codeTime = TreeItemBuilder.buildCodeTimeTree(codeTimeSummary);
         dataPanel.add(codeTime, gridConstraints(dataPanel.getComponentCount(), 1, 6, 0, 3, 0));
 
         // lines added

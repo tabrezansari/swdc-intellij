@@ -1,8 +1,8 @@
-package com.softwareco.intellij.plugin.event;
+package com.softwareco.intellij.plugin.managers;
 
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.models.CodeTimeEvent;
 
 public class EventManager {

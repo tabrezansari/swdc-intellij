@@ -10,10 +10,9 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
-import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.EventManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 
@@ -206,10 +205,6 @@ public class SoftwareCoSessionManager {
                             log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
                         }
                     }
-
-                    // fetch the sessions/summary in 70 seconds
-                    final Runnable service = () -> WallClockManager.getInstance().updateSessionSummaryFromServer(isNewDay);
-                    AsyncManager.getInstance().executeOnceInSeconds(service, 70);
 
                 } else {
                     log.info("Code Time: No offline data to send");

@@ -22,12 +22,10 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
-import com.softwareco.intellij.plugin.event.EventManager;
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.*;
+import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -37,7 +35,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.HttpClientBuilder;
-import sun.net.www.protocol.mailto.MailToURLConnection;
 
 import javax.swing.*;
 import java.io.*;
@@ -46,7 +43,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
-import java.time.temporal.WeekFields;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -551,20 +547,21 @@ public class SoftwareCoUtils {
         String todayStr = formatDay.format(new Date());
         dashboardContent += getSectionHeader("Today (" + todayStr + ")");
 
+        CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
+
+        String activeCodeTimeMin = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
+        String codeTimeMin = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.codeTimeMinutes);
+        dashboardContent += getDashboardRow("Code time today", codeTimeMin);
+        dashboardContent += getDashboardRow("Active code time today", activeCodeTimeMin);
+
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
         if (summary != null) {
-            long currentDayMinutes = summary.getCurrentDayMinutes();
-
             long averageDailyMinutes = summary.getAverageDailyMinutes();
-
-            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(currentDayMinutes);
             String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
-            String wcTime = SoftwareCoUtils.humanizeMinutes(WallClockManager.getInstance().getWcTimeInSeconds() / 60);
-
-            dashboardContent += getDashboardRow("Editor time today", wcTime);
-            dashboardContent += getDashboardRow("Hours coded today", currentDayTimeStr);
             dashboardContent += getDashboardRow("90-day avg", averageDailyMinutesTimeStr);
             dashboardContent += "\n";
+        } else {
+            dashboardContent += getDashboardRow("90-day avg", SoftwareCoUtils.humanizeMinutes(0));
         }
 
         // append the summary content

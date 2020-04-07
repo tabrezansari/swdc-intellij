@@ -4,14 +4,14 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.softwareco.intellij.plugin.fs.FileManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.sessiondata.SessionDataManager;
-import com.softwareco.intellij.plugin.timedata.TimeDataManager;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.managers.TimeDataManager;
+import com.softwareco.intellij.plugin.managers.WallClockManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -155,32 +155,6 @@ public class KeystrokeCount {
         }
     }
 
-    // end unended file payloads and add the cumulative editor seconds
-    public void endUnendedFiles() {
-
-        long incrementMinutes = SessionDataManager.getMinutesSinceLastPayload();
-        TimeDataManager.incrementSessionAndFileSeconds(this.project, incrementMinutes);
-
-        TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);
-
-        long editorSeconds = 60;
-        if (td != null) {
-            editorSeconds = Math.max(td.getEditor_seconds(), td.getSession_seconds());
-        }
-
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Map<String, FileInfo> fileInfoDataSet = this.source;
-        for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
-            // end the ones that don't have an end time
-            if (fileInfoData.end == 0) {
-                // set the end time for this file
-                fileInfoData.end = timesData.now;
-                fileInfoData.local_end = timesData.local_now;
-            }
-            fileInfoData.cumulative_editor_seconds = editorSeconds;
-        }
-    }
-
     // update each source with it's true amount of keystrokes
     public boolean hasData() {
         boolean foundKpmData = false;
@@ -218,9 +192,42 @@ public class KeystrokeCount {
 
             // store to send later
             SoftwareCoSessionManager.getInstance().storePayload(payload);
+
+            // refresh the code time tree view
+            WallClockManager.getInstance().dispatchStatusViewUpdate();
         }
 
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        // set the latest payload timestamp utc so help with session time calculations
+        FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+
         this.resetData();
+    }
+
+    // end unended file payloads and add the cumulative editor seconds
+    public void endUnendedFiles() {
+
+        long incrementMinutes = Math.min(1, SessionDataManager.getMinutesSinceLastPayload());
+        TimeDataManager.incrementSessionAndFileSeconds(this.project, incrementMinutes);
+
+        TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);
+
+        long editorSeconds = 60;
+        if (td != null) {
+            editorSeconds = Math.max(td.getEditor_seconds(), td.getSession_seconds());
+        }
+
+        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        Map<String, FileInfo> fileInfoDataSet = this.source;
+        for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
+            // end the ones that don't have an end time
+            if (fileInfoData.end == 0) {
+                // set the end time for this file
+                fileInfoData.end = timesData.now;
+                fileInfoData.local_end = timesData.local_now;
+            }
+            fileInfoData.cumulative_editor_seconds = editorSeconds;
+        }
     }
 
     private void updateAggregates() {
@@ -229,7 +236,7 @@ public class KeystrokeCount {
         if (this.project != null) {
             aggregate.directory = this.project.getDirectory();
         } else {
-            aggregate.directory = "Unnamed";
+            aggregate.directory = "Untitled";
         }
         for (String key : this.source.keySet()) {
             FileInfo fileInfo = this.source.get(key);
@@ -260,13 +267,6 @@ public class KeystrokeCount {
 
         // update the file info map
         FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
-
-        // refresh the code time tree view
-        WallClockManager.getInstance().dispatchStatusViewUpdate();
-
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        // set the latest payload timestamp utc so help with session time calculations
-        FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
     }
 
     public int getKeystrokes() {

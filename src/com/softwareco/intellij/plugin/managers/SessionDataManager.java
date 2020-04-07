@@ -1,4 +1,4 @@
-package com.softwareco.intellij.plugin.sessiondata;
+package com.softwareco.intellij.plugin.managers;
 
 
 import com.google.gson.JsonElement;
@@ -7,10 +7,8 @@ import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import com.softwareco.intellij.plugin.wallclock.WallClockManager;
 
 import java.lang.reflect.Type;
 
@@ -61,14 +59,10 @@ public class SessionDataManager {
     }
 
     public static void incrementSessionSummary(KeystrokeAggregate aggregate) {
-        WallClockManager wcMgr = WallClockManager.getInstance();
         SessionSummary summary = getSessionSummaryData();
 
-        long incrementMinutes = getMinutesSinceLastPayload();
+        long incrementMinutes = Math.max(1, getMinutesSinceLastPayload());
         summary.setCurrentDayMinutes(summary.getCurrentDayMinutes() + incrementMinutes);
-
-        long sessionSeconds = summary.getCurrentDayMinutes() * 60;
-        wcMgr.updateBasedOnSessionSeconds(sessionSeconds);
 
         summary.setCurrentDayKeystrokes(summary.getCurrentDayKeystrokes() + aggregate.keystrokes);
         summary.setCurrentDayLinesAdded(summary.getCurrentDayLinesAdded() + aggregate.linesAdded);
@@ -90,6 +84,6 @@ public class SessionDataManager {
             }
         }
 
-        return minutesSinceLastPayload;
+        return Math.max(1, minutesSinceLastPayload);
     }
 }

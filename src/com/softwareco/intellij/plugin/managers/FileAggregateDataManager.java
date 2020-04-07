@@ -6,7 +6,6 @@ import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.fs.FileManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 
 import java.lang.reflect.Type;
