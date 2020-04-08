@@ -850,18 +850,33 @@ public class SoftwareCoUtils {
 
     // the timestamps are all in seconds
     public static class TimesData {
-        public Integer offset = ZonedDateTime.now().getOffset().getTotalSeconds();
-        public long now = System.currentTimeMillis() / 1000;
-        public long local_now = now + offset;
-        public String timezone = TimeZone.getDefault().getID();
-        public long local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
-        public long local_start_yesterday = local_start_day - DAYS_IN_SECONDS;
-        public Date local_start_of_week_date = atStartOfWeek(local_now);
-        public Date local_start_of_yesterday_date = new Date(local_start_yesterday * 1000);
-        public Date local_start_today_date = new Date(local_start_day * 1000);
-        public long local_start_of_week = local_start_of_week_date.toInstant().getEpochSecond();
-        public long local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
-        public long utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
+        public Integer offset;
+        public long now;
+        public long local_now;
+        public String timezone;
+        public long local_start_day;
+        public long local_start_yesterday;
+        public Date local_start_of_week_date;
+        public Date local_start_of_yesterday_date;
+        public Date local_start_today_date;
+        public long local_start_of_week;
+        public long local_end_day;
+        public long utc_end_day;
+
+        public TimesData() {
+            offset = ZonedDateTime.now().getOffset().getTotalSeconds();
+            now = System.currentTimeMillis() / 1000;
+            local_now = now + offset;
+            timezone = TimeZone.getDefault().getID();
+            local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+            local_start_yesterday = local_start_day - DAYS_IN_SECONDS;
+            local_start_of_week_date = atStartOfWeek(local_now);
+            local_start_of_yesterday_date = new Date(local_start_yesterday * 1000);
+            local_start_today_date = new Date(local_start_day * 1000);
+            local_start_of_week = local_start_of_week_date.toInstant().getEpochSecond();
+            local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
+            utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
+        }
 
     }
 

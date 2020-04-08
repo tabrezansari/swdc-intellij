@@ -21,7 +21,7 @@ import java.util.logging.Logger;
 
 
 /**
- * Intellij Plugin Application.
+ * Intellij Plugin Application
  */
 public class SoftwareCo implements ApplicationComponent {
 
@@ -144,7 +144,7 @@ public class SoftwareCo implements ApplicationComponent {
     private void sendOfflineDataRunner() {
         new Thread(() -> {
             try {
-                SoftwareCoSessionManager.getInstance().sendOfflineData(false);
+                FileManager.sendOfflineData(false);
             } catch (Exception e) {
                 System.err.println(e);
             }

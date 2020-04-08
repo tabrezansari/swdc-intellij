@@ -166,6 +166,9 @@ public class SoftwareCoEventManager {
                                     }
                                 }
                                 fileInfo.lines = documentLineCount;
+
+                                // update the latest payload
+                                keystrokeCount.updateLatestPayloadLazily();
                             }
                         }
                     }

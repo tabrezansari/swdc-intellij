@@ -4,7 +4,6 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonArray;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -14,7 +13,6 @@ import com.softwareco.intellij.plugin.managers.EventManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 
 import java.awt.event.MouseEvent;
 import java.io.*;
@@ -104,16 +102,6 @@ public class SoftwareCoSessionManager {
         return file;
     }
 
-    public static String getSoftwareDataStoreFile() {
-        String file = getSoftwareDir(true);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\data.json";
-        } else {
-            file += "/data.json";
-        }
-        return file;
-    }
-
     public synchronized static boolean isServerOnline() {
         long nowInSec = Math.round(System.currentTimeMillis() / 1000);
         // 5 min threshold
@@ -135,7 +123,7 @@ public class SoftwareCoSessionManager {
         } else {
             payload += "\n";
         }
-        String dataStoreFile = getSoftwareDataStoreFile();
+        String dataStoreFile = FileManager.getSoftwareDataStoreFile();
         File f = new File(dataStoreFile);
         try {
             log.info("Code Time: Storing kpm metrics: " + payload);
@@ -145,83 +133,6 @@ public class SoftwareCoSessionManager {
             output.close();
         } catch (Exception e) {
             log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
-        }
-    }
-
-    public void sendOfflineData(boolean isNewDay) {
-        final String dataStoreFile = getSoftwareDataStoreFile();
-        File f = new File(dataStoreFile);
-
-        if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
-
-                //Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        sb.append(line).append(",");
-                    }
-                }
-
-                br.close();
-
-                if (sb.length() > 0) {
-                    // we have data to send
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-                    payloads = "[" + payloads + "]";
-
-                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
-
-                    // delete the file
-                    this.deleteFile(dataStoreFile);
-
-                    JsonArray batch = new JsonArray();
-                    // go through the array about 50 at a time
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        batch.add(jsonArray.get(i));
-                        if (i > 0 && i % 50 == 0) {
-                            String payloadData = SoftwareCo.gson.toJson(batch);
-                            SoftwareResponse resp =
-                                    SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                            if (!resp.isOk()) {
-                                // add these back to the offline file
-                                log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
-                            }
-                            batch = new JsonArray();
-                        }
-                    }
-                    if (batch.size() > 0) {
-                        String payloadData = SoftwareCo.gson.toJson(batch);
-                        SoftwareResponse resp =
-                                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                        if (!resp.isOk()) {
-                            // add these back to the offline file
-                            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
-                        }
-                    }
-
-                } else {
-                    log.info("Code Time: No offline data to send");
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
-            }
-        }
-
-    }
-
-
-    public void deleteFile(String file) {
-        File f = new File(file);
-        // if the file exists, delete it
-        if (f.exists()) {
-            f.delete();
         }
     }
 
@@ -262,7 +173,7 @@ public class SoftwareCoSessionManager {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
 
-                    SoftwareCoSessionManager.getInstance().sendOfflineData(false);
+                    FileManager.sendOfflineData(false);
                 }
             });
         }

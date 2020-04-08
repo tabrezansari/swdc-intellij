@@ -30,10 +30,7 @@ public class TimeDataManager {
     }
 
     public static void clearTimeDataSummary() {
-        TimeData td = new TimeData();
-        List<TimeData> tdList = new ArrayList<>();
-        tdList.add(td);
-        FileManager.writeData(getTimeDataSummaryFile(), tdList);
+        FileManager.writeData(getTimeDataSummaryFile(), new JsonArray());
     }
 
     public static void incrementEditorSeconds(long editorSeconds) {
@@ -161,7 +158,7 @@ public class TimeDataManager {
         td.setDay(day);
         td.setTimestamp_local(timesData.local_now);
         td.setTimestamp(timesData.now);
-        td.setProject(p.clone());
+        td.setProject(p.cloneProject());
 
         if (timeDataList == null) {
             timeDataList = new ArrayList<>();

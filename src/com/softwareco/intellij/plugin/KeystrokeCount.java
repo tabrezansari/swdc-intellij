@@ -17,11 +17,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class KeystrokeCount {
 
-    private static final Logger LOG = Logger.getLogger("KeystrokeCount");
     // TODO: backend driven, we should look at getting a list of types at some point
     private String type = "Events";
 
@@ -36,6 +36,7 @@ public class KeystrokeCount {
     private String os;
     private String timezone;
     private KeystrokeProject project;
+
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -121,8 +122,12 @@ public class KeystrokeCount {
             this.timezone = timesData.timezone;
 
             // start the keystroke processor 1 minute timer
-            final Runnable service = () -> this.processKeystrokes();
-            AsyncManager.getInstance().executeOnceInSeconds(service, 60);
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    processKeystrokes();
+                }
+            }, 60000);
         }
 
         // create one and return the one just created
@@ -188,6 +193,7 @@ public class KeystrokeCount {
             // update the file aggregate info.
             this.updateAggregates();
 
+
             final String payload = SoftwareCo.gson.toJson(this);
 
             // store to send later
@@ -202,6 +208,11 @@ public class KeystrokeCount {
         FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
 
         this.resetData();
+    }
+
+    public void updateLatestPayloadLazily() {
+        String payload = SoftwareCo.gson.toJson(this);
+        FileManager.storeLatestPayloadLazily(payload);
     }
 
     // end unended file payloads and add the cumulative editor seconds

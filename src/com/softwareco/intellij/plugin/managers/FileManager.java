@@ -20,6 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -27,6 +29,7 @@ public class FileManager {
     public static final Logger log = Logger.getLogger("FileManager");
 
     private static JsonObject sessionJson = null;
+    private static Timer _timer = null;
 
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
@@ -45,12 +48,32 @@ public class FileManager {
         return softwareDataDir;
     }
 
+    public static String getSoftwareDataStoreFile() {
+        String file = getSoftwareDir(true);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\data.json";
+        } else {
+            file += "/data.json";
+        }
+        return file;
+    }
+
     public static String getSoftwareSessionFile(boolean autoCreate) {
         String file = getSoftwareDir(autoCreate);
         if (SoftwareCoUtils.isWindows()) {
             file += "\\session.json";
         } else {
             file += "/session.json";
+        }
+        return file;
+    }
+
+    public static String getCurrentPayloadFile() {
+        String file = getSoftwareDir(false);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\latestKeystrokes.json";
+        } else {
+            file += "/latestKeystrokes.json";
         }
         return file;
     }
@@ -243,6 +266,21 @@ public class FileManager {
         }
     }
 
+    public static void storeLatestPayloadLazily(final String data) {
+        if (_timer != null) {
+            _timer.cancel();
+            _timer = null;
+        }
+
+        _timer = new Timer();
+        _timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                FileManager.saveFileContent(FileManager.getCurrentPayloadFile(), data);
+            }
+        }, 2000);
+    }
+
     public static void openReadmeFile() {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
@@ -278,6 +316,74 @@ public class FileManager {
 //        FileEditorManager fileEditorManager = FileEditorManager.getInstance(p);
 //        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
 //        fileEditorManager.openEditor(descriptor, true);
+    }
+
+    public static void sendOfflineData(boolean isNewDay) {
+        final String dataStoreFile = getSoftwareDataStoreFile();
+        File f = new File(dataStoreFile);
+
+        if (f.exists()) {
+            // found a data file, check if there's content
+            StringBuffer sb = new StringBuffer();
+            try {
+                FileInputStream fis = new FileInputStream(f);
+
+                //Construct BufferedReader from InputStreamReader
+                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    if (line.length() > 0) {
+                        sb.append(line).append(",");
+                    }
+                }
+
+                br.close();
+
+                if (sb.length() > 0) {
+                    // we have data to send
+                    String payloads = sb.toString();
+                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
+                    payloads = "[" + payloads + "]";
+
+                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+
+                    // delete the file
+                    deleteFile(dataStoreFile);
+
+                    JsonArray batch = new JsonArray();
+                    // go through the array about 50 at a time
+                    for (int i = 0; i < jsonArray.size(); i++) {
+                        batch.add(jsonArray.get(i));
+                        if (i > 0 && i % 50 == 0) {
+                            String payloadData = SoftwareCo.gson.toJson(batch);
+                            SoftwareResponse resp =
+                                    SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                            if (!resp.isOk()) {
+                                // add these back to the offline file
+                                log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                            }
+                            batch = new JsonArray();
+                        }
+                    }
+                    if (batch.size() > 0) {
+                        String payloadData = SoftwareCo.gson.toJson(batch);
+                        SoftwareResponse resp =
+                                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                        if (!resp.isOk()) {
+                            // add these back to the offline file
+                            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                        }
+                    }
+
+                } else {
+                    log.info("Code Time: No offline data to send");
+                }
+            } catch (Exception e) {
+                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
+            }
+        }
+
     }
 
     private static String getReadmeContent() {

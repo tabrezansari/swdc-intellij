@@ -28,7 +28,7 @@ public class KeystrokeProject {
         }
     }
 
-    public KeystrokeProject clone() {
+    public KeystrokeProject cloneProject() {
         KeystrokeProject p = new KeystrokeProject(this.name, this.directory);
         p.setIdentifier(p.getIdentifier());
         if (this.resource != null) {
