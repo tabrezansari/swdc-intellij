@@ -202,25 +202,27 @@ public class TimeDataManager {
             return;
         }
         String dir = timeData.getProject().getDirectory();
+        String day = timeData.getDay();
 
         // get the existing list
         List<TimeData> timeDataList = getTimeDataList();
 
         // new list to save
         List<TimeData> listToSave = new ArrayList<>();
-        // add it to the new list
-        listToSave.add(timeData);
 
+        boolean foundIt = false;
         if (timeDataList != null && timeDataList.size() > 0) {
             for (TimeData td : timeDataList) {
-                if (td.getProject() != null &&
-                        !td.getDay().equals(timeData.getDay()) &&
-                        !td.getProject().getDirectory().equals(dir)) {
-                    // add it back to the list to save. it doesn't match the
-                    // incoming timeData and day, and the project is also available
+                if (td.getDay().equals(day) && td.getProject().getDirectory().equals(dir)) {
+                    listToSave.add(timeData);
+                    foundIt = true;
+                } else {
                     listToSave.add(td);
                 }
             }
+        }
+        if (!foundIt) {
+            listToSave.add(timeData);
         }
 
         // write it all
