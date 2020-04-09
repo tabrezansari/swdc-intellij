@@ -66,6 +66,8 @@ public class SoftwareCoUtils {
 
     public static JsonParser jsonParser = new JsonParser();
 
+    public static KeystrokeCount latestPayload = null;
+
     // sublime = 1, vs code = 2, eclipse = 3, intellij = 4, visual studio = 6, atom = 7
     public static int pluginId = 4;
     public static String VERSION = null;
@@ -108,6 +110,14 @@ public class SoftwareCoUtils {
 
     public static class UserStatus {
         public boolean loggedIn;
+    }
+
+    public static KeystrokeCount getLatestPayload() {
+        return latestPayload;
+    }
+
+    public static void setLatestPayload(KeystrokeCount payload) {
+        latestPayload = payload;
     }
 
     public static String getHostname() {
