@@ -127,7 +127,9 @@ public class WallClockManager {
 
     private void updateWallClockTime() {
         boolean isActive = ApplicationManager.getApplication().isActive();
-        if (isActive) {
+        KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
+        boolean hasLatestPayload = latestPayload != null;
+        if (isActive || hasLatestPayload) {
             long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
             FileManager.setNumericItem("wctime", wctime);
 

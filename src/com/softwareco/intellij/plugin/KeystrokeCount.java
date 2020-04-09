@@ -74,6 +74,8 @@ public class KeystrokeCount {
         this.start = 0L;
         this.local_start = 0L;
         this.timezone = "";
+
+        SoftwareCoUtils.setLatestPayload(null);
     }
 
     private boolean hasOpenAndCloseMetrics() {
@@ -201,6 +203,9 @@ public class KeystrokeCount {
 
             // refresh the code time tree view
             WallClockManager.getInstance().dispatchStatusViewUpdate();
+
+            // set the latest payload
+            SoftwareCoUtils.setLatestPayload(this);
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
