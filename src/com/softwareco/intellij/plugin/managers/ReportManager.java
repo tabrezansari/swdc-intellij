@@ -30,7 +30,7 @@ public class ReportManager {
         if (SoftwareCoUtils.isWindows()) {
             file += "\\ProjectContributorCodeSummary.txt";
         } else {
-            file += "/ProjectContributorCodeSummary.txgt";
+            file += "/ProjectContributorCodeSummary.txt";
         }
         return file;
     }

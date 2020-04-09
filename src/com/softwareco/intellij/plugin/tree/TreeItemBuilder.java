@@ -71,8 +71,10 @@ public class TreeItemBuilder {
 
                         JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                         JLabel lbl = lst.getSelectedValue();
-                        if (lbl.getName().equals("contributor_title")) {
-                            ReportManager.displayProjectContributorSummaryDashboard(lbl.getText());
+                        if (lbl != null) {
+                            if (lbl.getName().equals("contributor_title")) {
+                                ReportManager.displayProjectContributorSummaryDashboard(lbl.getText());
+                            }
                         }
                     }
 
@@ -121,12 +123,14 @@ public class TreeItemBuilder {
 
                     JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                     JLabel lbl = lst.getSelectedValue();
-                    if (lbl.getName().equals("signup-google")) {
-                        SoftwareCoSessionManager.launchLogin("google");
-                    } else if (lbl.getName().equals("signup-github")) {
-                        SoftwareCoSessionManager.launchLogin("github");
-                    } else if (lbl.getName().equals("signup-email")) {
-                        SoftwareCoSessionManager.launchLogin("software");
+                    if (lbl != null) {
+                        if (lbl.getName().equals("signup-google")) {
+                            SoftwareCoSessionManager.launchLogin("google");
+                        } else if (lbl.getName().equals("signup-github")) {
+                            SoftwareCoSessionManager.launchLogin("github");
+                        } else if (lbl.getName().equals("signup-email")) {
+                            SoftwareCoSessionManager.launchLogin("software");
+                        }
                     }
                 }
 
@@ -175,22 +179,24 @@ public class TreeItemBuilder {
 
                 JBList<JLabel> lst = (JBList<JLabel>) e.getSource();
                 JLabel lbl = lst.getSelectedValue();
-                if (lbl.getName().equals("webdashboard")) {
-                    // if they're not logged in, launch the onboarding
-                    boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
-                    if (!isLoggedIn) {
-                        SoftwareCoSessionManager.launchLogin("software");
-                    } else {
-                        SoftwareCoSessionManager.launchWebDashboard();
+                if (lbl != null) {
+                    if (lbl.getName().equals("webdashboard")) {
+                        // if they're not logged in, launch the onboarding
+                        boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
+                        if (!isLoggedIn) {
+                            SoftwareCoSessionManager.launchLogin("software");
+                        } else {
+                            SoftwareCoSessionManager.launchWebDashboard();
+                        }
+                    } else if (lbl.getName().equals("editordashboard")) {
+                        SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+                    } else if (lbl.getName().equals("submitfeedback")) {
+                        SoftwareCoUtils.submitFeedback();
+                    } else if (lbl.getName().equals("learnmore")) {
+                        FileManager.openReadmeFile();
+                    } else if (lbl.getName().equals("togglestatus")) {
+                        SoftwareCoUtils.toggleStatusBar();
                     }
-                } else if (lbl.getName().equals("editordashboard")) {
-                    SoftwareCoUtils.launchCodeTimeMetricsDashboard();
-                } else if (lbl.getName().equals("submitfeedback")) {
-                    SoftwareCoUtils.submitFeedback();
-                } else if (lbl.getName().equals("learnmore")) {
-                    FileManager.openReadmeFile();
-                } else if (lbl.getName().equals("togglestatus")) {
-                    SoftwareCoUtils.toggleStatusBar();
                 }
             }
 
