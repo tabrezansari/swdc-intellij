@@ -53,11 +53,10 @@ public class TimeDataManager {
         }
     }
 
-    public static void incrementSessionAndFileSeconds(KeystrokeProject project, long minutesSincePayload) {
+    public static void incrementSessionAndFileSeconds(KeystrokeProject project, long sessionSeconds) {
 
         TimeData td = getTodayTimeDataSummary(project);
         if (td != null) {
-            long sessionSeconds = minutesSincePayload * 60;
             // increment the session and file seconds
             td.setSession_seconds(td.getSession_seconds() + sessionSeconds);
             td.setFile_seconds(td.getFile_seconds() + 60);

@@ -6,6 +6,7 @@ package com.softwareco.intellij.plugin;
 
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.TimeData;
@@ -36,6 +37,8 @@ public class KeystrokeCount {
     private String os;
     private String timezone;
     private KeystrokeProject project;
+    private long cumulative_editor_seconds = 0;
+    private long elapsed_seconds = 0;
 
 
     public KeystrokeCount() {
@@ -106,7 +109,6 @@ public class KeystrokeCount {
         public long local_start = 0;
         public long local_end = 0;
         public long duration_seconds = 0;
-        public long cumulative_editor_seconds = 0;
         public String fsPath = "";
         public String name = "";
     }
@@ -189,12 +191,13 @@ public class KeystrokeCount {
     public void processKeystrokes() {
         if (this.hasData()) {
 
+            ElapsedTime eTime = SessionDataManager.getTimeBetweenLastPayload();
+
             // end the file end times.
-            this.endUnendedFiles();
+            this.endUnendedFiles(eTime.sessionSeconds, eTime.elapsedSeconds);
 
             // update the file aggregate info.
-            this.updateAggregates();
-
+            this.updateAggregates(eTime.sessionSeconds);
 
             final String payload = SoftwareCo.gson.toJson(this);
 
@@ -221,10 +224,8 @@ public class KeystrokeCount {
     }
 
     // end unended file payloads and add the cumulative editor seconds
-    public void endUnendedFiles() {
-
-        long incrementMinutes = Math.min(1, SessionDataManager.getMinutesSinceLastPayload());
-        TimeDataManager.incrementSessionAndFileSeconds(this.project, incrementMinutes);
+    public void endUnendedFiles(long sessionSeconds, long elapsedSeconds) {
+        TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
         TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);
 
@@ -232,6 +233,9 @@ public class KeystrokeCount {
         if (td != null) {
             editorSeconds = Math.max(td.getEditor_seconds(), td.getSession_seconds());
         }
+
+        this.cumulative_editor_seconds = editorSeconds;
+        this.elapsed_seconds = elapsedSeconds;
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         Map<String, FileInfo> fileInfoDataSet = this.source;
@@ -242,11 +246,10 @@ public class KeystrokeCount {
                 fileInfoData.end = timesData.now;
                 fileInfoData.local_end = timesData.local_now;
             }
-            fileInfoData.cumulative_editor_seconds = editorSeconds;
         }
     }
 
-    private void updateAggregates() {
+    private void updateAggregates(long sessionSeconds) {
         Map<String, FileChangeInfo> fileChangeInfoMap = FileAggregateDataManager.getFileChangeInfo();
         KeystrokeAggregate aggregate = new KeystrokeAggregate();
         if (this.project != null) {
@@ -279,7 +282,7 @@ public class KeystrokeCount {
         }
 
         // update the aggregate info
-        SessionDataManager.incrementSessionSummary(aggregate);
+        SessionDataManager.incrementSessionSummary(aggregate, sessionSeconds);
 
         // update the file info map
         FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
