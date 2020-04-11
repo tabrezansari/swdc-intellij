@@ -159,9 +159,9 @@ public class SoftwareCoSessionManager {
     }
 
     protected static void lazilyFetchUserStatus(int retryCount) {
-        SoftwareCoUtils.UserStatus userStatus = SoftwareCoUtils.getUserStatus();
+        boolean loggedIn = SoftwareCoUtils.getLoggedInStatus();
 
-        if (!userStatus.loggedIn && retryCount > 0) {
+        if (!loggedIn && retryCount > 0) {
             final int newRetryCount = retryCount - 1;
 
             final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);

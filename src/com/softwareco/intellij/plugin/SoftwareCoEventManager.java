@@ -52,7 +52,7 @@ public class SoftwareCoEventManager {
     public void handleFileOpenedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
-            initializeKeystrokeObjectGraph(fileName, project.getName(), project.getProjectFilePath());
+            initializeKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
@@ -68,7 +68,8 @@ public class SoftwareCoEventManager {
     public void handleFileClosedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
-            initializeKeystrokeObjectGraph(fileName, project.getName(), project.getProjectFilePath());
+            // initialize it in case it's not initialized yet
+            initializeKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
@@ -105,15 +106,17 @@ public class SoftwareCoEventManager {
                             projectName = project.getName();
                             projectFilepath = project.getBasePath();
 
-                            keystrokeMgr.addKeystrokeWrapperIfNoneExists(project);
+                            // initialize it in case it's not initialized yet
+                            initializeKeystrokeCount(projectName, fileName, projectFilepath);
 
-                            initializeKeystrokeObjectGraph(fileName, projectName, projectFilepath);
+                            // check whether it's a code time file or not
+                            // .*\.software.*(data\.json|session\.json|latestKeystrokes\.json|ProjectContributorCodeSummary\.txt|CodeTime\.txt|SummaryInfo\.txt|events\.json|fileChangeSummary\.json)
+                            boolean skip = (file == null || file.equals("") || fileName.matches(".*\\.software.*(data\\.json|session\\.json|latestKeystrokes\\.json|ProjectContributorCodeSummary\\.txt|CodeTime\\.txt|SummaryInfo\\.txt|events\\.json|fileChangeSummary\\.json)")) ? true : false;
 
                             KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
-                            if (keystrokeCount != null) {
+                            if (!skip && keystrokeCount != null) {
 
                                 KeystrokeManager.KeystrokeCountWrapper wrapper = keystrokeMgr.getKeystrokeWrapper();
-
 
                                 // Set the current text length and the current file and the current project
                                 //
@@ -151,7 +154,7 @@ public class SoftwareCoEventManager {
                                     }
                                 }
 
-                                keystrokeCount.setKeystrokes(keystrokeCount.getKeystrokes() + 1);
+                                keystrokeCount.keystrokes += 1;
 
                                 int documentLineCount = document.getLineCount();
                                 int savedLines = fileInfo.lines;
@@ -178,12 +181,7 @@ public class SoftwareCoEventManager {
         });
     }
 
-    public void initializeKeystrokeObjectGraph(String fileName, String projectName, String projectFilepath) {
-        // initialize it in case it's not initialized yet
-        initializeKeystrokeCount(projectName, fileName, projectFilepath);
-    }
-
-    private void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {
+    public void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if ( keystrokeCount == null || keystrokeCount.getProject() == null ) {
             createKeystrokeCountWrapper(projectName, projectFilepath);

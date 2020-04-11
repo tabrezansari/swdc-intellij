@@ -30,7 +30,7 @@ public class KeystrokeCount {
     private Map<String, FileInfo> source = new HashMap<>();
     private String version;
     private int pluginId;
-    private int keystrokes = 0;
+    public int keystrokes = 0;
     // start and end are in seconds
     private long start;
     private long local_start;
@@ -120,6 +120,7 @@ public class KeystrokeCount {
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
 
+        // start the process keystrokes timer if this is the start of a new payload
         if (this.start == 0) {
             this.start = timesData.now;
             this.local_start = timesData.local_now;
@@ -167,7 +168,7 @@ public class KeystrokeCount {
     // update each source with it's true amount of keystrokes
     public boolean hasData() {
         boolean foundKpmData = false;
-        if (this.getKeystrokes() > 0 || this.hasOpenAndCloseMetrics()) {
+        if (this.keystrokes > 0 || this.hasOpenAndCloseMetrics()) {
             foundKpmData = true;
         }
 
@@ -180,8 +181,8 @@ public class KeystrokeCount {
             keystrokesTally += data.keystrokes;
         }
 
-        if (keystrokesTally > this.getKeystrokes()) {
-            this.setKeystrokes(keystrokesTally);
+        if (keystrokesTally > this.keystrokes) {
+            this.keystrokes = keystrokesTally;
         }
 
         return foundKpmData;
@@ -286,14 +287,6 @@ public class KeystrokeCount {
 
         // update the file info map
         FileAggregateDataManager.updateFileChangeInfo(fileChangeInfoMap);
-    }
-
-    public int getKeystrokes() {
-        return keystrokes;
-    }
-
-    public void setKeystrokes(int keystrokes) {
-        this.keystrokes = keystrokes;
     }
 
     public KeystrokeProject getProject() {

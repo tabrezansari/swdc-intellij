@@ -27,7 +27,7 @@ public class KeystrokeManager {
     }
 
     public void addKeystrokeWrapperIfNoneExists(Project project) {
-        if (wrapper == null || wrapper.getProjectName() == null) {
+        if (project != null && (wrapper == null || wrapper.getProjectName() == null)) {
             wrapper = new KeystrokeCountWrapper();
             wrapper.setProjectName(project.getName());
         }

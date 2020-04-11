@@ -17,6 +17,8 @@ import com.softwareco.intellij.plugin.managers.EventManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 
@@ -31,7 +33,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static MessageBusConnection connection;
 
-    private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
     private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private AsyncManager asyncManager = AsyncManager.getInstance();
 
@@ -125,18 +126,16 @@ public class SoftwareCo implements ApplicationComponent {
     private void initializeUserInfoWhenProjectsReady(boolean initializedUser) {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
-            new Thread(() -> {
-                try {
-                    Thread.sleep(2000);
+            // try again in 5 seconds
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
                     initializeUserInfoWhenProjectsReady(initializedUser);
-                } catch (Exception e) {
-                    System.err.println(e);
                 }
-            }).start();
+            }, 5000);
         } else {
             // store the activate event
             EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
-
             initializeUserInfo(initializedUser);
         }
     }
@@ -174,30 +173,18 @@ public class SoftwareCo implements ApplicationComponent {
         if (initializedUser) {
             // send an initial plugin payload
             this.sendInstallPayload();
-
             FileManager.openReadmeFile();
         }
 
-        new Thread(() -> {
-            try {
-                setupEventListeners();
-
-                SoftwareCoUtils.getUserStatus();
-            }
-            catch (Exception e){
-                System.err.println(e);
-            }
-        }).start();
+        // setup the doc listeners
+        setupEventListeners();
+        // check the logged in status
+        SoftwareCoUtils.getLoggedInStatus();
 
         // every 20 min
         final Runnable repoTaskRunner = () -> this.processRepoTasks();
         asyncManager.scheduleService(
                 repoTaskRunner, "repoTaskRunner", 90, 60 * 20);
-
-        // every 35 minutes
-        final Runnable userStatusRunner = () -> SoftwareCoUtils.getUserStatus();
-        asyncManager.scheduleService(
-                userStatusRunner, "userStatusRunner", 60, 60 * 35);
 
         // every 30 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
@@ -214,11 +201,12 @@ public class SoftwareCo implements ApplicationComponent {
     protected void sendInstallPayload() {
         KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
         String fileName = "Untitled";
-        eventMgr.initializeKeystrokeObjectGraph(fileName, "Unnamed", "Untitled");
+        // String projectName, String fileName, String projectFilepath
+        eventMgr.initializeKeystrokeCount("Unnamed", fileName, "Untitled");
         KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
         fileInfo.add = fileInfo.add + 1;
         fileInfo.netkeys = fileInfo.add - fileInfo.delete;
-        keystrokeManager.getKeystrokeCount().setKeystrokes(1);
+        keystrokeManager.getKeystrokeCount().keystrokes = 1;
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 

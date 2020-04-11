@@ -76,9 +76,6 @@ public class SoftwareCoUtils {
     public final static ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
     private final static int EOF = -1;
-
-    private static boolean loggedInCacheState = false;
-
     private static boolean appAvailable = true;
     private static boolean showStatusText = true;
 
@@ -105,12 +102,13 @@ public class SoftwareCoUtils {
     }
 
     public static boolean isLoggedIn() {
-        return loggedInCacheState;
+        String name = FileManager.getItem("name");
+        if (name != null && !name.equals("")) {
+            return true;
+        }
+        return false;
     }
 
-    public static class UserStatus {
-        public boolean loggedIn;
-    }
 
     public static KeystrokeCount getLatestPayload() {
         return latestPayload;
@@ -722,7 +720,7 @@ public class SoftwareCoUtils {
         return pattern.matcher(email).matches();
     }
 
-    private static boolean isLoggedOn(boolean serverIsOnline) {
+    private static boolean getUserLoginState(boolean serverIsOnline) {
         String pluginjwt = FileManager.getItem("jwt");
         if (serverIsOnline) {
             JsonObject userObj = getUser(serverIsOnline);
@@ -763,23 +761,19 @@ public class SoftwareCoUtils {
     }
 
 
-    public static synchronized UserStatus getUserStatus() {
-        UserStatus currentUserStatus = new UserStatus();
+    public static synchronized boolean getLoggedInStatus() {
+        boolean loggedIn = isLoggedIn();
 
-        if (loggedInCacheState) {
-            currentUserStatus.loggedIn = loggedInCacheState;
-            return currentUserStatus;
+        if (loggedIn) {
+            return true;
         }
 
         // check if they're logged on
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
 
-        boolean loggedIn = isLoggedOn(serverIsOnline);
+        loggedIn = getUserLoginState(serverIsOnline);
 
-        currentUserStatus.loggedIn = loggedIn;
-
-        loggedInCacheState = loggedIn;
-        return currentUserStatus;
+        return loggedIn;
     }
 
     public static void sendHeartbeat(String reason) {
