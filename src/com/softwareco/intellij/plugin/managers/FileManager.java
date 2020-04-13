@@ -266,19 +266,21 @@ public class FileManager {
         }
     }
 
-    public static void storeLatestPayloadLazily(final String data) {
+    public synchronized static void storeLatestPayloadLazily(final String data) {
         if (_timer != null) {
             _timer.cancel();
             _timer = null;
         }
 
         _timer = new Timer();
-        _timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                FileManager.saveFileContent(FileManager.getCurrentPayloadFile(), data);
-            }
-        }, 2000);
+        if (_timer != null) {
+            _timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    FileManager.saveFileContent(FileManager.getCurrentPayloadFile(), data);
+                }
+            }, 2000);
+        }
     }
 
     public static void openReadmeFile() {

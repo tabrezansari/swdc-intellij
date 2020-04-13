@@ -262,24 +262,27 @@ public class KeystrokeCount {
             FileInfo fileInfo = this.source.get(key);
             fileInfo.duration_seconds = fileInfo.end - fileInfo.start;
             fileInfo.fsPath = key;
-
-            Path path = Paths.get(key);
-            if (path != null) {
-                Path fileName = path.getFileName();
-                if (fileName != null) {
-                    fileInfo.name = fileName.toString();
+            try {
+                Path path = Paths.get(key);
+                if (path != null) {
+                    Path fileName = path.getFileName();
+                    if (fileName != null) {
+                        fileInfo.name = fileName.toString();
+                    }
                 }
-            }
 
-            aggregate.aggregate(fileInfo);
+                aggregate.aggregate(fileInfo);
 
-            FileChangeInfo existingFileInfo = fileChangeInfoMap.get(key);
-            if (existingFileInfo == null) {
-                existingFileInfo = new FileChangeInfo();
-                fileChangeInfoMap.put(key, existingFileInfo);
+                FileChangeInfo existingFileInfo = fileChangeInfoMap.get(key);
+                if (existingFileInfo == null) {
+                    existingFileInfo = new FileChangeInfo();
+                    fileChangeInfoMap.put(key, existingFileInfo);
+                }
+                existingFileInfo.aggregate(fileInfo);
+                existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
+            } catch (Exception e) {
+                // error getting the path
             }
-            existingFileInfo.aggregate(fileInfo);
-            existingFileInfo.kpm = existingFileInfo.keystrokes / existingFileInfo.update_count;
         }
 
         // update the aggregate info
