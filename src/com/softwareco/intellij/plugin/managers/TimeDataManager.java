@@ -206,19 +206,15 @@ public class TimeDataManager {
         // new list to save
         List<TimeData> listToSave = new ArrayList<>();
 
-        boolean foundIt = false;
         if (timeDataList != null && timeDataList.size() > 0) {
             for (TimeData td : timeDataList) {
                 if (td.getDay().equals(day) && td.getProject().getDirectory().equals(dir)) {
+                    // replace it with the new time data
                     listToSave.add(timeData);
-                    foundIt = true;
                 } else {
                     listToSave.add(td);
                 }
             }
-        }
-        if (!foundIt) {
-            listToSave.add(timeData);
         }
 
         // write it all
