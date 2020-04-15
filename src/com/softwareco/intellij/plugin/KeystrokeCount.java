@@ -18,8 +18,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class KeystrokeCount {
 
@@ -39,7 +37,6 @@ public class KeystrokeCount {
     private KeystrokeProject project;
     private long cumulative_editor_seconds = 0;
     private long elapsed_seconds = 0;
-
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -125,14 +122,6 @@ public class KeystrokeCount {
             this.start = timesData.now;
             this.local_start = timesData.local_now;
             this.timezone = timesData.timezone;
-
-            // start the keystroke processor 1 minute timer
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    processKeystrokes();
-                }
-            }, 60000);
         }
 
         // create one and return the one just created
@@ -226,6 +215,7 @@ public class KeystrokeCount {
 
     // end unended file payloads and add the cumulative editor seconds
     public void endUnendedFiles(long sessionSeconds, long elapsedSeconds) {
+        // update the project time data session seconds
         TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
         TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);

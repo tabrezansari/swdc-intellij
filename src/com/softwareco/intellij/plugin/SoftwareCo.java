@@ -167,6 +167,14 @@ public class SoftwareCo implements ApplicationComponent {
         EventManager.sendOfflineEvents();
     }
 
+    private void processKeystrokePayload() {
+        KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
+        if (keystrokeManager.getKeystrokeCount() != null) {
+            // process it
+            keystrokeManager.getKeystrokeCount().processKeystrokes();
+        }
+    }
+
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
@@ -186,13 +194,17 @@ public class SoftwareCo implements ApplicationComponent {
         asyncManager.scheduleService(
                 repoTaskRunner, "repoTaskRunner", 90, 60 * 20);
 
-        // every 30 minutes
+        // every 15 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
         asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 15);
 
         // every hour
         final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();
-        asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunning", 120, 60 * 60);
+        asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunner", 120, 60 * 60);
+
+        // every 1 minute
+        final Runnable minutePayloadRunner = () -> this.processKeystrokePayload();
+        asyncManager.scheduleService(minutePayloadRunner, "minutePayloadRunner", 60, 60);
 
         // initialize the wallclock manager
         WallClockManager.getInstance();
