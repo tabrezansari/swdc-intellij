@@ -86,7 +86,7 @@ public class SessionDataManager {
             elapsedSeconds = timesData.now - lastPayloadEnd;
             long sessionThresholdSeconds = 60 * 15;
             if (elapsedSeconds > 0 && elapsedSeconds <= sessionThresholdSeconds) {
-                sessionSeconds = elapsedSeconds / 60;
+                sessionSeconds = elapsedSeconds;
             }
             sessionSeconds = Math.max(60, sessionSeconds);
         }
