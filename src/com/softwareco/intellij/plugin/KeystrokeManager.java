@@ -26,13 +26,6 @@ public class KeystrokeManager {
         return instance;
     }
 
-    public void addKeystrokeWrapperIfNoneExists(Project project) {
-        if (project != null && (wrapper == null || wrapper.getProjectName() == null)) {
-            wrapper = new KeystrokeCountWrapper();
-            wrapper.setProjectName(project.getName());
-        }
-    }
-
     public KeystrokeCount getKeystrokeCount() {
         if (wrapper != null) {
             return wrapper.getKeystrokeCount();
@@ -56,8 +49,6 @@ public class KeystrokeManager {
         // KeystrokeCount cache metadata
         protected KeystrokeCount keystrokeCount;
         protected String projectName = "";
-        protected String currentFileName = "";
-        protected int currentTextLength = 0;
 
         public KeystrokeCount getKeystrokeCount() {
             return keystrokeCount;
@@ -67,25 +58,10 @@ public class KeystrokeManager {
             this.keystrokeCount = keystrokeCount;
         }
 
-        public String getProjectName() {
-            return projectName;
-        }
-
         public void setProjectName(String projectName) {
             this.projectName = projectName;
         }
 
-        public void setCurrentFileName(String currentFileName) {
-            this.currentFileName = currentFileName;
-        }
-
-        public int getCurrentTextLength() {
-            return currentTextLength;
-        }
-
-        public void setCurrentTextLength(int currentTextLength) {
-            this.currentTextLength = currentTextLength;
-        }
     }
 
 }

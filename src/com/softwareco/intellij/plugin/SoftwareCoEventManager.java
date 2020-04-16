@@ -51,16 +51,36 @@ public class SoftwareCoEventManager {
         }
     }
 
-    public void handleFileOpenedEvents(String fileName, Project project) {
+    private KeystrokeCount getCurrentKeystrokeCount(String projectName, String fileName, String projectDir) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
-            initializeKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+            initializeKeystrokeCount(projectName, fileName, projectDir);
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
+        return keystrokeCount;
+    }
+
+    // this is used to close unended files
+    public void handleSelectionChangedEvents(String fileName, Project project) {
+        KeystrokeCount keystrokeCount =
+                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
             return;
         }
+        keystrokeCount.endPreviousModifiedFiles(fileName);
+    }
+
+    public void handleFileOpenedEvents(String fileName, Project project) {
+        KeystrokeCount keystrokeCount =
+                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+
+        KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
+        if (fileInfo == null) {
+            return;
+        }
+        keystrokeCount.endPreviousModifiedFiles(fileName);
         fileInfo.open = fileInfo.open + 1;
         int documentLineCount = getLineCount(fileName);
         fileInfo.lines = documentLineCount;
@@ -68,12 +88,8 @@ public class SoftwareCoEventManager {
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {
-        KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
-        if (keystrokeCount == null) {
-            // initialize it in case it's not initialized yet
-            initializeKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
-            keystrokeCount = keystrokeMgr.getKeystrokeCount();
-        }
+        KeystrokeCount keystrokeCount =
+                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
             return;
@@ -94,6 +110,7 @@ public class SoftwareCoEventManager {
         }
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
+
             FileDocumentManager instance = FileDocumentManager.getInstance();
             if (instance != null) {
                 VirtualFile file = instance.getFile(document);
@@ -102,29 +119,18 @@ public class SoftwareCoEventManager {
                     if (editors != null && editors.length > 0) {
                         String fileName = file.getPath();
                         Project project = editors[0].getProject();
-                        String projectName = null;
-                        String projectFilepath = null;
-                        if (project != null) {
-                            projectName = project.getName();
-                            projectFilepath = project.getBasePath();
 
-                            // initialize it in case it's not initialized yet
-                            initializeKeystrokeCount(projectName, fileName, projectFilepath);
+                        if (project != null) {
+
+                            // get the current keystroke count obj
+                            KeystrokeCount keystrokeCount =
+                                    getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
 
                             // check whether it's a code time file or not
                             // .*\.software.*(data\.json|session\.json|latestKeystrokes\.json|ProjectContributorCodeSummary\.txt|CodeTime\.txt|SummaryInfo\.txt|events\.json|fileChangeSummary\.json)
                             boolean skip = (file == null || file.equals("") || fileName.matches(".*\\.software.*(data\\.json|session\\.json|latestKeystrokes\\.json|ProjectContributorCodeSummary\\.txt|CodeTime\\.txt|SummaryInfo\\.txt|events\\.json|fileChangeSummary\\.json)")) ? true : false;
 
-                            KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
                             if (!skip && keystrokeCount != null) {
-
-                                KeystrokeManager.KeystrokeCountWrapper wrapper = keystrokeMgr.getKeystrokeWrapper();
-
-                                // Set the current text length and the current file and the current project
-                                //
-                                int currLen = document.getTextLength();
-                                wrapper.setCurrentFileName(fileName);
-                                wrapper.setCurrentTextLength(currLen);
 
                                 KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
                                 String syntax = fileInfo.syntax;
@@ -183,22 +189,14 @@ public class SoftwareCoEventManager {
         });
     }
 
-    public void initializeKeystrokeCount(String projectName, String fileName, String projectFilepath) {
+    public void initializeKeystrokeCount(String projectName, String fileName, String projectDir) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
-        if ( keystrokeCount == null || keystrokeCount.getProject() == null ) {
-            createKeystrokeCountWrapper(projectName, projectFilepath);
-        } else if (!keystrokeCount.getProject().getName().equals(projectName)) {
-            final KeystrokeManager.KeystrokeCountWrapper current = keystrokeMgr.getKeystrokeWrapper();
 
-            // send the current wrapper and create a new one
-            current.getKeystrokeCount().processKeystrokes();
-
-            createKeystrokeCountWrapper(projectName, projectFilepath);
-        } else {
-            //
-            // update the end time for files that don't match the incoming fileName
-            //
-            keystrokeCount.endPreviousModifiedFiles(fileName);
+        if (keystrokeCount == null) {
+            // create one
+            projectName = projectName != null && !projectName.equals("") ? projectName : "Unnamed";
+            projectDir = projectDir != null && !projectDir.equals("") ? projectDir : "Untitled";
+            createKeystrokeCountWrapper(projectName, projectDir);
         }
     }
 

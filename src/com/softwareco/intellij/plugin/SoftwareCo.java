@@ -11,6 +11,7 @@ import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.managers.EventManager;
@@ -137,6 +138,8 @@ public class SoftwareCo implements ApplicationComponent {
             // store the activate event
             EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
             initializeUserInfo(initializedUser);
+
+            setupFileEditorEventListeners(p);
         }
     }
 
@@ -167,14 +170,6 @@ public class SoftwareCo implements ApplicationComponent {
         EventManager.sendOfflineEvents();
     }
 
-    private void processKeystrokePayload() {
-        KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
-        if (keystrokeManager.getKeystrokeCount() != null) {
-            // process it
-            keystrokeManager.getKeystrokeCount().processKeystrokes();
-        }
-    }
-
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
@@ -202,10 +197,6 @@ public class SoftwareCo implements ApplicationComponent {
         final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();
         asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunner", 120, 60 * 60);
 
-        // every 1 minute
-        final Runnable minutePayloadRunner = () -> this.processKeystrokePayload();
-        asyncManager.scheduleService(minutePayloadRunner, "minutePayloadRunner", 60, 60);
-
         // initialize the wallclock manager
         WallClockManager.getInstance();
     }
@@ -224,14 +215,19 @@ public class SoftwareCo implements ApplicationComponent {
 
     private void setupEventListeners() {
         ApplicationManager.getApplication().invokeLater(() -> {
-
             // edit document
             EditorFactory.getInstance().getEventMulticaster().addDocumentListener(
                     new SoftwareCoDocumentListener(), this::disposeComponent);
-
         });
     }
 
+    private void setupFileEditorEventListeners(Project p) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            // file open,close,selection listener
+            p.getMessageBus().connect().subscribe(
+                    FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
+        });
+    }
 
     public void disposeComponent() {
         // store the activate event

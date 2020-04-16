@@ -18,6 +18,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class KeystrokeCount {
 
@@ -37,6 +39,7 @@ public class KeystrokeCount {
     private KeystrokeProject project;
     private long cumulative_editor_seconds = 0;
     private long elapsed_seconds = 0;
+    private boolean triggered = false;
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -70,11 +73,10 @@ public class KeystrokeCount {
         if (this.project != null) {
             this.project.resetData();
         }
-
         this.start = 0L;
         this.local_start = 0L;
         this.timezone = "";
-
+        this.triggered = false;
         SoftwareCoUtils.setLatestPayload(null);
     }
 
@@ -111,13 +113,30 @@ public class KeystrokeCount {
     }
 
     public FileInfo getSourceByFileName(String fileName) {
-        if (source.get(fileName) != null) {
+        // Initiate Process Keystrokes Timer
+        if (!this.triggered) {
+            this.triggered = true;
+
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    processKeystrokes();
+                }
+            }, 1000 * 60);
+        }
+
+        // Fetch the FileInfo
+        if (source != null && source.get(fileName) != null) {
             return source.get(fileName);
+        }
+
+        if (source == null) {
+            source = new HashMap<>();
         }
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
 
-        // start the process keystrokes timer if this is the start of a new payload
+        // Keystrokes metadata needs to be initialized
         if (this.start == 0) {
             this.start = timesData.now;
             this.local_start = timesData.local_now;
@@ -129,6 +148,7 @@ public class KeystrokeCount {
         fileInfoData.start = timesData.now;
         fileInfoData.local_start = timesData.local_now;
         source.put(fileName, fileInfoData);
+        fileInfoData.fsPath = fileName;
 
         return fileInfoData;
     }
@@ -137,20 +157,19 @@ public class KeystrokeCount {
         return SoftwareCo.gson.toJson(source);
     }
 
-    public void endPreviousModifiedFiles(String currentFileName) {
+    public void endPreviousModifiedFiles(String fileName) {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        Map<String, FileInfo> fileInfoDataSet = this.source;
-
-        for (FileInfo fileInfoData : fileInfoDataSet.values()) {
-            if (fileInfoData.end == 0) {
-                fileInfoData.end = timesData.now;
-                fileInfoData.local_end = timesData.local_now;
+        if (this.source != null) {
+            for (String key : this.source.keySet()) {
+                FileInfo fileInfo = this.source.get(key);
+                if (key.equals(fileName)) {
+                    fileInfo.end = 0;
+                    fileInfo.local_end = 0;
+                } else {
+                    fileInfo.end = timesData.now;
+                    fileInfo.local_end = timesData.local_now;
+                }
             }
-        }
-        if(fileInfoDataSet.get(currentFileName) != null) {
-            FileInfo fileInfoData = fileInfoDataSet.get(currentFileName);
-            fileInfoData.end = 0;
-            fileInfoData.local_end = 0;
         }
     }
 
