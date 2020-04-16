@@ -203,21 +203,18 @@ public class TimeDataManager {
         // get the existing list
         List<TimeData> timeDataList = getTimeDataList();
 
-        // new list to save
-        List<TimeData> listToSave = new ArrayList<>();
-
         if (timeDataList != null && timeDataList.size() > 0) {
-            for (TimeData td : timeDataList) {
+            for (int i = timeDataList.size() - 1; i >= 0; i--) {
+                TimeData td = timeDataList.get(i);
                 if (td.getDay().equals(day) && td.getProject().getDirectory().equals(dir)) {
-                    // replace it with the new time data
-                    listToSave.add(timeData);
-                } else {
-                    listToSave.add(td);
+                    timeDataList.remove(i);
+                    break;
                 }
             }
         }
+        timeDataList.add(timeData);
 
         // write it all
-        FileManager.writeData(getTimeDataSummaryFile(), listToSave);
+        FileManager.writeData(getTimeDataSummaryFile(), timeDataList);
     }
 }
