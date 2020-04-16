@@ -76,7 +76,8 @@ public class SessionDataManager {
     public static ElapsedTime getTimeBetweenLastPayload() {
         ElapsedTime eTime = new ElapsedTime();
 
-        long sessionSeconds = 0;
+        // default of 1 minute
+        long sessionSeconds = 60;
         long elapsedSeconds = 0;
 
         long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);

@@ -42,7 +42,7 @@ public class GitUtil {
     public static CommitChangeStats getChangeStats(String[] cmdList, String projectDir, boolean committedChanges) {
         CommitChangeStats changeStats = new CommitChangeStats(committedChanges);
 
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return changeStats;
         }
 
@@ -71,7 +71,7 @@ public class GitUtil {
     public static CommitChangeStats getUncommitedChanges(String projectDir) {
         CommitChangeStats changeStats = new CommitChangeStats(false);
 
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return changeStats;
         }
 
@@ -85,7 +85,7 @@ public class GitUtil {
         ResourceInfo resourceInfo = new ResourceInfo();
 
         // is the project dir avail?
-        if (projectDir != null && !projectDir.equals("")) {
+        if (projectDir != null &&  SoftwareCoUtils.isGitProject(projectDir)) {
             try {
                 String[] branchCmd = { "git", "symbolic-ref", "--short", "HEAD" };
                 String branch = SoftwareCoUtils.runCommand(branchCmd, projectDir);
@@ -157,6 +157,9 @@ public class GitUtil {
     }
 
     public static String getUsersEmail(String projectDir) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
+            return "";
+        }
         String[] emailCmd = { "git", "config", "user.email" };
         String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
         return email;
@@ -165,7 +168,7 @@ public class GitUtil {
     public static CommitChangeStats getTodaysCommits(String projectDir, String email) {
         CommitChangeStats changeStats = new CommitChangeStats(true);
 
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return changeStats;
         }
 
@@ -175,7 +178,7 @@ public class GitUtil {
     public static CommitChangeStats getYesterdaysCommits(String projectDir, String email) {
         CommitChangeStats changeStats = new CommitChangeStats(true);
 
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return changeStats;
         }
 
@@ -185,7 +188,7 @@ public class GitUtil {
     public static CommitChangeStats getThisWeeksCommits(String projectDir, String email) {
         CommitChangeStats changeStats = new CommitChangeStats(true);
 
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return changeStats;
         }
 
@@ -193,6 +196,9 @@ public class GitUtil {
     }
 
     public static CommitChangeStats getCommitsForRange(String rangeType, String projectDir, String email) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
+            return new CommitChangeStats(true);
+        }
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         long startOfRange = 0l;
         if (rangeType == "today") {
@@ -222,6 +228,9 @@ public class GitUtil {
     }
 
     public static String getRepoUrlLink(String projectDir) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
+            return "";
+        }
         String[] cmdList = { "git", "config", "--get", "remote.origin.url" };
 
         // should only be a result of 1
@@ -234,7 +243,7 @@ public class GitUtil {
     }
 
     public static CommitInfo getLastCommitInfo(String projectDir, String email) {
-        if (projectDir == null) {
+        if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return null;
         }
         if (email == null) {

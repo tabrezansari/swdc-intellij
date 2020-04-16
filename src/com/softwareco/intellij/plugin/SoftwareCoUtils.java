@@ -40,6 +40,8 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -934,6 +936,16 @@ public class SoftwareCoUtils {
             content += " ";
         }
         return content + "" + data;
+    }
+
+    public static boolean isGitProject(String projectDir) {
+        if (projectDir == null || projectDir.equals("")) {
+            return false;
+        }
+
+        String gitFile = projectDir + File.separator + ".git";
+        File f = new File(gitFile);
+        return f.exists();
     }
 
 }
