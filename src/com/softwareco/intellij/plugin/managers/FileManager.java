@@ -34,7 +34,7 @@ public class FileManager {
     private static KeystrokeCount lastSavedKeystrokeStats = null;
 
     public static KeystrokeCount getLastSavedKeystrokeStats() {
-        if (lastSavedKeystrokeStats != null) {
+        if (lastSavedKeystrokeStats == null) {
             // build it then return it
             updateLastSavedKeystrokesStats();
         }
@@ -568,22 +568,37 @@ public class FileManager {
     }
 
     public static KeystrokeCount updateLastSavedKeystrokesStats() {
-        // get the software data store file
-        String dataFile = FileManager.getSoftwareDataStoreFile();
+        final String dataStoreFile = getSoftwareDataStoreFile();
+        File f = new File(dataStoreFile);
 
-        File f = new File(dataFile);
         if (f.exists()) {
+            // found a data file, check if there's content
+            StringBuffer sb = new StringBuffer();
             try {
-                Path p = Paths.get(dataFile);
-                byte[] encoded = Files.readAllBytes(p);
-                String content = new String(encoded, Charset.defaultCharset());
-                if (content != null) {
-                    // json parse it
-                    JsonArray jsonData = SoftwareCo.jsonParser.parse(content).getAsJsonArray();
+                FileInputStream fis = new FileInputStream(f);
 
-                    if (jsonData != null && jsonData.size() == 0) {
+                //Construct BufferedReader from InputStreamReader
+                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+
+                String line = null;
+                while ((line = br.readLine()) != null) {
+                    if (line.length() > 0) {
+                        sb.append(line).append(",");
+                    }
+                }
+
+                br.close();
+
+                if (sb.length() > 0) {
+                    // we have data to send
+                    String payloads = sb.toString();
+                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
+                    payloads = "[" + payloads + "]";
+
+                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+                    if (jsonArray != null && jsonArray.size() > 0) {
                         Type type = new TypeToken<List<KeystrokeCount>>() {}.getType();
-                        List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonData, type);
+                        List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonArray, type);
 
                         if (list != null && list.size() > 0) {
                             list.sort(new Comparator<KeystrokeCount>() {
@@ -595,9 +610,12 @@ public class FileManager {
                             return list.get(0);
                         }
                     }
+
+                } else {
+                    log.info("Code Time: No offline data to send");
                 }
             } catch (Exception e) {
-                //
+                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
             }
         }
         return null;
