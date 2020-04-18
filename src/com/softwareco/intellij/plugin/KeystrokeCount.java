@@ -32,14 +32,22 @@ public class KeystrokeCount {
     private int pluginId;
     public int keystrokes = 0;
     // start and end are in seconds
-    private long start;
+    public long start;
     private long local_start;
     private String os;
     private String timezone;
     private KeystrokeProject project;
-    private long cumulative_editor_seconds = 0;
-    private long elapsed_seconds = 0;
+
+    public long cumulative_editor_seconds = 0;
+    public long cumulative_session_seconds = 0;
+    public long elapsed_seconds = 0;
+    public int new_day = 0; // 1 or zero to denote new day or not
+    public String project_null_error = "";
+    public String editor_seconds_error = "";
+    public String session_seconds_error = "";
+
     private boolean triggered = false;
+
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -64,6 +72,14 @@ public class KeystrokeCount {
         kc.source = this.source;
         kc.timezone = this.timezone;
 
+        kc.cumulative_editor_seconds = this.cumulative_editor_seconds;
+        kc.cumulative_session_seconds = this.cumulative_session_seconds;
+        kc.elapsed_seconds = this.elapsed_seconds;
+        kc.new_day = this.new_day; // 1 or zero to denote new day or not
+        kc.project_null_error = this.project_null_error;
+        kc.editor_seconds_error = this.editor_seconds_error;
+        kc.session_seconds_error = this.session_seconds_error;
+
         return kc;
     }
 
@@ -77,6 +93,13 @@ public class KeystrokeCount {
         this.local_start = 0L;
         this.timezone = "";
         this.triggered = false;
+        this.cumulative_editor_seconds = 0;
+        this.cumulative_session_seconds = 0;
+        this.elapsed_seconds = 0;
+        this.new_day = 0; // 1 or zero to denote new day or not
+        this.project_null_error = "";
+        this.editor_seconds_error = "";
+        this.session_seconds_error = "";
         SoftwareCoUtils.setLatestPayload(null);
     }
 
@@ -203,7 +226,7 @@ public class KeystrokeCount {
             ElapsedTime eTime = SessionDataManager.getTimeBetweenLastPayload();
 
             // end the file end times.
-            this.endUnendedFiles(eTime.sessionSeconds, eTime.elapsedSeconds);
+            this.preProcessKeystrokeData(eTime.sessionSeconds, eTime.elapsedSeconds);
 
             // update the file aggregate info.
             this.updateAggregates(eTime.sessionSeconds);
@@ -232,20 +255,70 @@ public class KeystrokeCount {
         FileManager.storeLatestPayloadLazily(payload);
     }
 
-    // end unended file payloads and add the cumulative editor seconds
-    public void endUnendedFiles(long sessionSeconds, long elapsedSeconds) {
-        // update the project time data session seconds
-        TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
+    private void validateAndUpdateCumulativeData(long sessionSeconds) {
+        TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
-        TimeData td = TimeDataManager.getTodayTimeDataSummary(this.project);
+        // add the cumulative data
+        long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
+        this.new_day = lastPayloadEnd == 0 ? 1 : 0;
 
-        long editorSeconds = 60;
-        if (td != null) {
-            editorSeconds = Math.max(td.getEditor_seconds(), td.getSession_seconds());
+        // get the current payloads so we can compare our last cumulative seconds
+        KeystrokeCount lastKpm = FileManager.getLastSavedKeystrokeStats();
+        if (lastKpm != null) {
+            if (lastKpm.cumulative_editor_seconds == 0 ||
+                lastKpm.cumulative_session_seconds == 0) {
+                lastKpm = null;
+            }
+            if (lastKpm != null &&
+                    SoftwareCoUtils.getFormattedDay(lastKpm.start).equals(SoftwareCoUtils.getFormattedDay(this.start))) {
+                lastKpm = null;
+            }
         }
 
-        this.cumulative_editor_seconds = editorSeconds;
-        this.elapsed_seconds = elapsedSeconds;
+        this.cumulative_session_seconds = 60;
+        this.cumulative_editor_seconds = 60;
+
+        if (td != null) {
+            this.cumulative_editor_seconds = td.getEditor_seconds();
+            this.cumulative_session_seconds = td.getSession_seconds();
+            if (lastKpm != null) {
+                // editor seconds check
+                if (lastKpm.cumulative_editor_seconds > cumulative_editor_seconds) {
+                    long diff = lastKpm.cumulative_editor_seconds - cumulative_editor_seconds;
+                    cumulative_editor_seconds = lastKpm.cumulative_editor_seconds + 60;
+                    this.editor_seconds_error = "TimeData has lower editor seconds than last saved keystroke data by " + diff + " seconds";
+                }
+                // session seconds check
+                if (lastKpm.cumulative_session_seconds > cumulative_session_seconds) {
+                    long diff = lastKpm.cumulative_session_seconds - cumulative_session_seconds;
+                    cumulative_session_seconds = lastKpm.cumulative_session_seconds + 60;
+                    this.session_seconds_error = "TimeData has lower session seconds than last saved keystroke data by " + diff + " seconds";
+                }
+            }
+        } else if (lastKpm != null) {
+            // no time data found, project null error
+            this.project_null_error = "TimeData not found using " + this.project.getDirectory() + " for editor and session seconds";
+            cumulative_editor_seconds = lastKpm.cumulative_editor_seconds + 60;
+            cumulative_session_seconds = lastKpm.cumulative_session_seconds + 60;
+        }
+
+        if (cumulative_editor_seconds < cumulative_session_seconds) {
+            long diff = cumulative_session_seconds - cumulative_editor_seconds;
+            if (diff > 45) {
+                this.editor_seconds_error = "Cumulative editor seconds is behind session seconds by " + diff + " seconds";
+            }
+            cumulative_editor_seconds = cumulative_session_seconds;
+        }
+
+        // update the cumulative editor second
+        this.cumulative_editor_seconds = cumulative_editor_seconds;
+        this.cumulative_session_seconds = cumulative_session_seconds;
+    }
+
+    // end unended file payloads and add the cumulative editor seconds
+    public void preProcessKeystrokeData(long sessionSeconds, long elapsedSeconds) {
+
+        this.validateAndUpdateCumulativeData(sessionSeconds);
 
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         Map<String, FileInfo> fileInfoDataSet = this.source;

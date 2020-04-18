@@ -61,7 +61,7 @@ public class SoftwareCo implements ApplicationComponent {
             if (pluginDescriptor != null) {
                 SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
             } else {
-                return "1.0.2";
+                return "2.0.1";
             }
         }
         return SoftwareCoUtils.VERSION;
@@ -213,6 +213,7 @@ public class SoftwareCo implements ApplicationComponent {
         keystrokeManager.getKeystrokeCount().processKeystrokes();
     }
 
+    // add the document change event listener
     private void setupEventListeners() {
         ApplicationManager.getApplication().invokeLater(() -> {
             // edit document
@@ -221,6 +222,7 @@ public class SoftwareCo implements ApplicationComponent {
         });
     }
 
+    // add the file selection change event listener
     private void setupFileEditorEventListeners(Project p) {
         ApplicationManager.getApplication().invokeLater(() -> {
             // file open,close,selection listener

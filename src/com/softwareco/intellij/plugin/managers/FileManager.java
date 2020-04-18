@@ -3,23 +3,24 @@ package com.softwareco.intellij.plugin.managers;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.softwareco.intellij.plugin.SoftwareCo;
-import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
-import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.SoftwareResponse;
+import com.softwareco.intellij.plugin.*;
 import org.apache.http.client.methods.HttpPost;
 
 import java.io.*;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -30,6 +31,15 @@ public class FileManager {
 
     private static JsonObject sessionJson = null;
     private static Timer _timer = null;
+    private static KeystrokeCount lastSavedKeystrokeStats = null;
+
+    public static KeystrokeCount getLastSavedKeystrokeStats() {
+        if (lastSavedKeystrokeStats != null) {
+            // build it then return it
+            updateLastSavedKeystrokesStats();
+        }
+        return lastSavedKeystrokeStats;
+    }
 
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
@@ -556,4 +566,41 @@ public class FileManager {
         }
         return sessionJson;
     }
+
+    public static KeystrokeCount updateLastSavedKeystrokesStats() {
+        // get the software data store file
+        String dataFile = FileManager.getSoftwareDataStoreFile();
+
+        File f = new File(dataFile);
+        if (f.exists()) {
+            try {
+                Path p = Paths.get(dataFile);
+                byte[] encoded = Files.readAllBytes(p);
+                String content = new String(encoded, Charset.defaultCharset());
+                if (content != null) {
+                    // json parse it
+                    JsonArray jsonData = SoftwareCo.jsonParser.parse(content).getAsJsonArray();
+
+                    if (jsonData != null && jsonData.size() == 0) {
+                        Type type = new TypeToken<List<KeystrokeCount>>() {}.getType();
+                        List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonData, type);
+
+                        if (list != null && list.size() > 0) {
+                            list.sort(new Comparator<KeystrokeCount>() {
+                                @Override
+                                public int compare(KeystrokeCount o1, KeystrokeCount o2) {
+                                    return o2.start < o1.start ? -1 : o2.start > o1.start ? 1 : 0;
+                                }
+                            });
+                            return list.get(0);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                //
+            }
+        }
+        return null;
+    }
+
 }

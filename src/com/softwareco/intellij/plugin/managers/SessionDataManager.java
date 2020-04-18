@@ -78,12 +78,12 @@ public class SessionDataManager {
 
         // default of 1 minute
         long sessionSeconds = 60;
-        long elapsedSeconds = 0;
+        long elapsedSeconds = 60;
 
         long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
         if (lastPayloadEnd > 0) {
             SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-            elapsedSeconds = timesData.now - lastPayloadEnd;
+            elapsedSeconds = Math.max(60, timesData.now - lastPayloadEnd);
             long sessionThresholdSeconds = 60 * 15;
             if (elapsedSeconds > 0 && elapsedSeconds <= sessionThresholdSeconds) {
                 sessionSeconds = elapsedSeconds;

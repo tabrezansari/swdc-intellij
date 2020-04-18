@@ -3,6 +3,7 @@ package com.softwareco.intellij.plugin.managers;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Timed;
 import com.softwareco.intellij.plugin.KeystrokeProject;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
@@ -53,7 +54,7 @@ public class TimeDataManager {
         }
     }
 
-    public static void incrementSessionAndFileSeconds(KeystrokeProject project, long sessionSeconds) {
+    public static TimeData incrementSessionAndFileSeconds(KeystrokeProject project, long sessionSeconds) {
 
         TimeData td = getTodayTimeDataSummary(project);
         if (td != null) {
@@ -70,6 +71,8 @@ public class TimeDataManager {
 
             saveTimeDataSummaryToDisk(td);
         }
+
+        return td;
     }
 
     public static void updateSessionFromSummaryApi(long currentDayMinutes) {
