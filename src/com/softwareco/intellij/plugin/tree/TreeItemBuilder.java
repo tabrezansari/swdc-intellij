@@ -14,7 +14,7 @@ import com.softwareco.intellij.plugin.managers.ReportManager;
 import com.softwareco.intellij.plugin.models.*;
 import com.softwareco.intellij.plugin.repo.GitUtil;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
-import com.softwareco.intellij.plugin.managers.WallClockManager;
+import org.apache.commons.lang.StringUtils;
 
 import javax.swing.*;
 import javax.swing.event.TreeExpansionEvent;
@@ -50,7 +50,7 @@ public class TreeItemBuilder {
         Project p = SoftwareCoUtils.getFirstActiveProject();
         if (p != null) {
             ResourceInfo resourceInfo = GitUtil.getResourceInfo(p.getBasePath());
-            if (resourceInfo != null) {
+            if (resourceInfo != null && StringUtils.isNotBlank(resourceInfo.getIdentifier())) {
                 DefaultListModel listModel = new DefaultListModel();
                 JLabel label = new JLabel();
 

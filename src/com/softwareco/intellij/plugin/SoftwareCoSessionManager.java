@@ -114,28 +114,6 @@ public class SoftwareCoSessionManager {
         return SoftwareCoUtils.isAppAvailable();
     }
 
-    public void storePayload(String payload) {
-        if (payload == null || payload.length() == 0) {
-            return;
-        }
-        if (SoftwareCoUtils.isWindows()) {
-            payload += "\r\n";
-        } else {
-            payload += "\n";
-        }
-        String dataStoreFile = FileManager.getSoftwareDataStoreFile();
-        File f = new File(dataStoreFile);
-        try {
-            log.info("Code Time: Storing kpm metrics: " + payload);
-            Writer output;
-            output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
-            output.append(payload);
-            output.close();
-        } catch (Exception e) {
-            log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
-        }
-    }
-
     private Project getCurrentProject() {
         Project[] projects = ProjectManager.getInstance().getOpenProjects();
         if (projects != null && projects.length > 0) {
@@ -173,7 +151,7 @@ public class SoftwareCoSessionManager {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
 
-                    FileManager.sendOfflineData(false);
+                    FileManager.sendOfflineData();
                 }
             });
         }

@@ -146,7 +146,7 @@ public class SoftwareCo implements ApplicationComponent {
     private void sendOfflineDataRunner() {
         new Thread(() -> {
             try {
-                FileManager.sendOfflineData(false);
+                FileManager.sendOfflineData();
             } catch (Exception e) {
                 System.err.println(e);
             }

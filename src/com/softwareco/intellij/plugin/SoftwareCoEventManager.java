@@ -12,9 +12,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
@@ -216,21 +213,6 @@ public class SoftwareCoEventManager {
         keystrokeMgr.setKeystrokeCount(projectName, keystrokeCount);
     }
 
-    private void updateKeystrokeProject(String projectName, String fileName, KeystrokeCount keystrokeCount) {
-        if (keystrokeCount == null) {
-            return;
-        }
-        KeystrokeProject project = keystrokeCount.getProject();
-        String projectDirectory = getProjectDirectory(projectName, fileName);
-
-        if (project == null) {
-            project = new KeystrokeProject( projectName, projectDirectory );
-            keystrokeCount.setProject( project );
-        } else if (project.getName() == null || project.getName() == "") {
-            project.setDirectory(projectDirectory);
-            project.setName(projectName);
-        }
-    }
 
     private String getProjectDirectory(String projectName, String fileName) {
         String projectDirectory = "";

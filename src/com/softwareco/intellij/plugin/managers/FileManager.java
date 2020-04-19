@@ -10,6 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.*;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
 
 import java.io.*;
@@ -19,10 +20,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Logger;
 
 public class FileManager {
@@ -32,6 +31,8 @@ public class FileManager {
     private static JsonObject sessionJson = null;
     private static Timer _timer = null;
     private static KeystrokeCount lastSavedKeystrokeStats = null;
+
+    private static Semaphore semaphore = new Semaphore(1);
 
     public static KeystrokeCount getLastSavedKeystrokeStats() {
         if (lastSavedKeystrokeStats == null) {
@@ -95,15 +96,19 @@ public class FileManager {
         File f = new File(file);
         final String content = SoftwareCo.gson.toJson(o);
 
-        Writer writer = null;
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(f), Charset.forName("UTF-8")));
-            writer.write(content);
-        } catch (IOException e) {
-            log.warning("Code Time: Error writing content: " + e.getMessage());
-        } finally {
-            try {writer.close();} catch (Exception ex) {/*ignore*/}
+        synchronized (semaphore) {
+            Writer writer = null;
+            try {
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(f), Charset.forName("UTF-8")));
+                writer.write(content);
+            } catch (IOException e) {
+                log.warning("Code Time: Error writing content: " + e.getMessage());
+            } finally {
+                try {
+                    writer.close();
+                } catch (Exception ex) {/*ignore*/}
+            }
         }
     }
 
@@ -118,37 +123,44 @@ public class FileManager {
         } else {
             content += "\n";
         }
-        try {
-            log.info("Code Time: Storing content: " + content);
-            Writer output;
-            output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
-            output.append(content);
-            output.close();
-        } catch (Exception e) {
-            log.warning("Code Time: Error appending content: " + e.getMessage());
+        final String contentToWrite = content;
+        synchronized (semaphore) {
+            try {
+                log.info("Code Time: Storing content: " + contentToWrite);
+                Writer output;
+                output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
+                output.append(contentToWrite);
+                output.close();
+            } catch (Exception e) {
+                log.warning("Code Time: Error appending content: " + e.getMessage());
+            }
         }
     }
 
     public static JsonArray getFileContentAsJsonArray(String file) {
-        JsonParser parser = new JsonParser();
-        try {
-            Object obj = parser.parse(new FileReader(file));
-            JsonArray jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonArray();
-            return jsonArray;
-        } catch (Exception e) {
-            log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
+        synchronized (semaphore) {
+            JsonParser parser = new JsonParser();
+            try {
+                Object obj = parser.parse(new FileReader(file));
+                JsonArray jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonArray();
+                return jsonArray;
+            } catch (Exception e) {
+                log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
+            }
         }
         return new JsonArray();
     }
 
     public static JsonObject getFileContentAsJson(String file) {
-        JsonParser parser = new JsonParser();
-        try {
-            Object obj = parser.parse(new FileReader(file));
-            JsonObject jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonObject();
-            return jsonArray;
-        } catch (Exception e) {
-            log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
+        synchronized (semaphore) {
+            JsonParser parser = new JsonParser();
+            try {
+                Object obj = parser.parse(new FileReader(file));
+                JsonObject jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonObject();
+                return jsonArray;
+            } catch (Exception e) {
+                log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
+            }
         }
         return new JsonObject();
     }
@@ -165,17 +177,19 @@ public class FileManager {
     public static void sendJsonArrayData(String file, String api) {
         File f = new File(file);
         if (f.exists()) {
-            try {
-                JsonArray jsonArr = FileManager.getFileContentAsJsonArray(file);
-                String payloadData = SoftwareCo.gson.toJson(jsonArr);
-                SoftwareResponse resp =
-                        SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
-                if (!resp.isOk()) {
-                    // add these back to the offline file
-                    log.info("Code Time: Unable to send array data: " + resp.getErrorMessage());
+            synchronized (semaphore) {
+                try {
+                    JsonArray jsonArr = FileManager.getFileContentAsJsonArray(file);
+                    String payloadData = SoftwareCo.gson.toJson(jsonArr);
+                    SoftwareResponse resp =
+                            SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
+                    if (!resp.isOk()) {
+                        // add these back to the offline file
+                        log.info("Code Time: Unable to send array data: " + resp.getErrorMessage());
+                    }
+                } catch (Exception e) {
+                    log.info("Code Time: Unable to send array data: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                log.info("Code Time: Unable to send array data: " + e.getMessage());
             }
         }
     }
@@ -183,65 +197,67 @@ public class FileManager {
     public static void sendBatchData(String file, String api) {
         File f = new File(file);
         if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
+            synchronized (semaphore) {
+                // found a data file, check if there's content
+                StringBuffer sb = new StringBuffer();
+                try {
+                    FileInputStream fis = new FileInputStream(f);
 
-                // Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                    // Construct BufferedReader from InputStreamReader
+                    BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
-                String line = null;
-                // add commas to the end of each line
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        sb.append(line).append(",");
+                    String line = null;
+                    // add commas to the end of each line
+                    while ((line = br.readLine()) != null) {
+                        if (line.length() > 0) {
+                            sb.append(line).append(",");
+                        }
                     }
-                }
 
-                br.close();
+                    br.close();
 
-                if (sb.length() > 0) {
-                    // check to see if it's already an array
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-                    payloads = "[" + payloads + "]";
+                    if (sb.length() > 0) {
+                        // check to see if it's already an array
+                        String payloads = sb.toString();
+                        payloads = payloads.substring(0, payloads.lastIndexOf(","));
+                        payloads = "[" + payloads + "]";
 
-                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+                        JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
 
-                    // delete the file
-                    deleteFile(file);
+                        // delete the file
+                        deleteFile(file);
 
-                    JsonArray batch = new JsonArray();
-                    // go through the array about 50 at a time
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        batch.add(jsonArray.get(i));
-                        if (i > 0 && i % 50 == 0) {
+                        JsonArray batch = new JsonArray();
+                        // go through the array about 50 at a time
+                        for (int i = 0; i < jsonArray.size(); i++) {
+                            batch.add(jsonArray.get(i));
+                            if (i > 0 && i % 50 == 0) {
+                                String payloadData = SoftwareCo.gson.toJson(batch);
+                                SoftwareResponse resp =
+                                        SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
+                                if (!resp.isOk()) {
+                                    // add these back to the offline file
+                                    log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                                }
+                                batch = new JsonArray();
+                            }
+                        }
+                        if (batch.size() > 0) {
                             String payloadData = SoftwareCo.gson.toJson(batch);
                             SoftwareResponse resp =
-                                    SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
+                                    SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
                             if (!resp.isOk()) {
                                 // add these back to the offline file
                                 log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
                             }
-                            batch = new JsonArray();
                         }
-                    }
-                    if (batch.size() > 0) {
-                        String payloadData = SoftwareCo.gson.toJson(batch);
-                        SoftwareResponse resp =
-                                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                        if (!resp.isOk()) {
-                            // add these back to the offline file
-                            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
-                        }
-                    }
 
-                } else {
-                    log.info("Code Time: No offline data to send");
+                    } else {
+                        log.info("Code Time: No offline data to send");
+                    }
+                } catch (Exception e) {
+                    log.warning("Code Time: Error trying to read and send offline data: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data: " + e.getMessage());
             }
         }
     }
@@ -251,11 +267,13 @@ public class FileManager {
 
         File f = new File(file);
         if (f.exists()) {
-            try {
-                byte[] encoded = Files.readAllBytes(Paths.get(file));
-                content = new String(encoded, Charset.forName("UTF-8"));
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
+            synchronized (semaphore) {
+                try {
+                    byte[] encoded = Files.readAllBytes(Paths.get(file));
+                    content = new String(encoded, Charset.forName("UTF-8"));
+                } catch (Exception e) {
+                    log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
+                }
             }
         }
         return content;
@@ -263,16 +281,43 @@ public class FileManager {
 
     public static void saveFileContent(String file, String content) {
         File f = new File(file);
+        synchronized (semaphore) {
+            Writer writer = null;
+            try {
+                writer = new BufferedWriter(new OutputStreamWriter(
+                        new FileOutputStream(f), Charset.forName("UTF-8")));
+                writer.write(content);
+            } catch (IOException ex) {
+                // Report
+            } finally {
+                try {
+                    writer.close();
+                } catch (Exception ex) {/*ignore*/}
+            }
+        }
+    }
 
-        Writer writer = null;
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(
-                    new FileOutputStream(f), Charset.forName("UTF-8")));
-            writer.write(content);
-        } catch (IOException ex) {
-            // Report
-        } finally {
-            try {writer.close();} catch (Exception ex) {/*ignore*/}
+    public static void storePayload(String payload) {
+        if (payload == null || payload.length() == 0) {
+            return;
+        }
+        if (SoftwareCoUtils.isWindows()) {
+            payload += "\r\n";
+        } else {
+            payload += "\n";
+        }
+        String dataStoreFile = FileManager.getSoftwareDataStoreFile();
+        synchronized (semaphore) {
+            File f = new File(dataStoreFile);
+            try {
+                log.info("Code Time: Storing kpm metrics: " + payload);
+                Writer output;
+                output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
+                output.append(payload);
+                output.close();
+            } catch (Exception e) {
+                log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
+            }
         }
     }
 
@@ -330,70 +375,46 @@ public class FileManager {
 //        fileEditorManager.openEditor(descriptor, true);
     }
 
-    public static void sendOfflineData(boolean isNewDay) {
-        final String dataStoreFile = getSoftwareDataStoreFile();
-        File f = new File(dataStoreFile);
-
-        if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
-
-                //Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        sb.append(line).append(",");
-                    }
-                }
-
-                br.close();
-
-                if (sb.length() > 0) {
-                    // we have data to send
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-                    payloads = "[" + payloads + "]";
-
-                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
-
-                    // delete the file
-                    deleteFile(dataStoreFile);
-
-                    JsonArray batch = new JsonArray();
-                    // go through the array about 50 at a time
-                    for (int i = 0; i < jsonArray.size(); i++) {
-                        batch.add(jsonArray.get(i));
-                        if (i > 0 && i % 50 == 0) {
-                            String payloadData = SoftwareCo.gson.toJson(batch);
-                            SoftwareResponse resp =
-                                    SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                            if (!resp.isOk()) {
-                                // add these back to the offline file
-                                log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
-                            }
-                            batch = new JsonArray();
-                        }
-                    }
-                    if (batch.size() > 0) {
-                        String payloadData = SoftwareCo.gson.toJson(batch);
-                        SoftwareResponse resp =
-                                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                        if (!resp.isOk()) {
-                            // add these back to the offline file
-                            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
-                        }
-                    }
-
-                } else {
-                    log.info("Code Time: No offline data to send");
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
+    public static void sendOfflineData() {
+        try {
+            String payloads = getKeystrokePayloads();
+            if (payloads == null || StringUtils.isBlank(payloads)) {
+                return;
             }
+
+            JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+
+            JsonArray batch = new JsonArray();
+            // go through the array about 50 at a time
+            for (int i = 0; i < jsonArray.size(); i++) {
+                batch.add(jsonArray.get(i));
+                if (i > 0 && i % 50 == 0) {
+                    String payloadData = SoftwareCo.gson.toJson(batch);
+                    SoftwareResponse resp =
+                            SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                    if (!resp.isOk()) {
+                        // add these back to the offline file
+                        log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                        return;
+                    }
+                    batch = new JsonArray();
+                }
+            }
+            if (batch.size() > 0) {
+                String payloadData = SoftwareCo.gson.toJson(batch);
+                SoftwareResponse resp =
+                        SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+                if (!resp.isOk()) {
+                    // add these back to the offline file
+                    log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                    return;
+                }
+            }
+
+            // delete the file now that we've made it this far without http errors
+            deleteFile(getSoftwareDataStoreFile());
+        } catch (Exception e) {
+            log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
         }
 
     }
@@ -542,7 +563,6 @@ public class FileManager {
 
     public static synchronized JsonObject getSoftwareSessionAsJson() {
         if (sessionJson == null) {
-
             String sessionFile = getSoftwareSessionFile(true);
             File f = new File(sessionFile);
             if (f.exists()) {
@@ -568,54 +588,65 @@ public class FileManager {
     }
 
     public static KeystrokeCount updateLastSavedKeystrokesStats() {
+        List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
+        if (list != null && list.size() > 0) {
+            list.sort((o1, o2) -> o2.start < o1.start ? -1 : o2.start > o1.start ? 1 : 0);
+            return list.get(0);
+        }
+        return null;
+    }
+
+    private static List<KeystrokeCount> convertPayloadsToList(String payloads) {
+        if (StringUtils.isNotBlank(payloads)) {
+            JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+            if (jsonArray != null && jsonArray.size() > 0) {
+                Type type = new TypeToken<List<KeystrokeCount>>() {
+                }.getType();
+                List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonArray, type);
+
+                return list;
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    private static String getKeystrokePayloads() {
         final String dataStoreFile = getSoftwareDataStoreFile();
         File f = new File(dataStoreFile);
 
         if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
+            synchronized (semaphore) {
+                // found a data file, check if there's content
+                StringBuffer sb = new StringBuffer();
+                try {
+                    FileInputStream fis = new FileInputStream(f);
 
-                //Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
+                    //Construct BufferedReader from InputStreamReader
+                    BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        sb.append(line).append(",");
-                    }
-                }
-
-                br.close();
-
-                if (sb.length() > 0) {
-                    // we have data to send
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-                    payloads = "[" + payloads + "]";
-
-                    JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
-                    if (jsonArray != null && jsonArray.size() > 0) {
-                        Type type = new TypeToken<List<KeystrokeCount>>() {}.getType();
-                        List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonArray, type);
-
-                        if (list != null && list.size() > 0) {
-                            list.sort(new Comparator<KeystrokeCount>() {
-                                @Override
-                                public int compare(KeystrokeCount o1, KeystrokeCount o2) {
-                                    return o2.start < o1.start ? -1 : o2.start > o1.start ? 1 : 0;
-                                }
-                            });
-                            return list.get(0);
+                    String line = null;
+                    while ((line = br.readLine()) != null) {
+                        if (line.length() > 0) {
+                            sb.append(line).append(",");
                         }
                     }
 
-                } else {
-                    log.info("Code Time: No offline data to send");
+                    br.close();
+
+                    if (sb.length() > 0) {
+                        // we have data to send
+                        String payloads = sb.toString();
+                        payloads = payloads.substring(0, payloads.lastIndexOf(","));
+                        payloads = "[" + payloads + "]";
+
+                        return payloads;
+
+                    } else {
+                        log.info("Code Time: No offline data to send");
+                    }
+                } catch (Exception e) {
+                    log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
             }
         }
         return null;

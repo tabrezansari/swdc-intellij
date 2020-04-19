@@ -58,7 +58,7 @@ public class WallClockManager {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         if (!day.equals(currentDay)) {
             // send the payloads
-            FileManager.sendOfflineData(true);
+            FileManager.sendOfflineData();
 
             // send the time data
             TimeDataManager.sendOfflineTimeData();

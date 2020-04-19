@@ -13,6 +13,7 @@ import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
+import org.apache.commons.lang.StringUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -221,31 +222,40 @@ public class KeystrokeCount {
 
 
     public void processKeystrokes() {
-        if (this.hasData()) {
+        try {
+            if (this.hasData()) {
 
-            ElapsedTime eTime = SessionDataManager.getTimeBetweenLastPayload();
+                // make sure a project is available
+                if (this.project == null || StringUtils.isBlank(this.project.getDirectory())) {
+                    this.project = new KeystrokeProject("Unnamed", "Untitled");
+                }
 
-            // end the file end times.
-            this.preProcessKeystrokeData(eTime.sessionSeconds, eTime.elapsedSeconds);
+                ElapsedTime eTime = SessionDataManager.getTimeBetweenLastPayload();
 
-            // update the file aggregate info.
-            this.updateAggregates(eTime.sessionSeconds);
+                // end the file end times.
+                this.preProcessKeystrokeData(eTime.sessionSeconds, eTime.elapsedSeconds);
 
-            final String payload = SoftwareCo.gson.toJson(this);
+                // update the file aggregate info.
+                this.updateAggregates(eTime.sessionSeconds);
 
-            // store to send later
-            SoftwareCoSessionManager.getInstance().storePayload(payload);
+                final String payload = SoftwareCo.gson.toJson(this);
 
-            // refresh the code time tree view
-            WallClockManager.getInstance().dispatchStatusViewUpdate();
+                // store to send later
+                FileManager.storePayload(payload);
 
-            // set the latest payload
-            SoftwareCoUtils.setLatestPayload(this);
+                // refresh the code time tree view
+                WallClockManager.getInstance().dispatchStatusViewUpdate();
+
+                // set the latest payload
+                SoftwareCoUtils.setLatestPayload(this);
+            }
+
+            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            // set the latest payload timestamp utc so help with session time calculations
+            FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+        } catch (Exception e) {
+            //
         }
-
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-        // set the latest payload timestamp utc so help with session time calculations
-        FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
 
         this.resetData();
     }
@@ -256,6 +266,7 @@ public class KeystrokeCount {
     }
 
     private void validateAndUpdateCumulativeData(long sessionSeconds) {
+
         TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
         // add the cumulative data
