@@ -37,7 +37,7 @@ public class FileManager {
     public static KeystrokeCount getLastSavedKeystrokeStats() {
         if (lastSavedKeystrokeStats == null) {
             // build it then return it
-            updateLastSavedKeystrokesStats();
+            lastSavedKeystrokeStats = updateLastSavedKeystrokesStats();
         }
         return lastSavedKeystrokeStats;
     }
