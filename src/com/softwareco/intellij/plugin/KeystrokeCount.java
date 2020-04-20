@@ -280,9 +280,13 @@ public class KeystrokeCount {
                 lastKpm.cumulative_session_seconds == 0) {
                 lastKpm = null;
             }
-            if (lastKpm != null &&
-                    SoftwareCoUtils.getFormattedDay(lastKpm.start).equals(SoftwareCoUtils.getFormattedDay(this.start))) {
-                lastKpm = null;
+            if (lastKpm != null) {
+                String lastKpmDay = SoftwareCoUtils.getFormattedDay(lastKpm.start);
+                String thisDay = SoftwareCoUtils.getFormattedDay(this.start);
+                if (!lastKpmDay.equals(thisDay)) {
+                    // don't use the last kpm since the day is different
+                    lastKpm = null;
+                }
             }
         }
 
