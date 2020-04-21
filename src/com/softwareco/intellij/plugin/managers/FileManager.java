@@ -42,6 +42,10 @@ public class FileManager {
         return lastSavedKeystrokeStats;
     }
 
+    public static void clearLastSavedKeystrokeStats() {
+        lastSavedKeystrokeStats = null;
+    }
+
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
         if (SoftwareCoUtils.isWindows()) {

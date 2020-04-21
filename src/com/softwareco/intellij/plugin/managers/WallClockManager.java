@@ -53,12 +53,15 @@ public class WallClockManager {
         dispatchStatusViewUpdate();
     }
 
-    private void newDayChecker() {
+    public void newDayChecker() {
         String currentDay = FileManager.getItem("currentDay", "");
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         if (!day.equals(currentDay)) {
             // send the payloads
             FileManager.sendOfflineData();
+
+            // clear out last keystroke stats
+            FileManager.clearLastSavedKeystrokeStats();
 
             // send the time data
             TimeDataManager.sendOfflineTimeData();
@@ -78,13 +81,13 @@ public class WallClockManager {
             // update the last payload timestamp
             FileManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
 
-            final Runnable service = () -> updateSessionSummaryFromServer(true);
+            final Runnable service = () -> updateSessionSummaryFromServer();
             AsyncManager.getInstance().executeOnceInSeconds(service, 60);
 
         }
     }
 
-    public void updateSessionSummaryFromServer(boolean isNewDay) {
+    public void updateSessionSummaryFromServer() {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
         String jwt = FileManager.getItem("jwt");
@@ -116,7 +119,7 @@ public class WallClockManager {
             SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
 
             // clone all
-            summary.clone(fetchedSummary, isNewDay);
+            summary.clone(fetchedSummary);
 
             TimeDataManager.updateSessionFromSummaryApi(fetchedSummary.getCurrentDayMinutes());
 

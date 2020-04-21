@@ -198,7 +198,7 @@ public class SoftwareCo implements ApplicationComponent {
         asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunner", 120, 60 * 60);
 
         // initialize the wallclock manager
-        WallClockManager.getInstance();
+        WallClockManager.getInstance().updateSessionSummaryFromServer();
     }
 
     protected void sendInstallPayload() {

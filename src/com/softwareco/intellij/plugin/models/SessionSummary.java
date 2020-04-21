@@ -27,10 +27,8 @@ public class SessionSummary {
     private long globalAverageLinesAdded = 0L;
     private long globalAverageLinesRemoved = 0L;
 
-    public void clone(SessionSummary in, boolean isNewDay) {
-        if (!isNewDay && in.currentDayMinutes > this.currentDayMinutes) {
-            this.currentDayMinutes = in.getCurrentDayMinutes();
-        }
+    public void clone(SessionSummary in) {
+        this.currentDayMinutes = in.getCurrentDayMinutes();
         this.currentDayKeystrokes = in.getCurrentDayKeystrokes();
         this.currentDayKpm = in.getCurrentDayKpm();
         this.currentDayLinesAdded = in.getCurrentDayLinesAdded();
