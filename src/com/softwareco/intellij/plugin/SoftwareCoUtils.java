@@ -897,6 +897,15 @@ public class SoftwareCoUtils {
         return day;
     }
 
+    public static boolean isNewDay() {
+        String currentDay = FileManager.getItem("currentDay", "");
+        String day = SoftwareCoUtils.getTodayInStandardFormat();
+        if (!day.equals(currentDay)) {
+            return true;
+        }
+        return false;
+    }
+
     public static String getFormattedDay(long unixSeconds) {
         SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
         String day = formatDay.format(new Date(unixSeconds * 1000));

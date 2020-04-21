@@ -269,28 +269,24 @@ public class KeystrokeCount {
 
         TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
-        // add the cumulative data
-        long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
-        this.new_day = lastPayloadEnd == 0 ? 1 : 0;
-
         // get the current payloads so we can compare our last cumulative seconds
         KeystrokeCount lastPayload = FileManager.getLastSavedKeystrokeStats();
-        boolean initiateNewDayCheck = false;
-        if (lastPayload != null) {
-            String lastKpmDay = SoftwareCoUtils.getFormattedDay(lastPayload.local_start);
-            String thisDay = SoftwareCoUtils.getFormattedDay(this.local_start);
-            if (!lastKpmDay.equals(thisDay)) {
-                // don't use the last kpm since the day is different
-                lastPayload = null;
-                initiateNewDayCheck = true;
+        if (SoftwareCoUtils.isNewDay()) {
+            // don't use the last kpm since the day is different
+            lastPayload = null;
+
+            // clear out data from the previous day
+            WallClockManager.getInstance().newDayChecker();
+
+            if (td != null) {
                 td = null;
+                this.project_null_error = "TimeData should be null as its a new day";
             }
         }
 
-        if (initiateNewDayCheck) {
-            // clear out data from the previous day
-            WallClockManager.getInstance().newDayChecker();
-        }
+        // add the cumulative data
+        long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
+        this.new_day = lastPayloadEnd == 0 ? 1 : 0;
 
         this.cumulative_session_seconds = 60;
         this.cumulative_editor_seconds = 60;
