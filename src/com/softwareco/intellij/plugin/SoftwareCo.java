@@ -37,6 +37,8 @@ public class SoftwareCo implements ApplicationComponent {
     private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private AsyncManager asyncManager = AsyncManager.getInstance();
 
+    public static final String WORKSPACE_NAME = SoftwareCoSessionManager.generateToken();
+
     private static int retry_counter = 0;
 
     public SoftwareCo() {
@@ -181,20 +183,21 @@ public class SoftwareCo implements ApplicationComponent {
 
         // setup the doc listeners
         setupEventListeners();
+
         // check the logged in status
         SoftwareCoUtils.getLoggedInStatus();
 
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
 
-        // every 20 min
+        // every 25 min
         final Runnable repoTaskRunner = () -> this.processRepoTasks();
         asyncManager.scheduleService(
-                repoTaskRunner, "repoTaskRunner", 90, 60 * 20);
+                repoTaskRunner, "repoTaskRunner", 90, 60 * 25);
 
         // every 15 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 2, 60 * 15);
+        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 30, 60 * 15);
 
         // every hour
         final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();

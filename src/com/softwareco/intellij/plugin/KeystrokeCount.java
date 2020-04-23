@@ -292,7 +292,7 @@ public class KeystrokeCount {
         }
 
         // add the cumulative data
-        this.workspace_name = this.project.getName();
+        this.workspace_name = SoftwareCo.WORKSPACE_NAME;
 
         this.cumulative_session_seconds = 60;
         this.cumulative_editor_seconds = 60;

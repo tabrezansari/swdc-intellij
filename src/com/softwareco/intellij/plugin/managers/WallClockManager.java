@@ -58,6 +58,9 @@ public class WallClockManager {
             // send the payloads
             FileManager.sendOfflineData();
 
+            // clear the last payload we have in memory
+            FileManager.clearLastSavedKeystrokeStats();
+
             // send the time data
             TimeDataManager.sendOfflineTimeData();
 

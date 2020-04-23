@@ -34,6 +34,10 @@ public class FileManager {
 
     private static Semaphore semaphore = new Semaphore(1);
 
+    public static void clearLastSavedKeystrokeStats() {
+        lastSavedKeystrokeStats = null;
+    }
+
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
         if (SoftwareCoUtils.isWindows()) {
