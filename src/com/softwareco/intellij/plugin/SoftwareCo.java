@@ -184,6 +184,9 @@ public class SoftwareCo implements ApplicationComponent {
         // check the logged in status
         SoftwareCoUtils.getLoggedInStatus();
 
+        // get the last payload into memory
+        FileManager.getLastSavedKeystrokeStats();
+
         // every 20 min
         final Runnable repoTaskRunner = () -> this.processRepoTasks();
         asyncManager.scheduleService(

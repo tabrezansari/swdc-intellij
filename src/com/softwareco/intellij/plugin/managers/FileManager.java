@@ -34,18 +34,6 @@ public class FileManager {
 
     private static Semaphore semaphore = new Semaphore(1);
 
-    public static KeystrokeCount getLastSavedKeystrokeStats() {
-        if (lastSavedKeystrokeStats == null) {
-            // build it then return it
-            lastSavedKeystrokeStats = updateLastSavedKeystrokesStats();
-        }
-        return lastSavedKeystrokeStats;
-    }
-
-    public static void clearLastSavedKeystrokeStats() {
-        lastSavedKeystrokeStats = null;
-    }
-
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
         if (SoftwareCoUtils.isWindows()) {
@@ -591,13 +579,13 @@ public class FileManager {
         return sessionJson;
     }
 
-    public static KeystrokeCount updateLastSavedKeystrokesStats() {
+    public static KeystrokeCount getLastSavedKeystrokeStats() {
         List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
         if (list != null && list.size() > 0) {
             list.sort((o1, o2) -> o2.start < o1.start ? -1 : o2.start > o1.start ? 1 : 0);
-            return list.get(0);
+            lastSavedKeystrokeStats = list.get(0);
         }
-        return null;
+        return lastSavedKeystrokeStats;
     }
 
     private static List<KeystrokeCount> convertPayloadsToList(String payloads) {
