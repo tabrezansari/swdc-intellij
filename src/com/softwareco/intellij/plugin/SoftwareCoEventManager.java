@@ -48,10 +48,16 @@ public class SoftwareCoEventManager {
         }
     }
 
-    private KeystrokeCount getCurrentKeystrokeCount(String projectName, String fileName, String projectDir) {
+    private KeystrokeCount getCurrentKeystrokeCount(String projectName, String projectDir) {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
-            initializeKeystrokeCount(projectName, fileName, projectDir);
+            // create one
+            projectName = projectName != null && !projectName.equals("") ? projectName : "Unnamed";
+            projectDir = projectDir != null && !projectDir.equals("") ? projectDir : "Untitled";
+            // create the keysrtroke count wrapper
+            createKeystrokeCountWrapper(projectName, projectDir);
+
+            // now retrieve it from the mgr
             keystrokeCount = keystrokeMgr.getKeystrokeCount();
         }
         return keystrokeCount;
@@ -60,7 +66,7 @@ public class SoftwareCoEventManager {
     // this is used to close unended files
     public void handleSelectionChangedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount =
-                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+                getCurrentKeystrokeCount(project.getName(), project.getProjectFilePath());
 
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
@@ -71,7 +77,7 @@ public class SoftwareCoEventManager {
 
     public void handleFileOpenedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount =
-                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+                getCurrentKeystrokeCount(project.getName(), project.getProjectFilePath());
 
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
@@ -86,7 +92,7 @@ public class SoftwareCoEventManager {
 
     public void handleFileClosedEvents(String fileName, Project project) {
         KeystrokeCount keystrokeCount =
-                getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+                getCurrentKeystrokeCount(project.getName(), project.getProjectFilePath());
         KeystrokeCount.FileInfo fileInfo = keystrokeCount.getSourceByFileName(fileName);
         if (fileInfo == null) {
             return;
@@ -121,7 +127,7 @@ public class SoftwareCoEventManager {
 
                             // get the current keystroke count obj
                             KeystrokeCount keystrokeCount =
-                                    getCurrentKeystrokeCount(project.getName(), fileName, project.getProjectFilePath());
+                                    getCurrentKeystrokeCount(project.getName(), project.getProjectFilePath());
 
                             // check whether it's a code time file or not
                             // .*\.software.*(data\.json|session\.json|latestKeystrokes\.json|ProjectContributorCodeSummary\.txt|CodeTime\.txt|SummaryInfo\.txt|events\.json|fileChangeSummary\.json)
@@ -186,18 +192,7 @@ public class SoftwareCoEventManager {
         });
     }
 
-    public void initializeKeystrokeCount(String projectName, String fileName, String projectDir) {
-        KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
-
-        if (keystrokeCount == null) {
-            // create one
-            projectName = projectName != null && !projectName.equals("") ? projectName : "Unnamed";
-            projectDir = projectDir != null && !projectDir.equals("") ? projectDir : "Untitled";
-            createKeystrokeCountWrapper(projectName, projectDir);
-        }
-    }
-
-    private void createKeystrokeCountWrapper(String projectName, String projectFilepath) {
+    public void createKeystrokeCountWrapper(String projectName, String projectFilepath) {
         //
         // Create one since it hasn't been created yet
         // and set the start time (in seconds)

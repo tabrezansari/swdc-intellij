@@ -203,9 +203,11 @@ public class SoftwareCo implements ApplicationComponent {
 
     protected void sendInstallPayload() {
         KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
+
+        // create the keystroke count wrapper
+        eventMgr.createKeystrokeCountWrapper("Unnamed", "Untitled");
+
         String fileName = "Untitled";
-        // String projectName, String fileName, String projectFilepath
-        eventMgr.initializeKeystrokeCount("Unnamed", fileName, "Untitled");
         KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
         fileInfo.add = fileInfo.add + 1;
         fileInfo.netkeys = fileInfo.add - fileInfo.delete;
