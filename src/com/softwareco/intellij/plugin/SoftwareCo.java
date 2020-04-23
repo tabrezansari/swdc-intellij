@@ -37,8 +37,6 @@ public class SoftwareCo implements ApplicationComponent {
     private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private AsyncManager asyncManager = AsyncManager.getInstance();
 
-    public static final String WORKSPACE_NAME = SoftwareCoSessionManager.generateToken();
-
     private static int retry_counter = 0;
 
     public SoftwareCo() {

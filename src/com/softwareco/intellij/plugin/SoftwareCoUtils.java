@@ -89,6 +89,8 @@ public class SoftwareCoUtils {
 
     private static long DAYS_IN_SECONDS = 60 * 60 * 24;
 
+    private static String workspace_name = null;
+
     static {
         // initialize the HttpClient
         RequestConfig config = RequestConfig.custom()
@@ -99,6 +101,18 @@ public class SoftwareCoUtils {
 
         pingClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         httpClient = HttpClientBuilder.create().build();
+    }
+
+    public static String getWorkspaceName() {
+        if (workspace_name == null) {
+            workspace_name = generateToken();
+        }
+        return workspace_name;
+    }
+
+    public static String generateToken() {
+        String uuid = UUID.randomUUID().toString();
+        return uuid.replace("-", "");
     }
 
     public static boolean isLoggedIn() {

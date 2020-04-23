@@ -122,11 +122,6 @@ public class SoftwareCoSessionManager {
         return null;
     }
 
-    public static String generateToken() {
-        String uuid = UUID.randomUUID().toString();
-        return uuid.replace("-", "");
-    }
-
     public void statusBarClickHandler(MouseEvent mouseEvent, String id) {
         EventManager.createCodeTimeEvent(
                 "mouse",
