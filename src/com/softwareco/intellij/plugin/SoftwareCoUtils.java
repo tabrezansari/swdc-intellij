@@ -895,9 +895,7 @@ public class SoftwareCoUtils {
             local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
             utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
         }
-
     }
-
 
     public static TimesData getTimesData() {
         TimesData timesData = new TimesData();
@@ -905,9 +903,8 @@ public class SoftwareCoUtils {
     }
 
     public static String getTodayInStandardFormat() {
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
-        String day = formatDay.format(new Date(timesData.now * 1000));
+        String day = formatDay.format(new Date());
         return day;
     }
 
@@ -918,12 +915,6 @@ public class SoftwareCoUtils {
             return true;
         }
         return false;
-    }
-
-    public static String getFormattedDay(long unixSeconds) {
-        SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
-        String day = formatDay.format(new Date(unixSeconds * 1000));
-        return day;
     }
 
     public static String getDashboardRow(String label, String value) {
