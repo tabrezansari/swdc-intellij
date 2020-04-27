@@ -220,7 +220,7 @@ public class GitUtil {
         }
 
         // set the until to now
-        String untilArg = "--until=" + timesData.local_now;
+        String untilArg = "--until=" + timesData.now;
 
         String[] cmdList = {"git", "log", "--stat", "--pretty=COMMIT:%H,%ct,%cI,%s", "--since=" + startOfRange, untilArg, authorArg};
 
