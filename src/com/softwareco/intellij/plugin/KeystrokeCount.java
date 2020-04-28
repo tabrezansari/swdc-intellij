@@ -45,6 +45,7 @@ public class KeystrokeCount {
     public long cumulative_session_seconds = 0;
     public long elapsed_seconds = 0;
     public String workspace_name = "";
+    public String hostname = "";
     public String project_null_error = "";
 
     private boolean triggered = false;
@@ -77,6 +78,7 @@ public class KeystrokeCount {
         kc.cumulative_session_seconds = this.cumulative_session_seconds;
         kc.elapsed_seconds = this.elapsed_seconds;
         kc.workspace_name = this.workspace_name;
+        kc.hostname = this.hostname;
         kc.project_null_error = this.project_null_error;
 
         return kc;
@@ -86,7 +88,7 @@ public class KeystrokeCount {
         this.keystrokes = 0;
         this.source = new HashMap<>();
         if (this.project != null) {
-            this.project.resetData();
+            this.project = null;
         }
         this.start = 0L;
         this.local_start = 0L;
@@ -141,6 +143,7 @@ public class KeystrokeCount {
                 @Override
                 public void run() {
                     processKeystrokes();
+                    triggered = false;
                 }
             }, 1000 * 60);
         }
@@ -293,7 +296,7 @@ public class KeystrokeCount {
 
         // add the cumulative data
         this.workspace_name = SoftwareCoUtils.getWorkspaceName();
-
+        this.hostname = SoftwareCoUtils.getHostname();
         this.cumulative_session_seconds = 60;
         this.cumulative_editor_seconds = 60;
 
@@ -303,17 +306,13 @@ public class KeystrokeCount {
         } else if (lastPayload != null) {
             // no time data found, project null error
             this.project_null_error = "TimeData not found using " + this.project.getDirectory() + " for editor and session seconds";
-            cumulative_editor_seconds = lastPayload.cumulative_editor_seconds + 60;
-            cumulative_session_seconds = lastPayload.cumulative_session_seconds + 60;
+            this.cumulative_editor_seconds = lastPayload.cumulative_editor_seconds + 60;
+            this.cumulative_session_seconds = lastPayload.cumulative_session_seconds + 60;
         }
 
-        if (cumulative_editor_seconds < cumulative_session_seconds) {
-            cumulative_editor_seconds = cumulative_session_seconds;
+        if (this.cumulative_editor_seconds < this.cumulative_session_seconds) {
+            this.cumulative_editor_seconds = this.cumulative_session_seconds;
         }
-
-        // update the cumulative editor second
-        this.cumulative_editor_seconds = cumulative_editor_seconds;
-        this.cumulative_session_seconds = cumulative_session_seconds;
     }
 
     // end unended file payloads and add the cumulative editor seconds

@@ -37,10 +37,6 @@ public class KeystrokeProject {
         return p;
     }
 
-    public void resetData() {
-        // intentional for now
-    }
-
     public String getName() {
         return name;
     }
