@@ -236,7 +236,7 @@ public class GitUtil {
         // should only be a result of 1
         List<String> resultList = SoftwareCoUtils.getResultsForCommandArgs(cmdList, projectDir);
         String url = resultList != null && resultList.size() > 0 ? resultList.get(0) : null;
-        if (url != null) {
+        if (url != null && !url.equals("") && url.indexOf(".git") != -1) {
             url = url.substring(0, url.lastIndexOf(".git"));
         }
         return url;

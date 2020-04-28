@@ -505,12 +505,18 @@ public class SoftwareCoUtils {
 
     public static List<String> getResultsForCommandArgs(String[] args, String dir) {
         List<String> results = new ArrayList<>();
-        String result = runCommand(args, dir);
-        if (result == null || result.trim().length() == 0) {
-            return results;
+        try {
+            String result = runCommand(args, dir);
+            if (result == null || result.trim().length() == 0) {
+                return results;
+            }
+            String[] contentList = result.split("\n");
+            results = Arrays.asList(contentList);
+        } catch (Exception e) {
+            if (results == null) {
+                results = new ArrayList<>();
+            }
         }
-        String[] contentList = result.split("\n");
-        results =  Arrays.asList(contentList);
         return results;
     }
 
