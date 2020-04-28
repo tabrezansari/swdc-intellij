@@ -223,10 +223,11 @@ public class FileManager {
                         deleteFile(file);
 
                         JsonArray batch = new JsonArray();
+                        int batch_size = 5;
                         // go through the array about 50 at a time
                         for (int i = 0; i < jsonArray.size(); i++) {
                             batch.add(jsonArray.get(i));
-                            if (i > 0 && i % 50 == 0) {
+                            if (i > 0 && i % batch_size == 0) {
                                 String payloadData = SoftwareCo.gson.toJson(batch);
                                 SoftwareResponse resp =
                                         SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payloadData);
@@ -380,10 +381,11 @@ public class FileManager {
             JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
 
             JsonArray batch = new JsonArray();
-            // go through the array about 50 at a time
+            int batch_size = 5;
+            // go through the array about 8
             for (int i = 0; i < jsonArray.size(); i++) {
                 batch.add(jsonArray.get(i));
-                if (i > 0 && i % 50 == 0) {
+                if (i > 0 && i % batch_size == 0) {
                     String payloadData = SoftwareCo.gson.toJson(batch);
                     SoftwareResponse resp =
                             SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
