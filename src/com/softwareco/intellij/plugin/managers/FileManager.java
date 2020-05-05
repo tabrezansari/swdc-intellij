@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -335,40 +336,36 @@ public class FileManager {
     }
 
     public static void openReadmeFile() {
-        Project p = SoftwareCoUtils.getOpenProject();
-        if (p == null) {
-            return;
-        }
-
-        String fileContent = getReadmeContent();
-
-        String readmeFile = SoftwareCoSessionManager.getReadmeFile();
-        File f = new File(readmeFile);
-        if (!f.exists()) {
-            Writer writer = null;
-            // write the summary content
-            try {
-                writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(new File(readmeFile)), StandardCharsets.UTF_8));
-                writer.write(fileContent);
-            } catch (IOException ex) {
-                // Report
-            } finally {
-                try {
-                    writer.close();
-                } catch (Exception ex) {/*ignore*/}
+        ApplicationManager.getApplication().invokeLater(() -> {
+            Project p = SoftwareCoUtils.getOpenProject();
+            if (p == null) {
+                return;
             }
-        }
-        VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
-        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
-        FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
 
-        // possible way of opening an asset file but it doesn't work in prod, only in debug
-//        VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
-//        // TODO: figure out how to show it with only the preview window
-//        FileEditorManager fileEditorManager = FileEditorManager.getInstance(p);
-//        OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
-//        fileEditorManager.openEditor(descriptor, true);
+            String fileContent = getReadmeContent();
+
+            String readmeFile = SoftwareCoSessionManager.getReadmeFile();
+            File f = new File(readmeFile);
+            if (!f.exists()) {
+                Writer writer = null;
+                // write the summary content
+                try {
+                    writer = new BufferedWriter(new OutputStreamWriter(
+                            new FileOutputStream(new File(readmeFile)), StandardCharsets.UTF_8));
+                    writer.write(fileContent);
+                } catch (IOException ex) {
+                    // Report
+                } finally {
+                    try {
+                        writer.close();
+                    } catch (Exception ex) {/*ignore*/}
+                }
+            }
+            VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
+            OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
+            FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+
+        });
     }
 
     public static void sendOfflineData() {

@@ -173,10 +173,12 @@ public class SoftwareCo implements ApplicationComponent {
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
-        if (initializedUser) {
+        String readmeDisplayed = FileManager.getItem("intellij_CtReadme");
+        if (readmeDisplayed == null || Boolean.valueOf(readmeDisplayed) == false) {
             // send an initial plugin payload
             this.sendInstallPayload();
             FileManager.openReadmeFile();
+            FileManager.setItem("intellij_CtReadme", "true");
         }
 
         // setup the doc listeners
