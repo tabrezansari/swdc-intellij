@@ -88,7 +88,7 @@ public class KeystrokeCount {
         this.keystrokes = 0;
         this.source = new HashMap<>();
         if (this.project != null) {
-            this.project = null;
+            this.project = new KeystrokeProject("Unnamed", "Untitled");
         }
         this.start = 0L;
         this.local_start = 0L;
