@@ -232,8 +232,15 @@ public class KeystrokeCount {
                         for (Editor editor : editors) {
                             Project p = editor.getProject();
                             if (p != null && p.getName() != null && !p.getName().equals("")) {
-                                this.project.setDirectory(p.getProjectFilePath());
-                                this.project.setName(p.getName());
+                                String projDir = p.getProjectFilePath();
+                                String projName = p.getName();
+                                if (this.project == null) {
+                                    // create the project
+                                    this.project = new KeystrokeProject(projName, projDir);
+                                } else {
+                                    this.project.setDirectory(projDir);
+                                    this.project.setName(projName);
+                                }
                                 break;
                             }
                         }
