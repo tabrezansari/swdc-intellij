@@ -771,12 +771,9 @@ public class SoftwareCoUtils {
                         FileManager.setItem("name", dataEmail);
                     }
                     return true;
-                } else if (state.equals("NOT_FOUND")) {
-                    FileManager.setItem("jwt", null);
                 }
             }
         }
-        FileManager.setItem("name", null);
         return false;
     }
 
