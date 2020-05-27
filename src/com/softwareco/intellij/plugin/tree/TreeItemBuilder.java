@@ -412,11 +412,15 @@ public class TreeItemBuilder {
             }
             Map.Entry<String, FileChangeInfo> fileChangeInfoEntry = entryList.get(i);
             String name = fileChangeInfoEntry.getValue().name;
-            if (name == null || name.length() == 0) {
+            if (StringUtils.isBlank(name)) {
                 Path path = Paths.get(fileChangeInfoEntry.getKey());
                 if (path != null) {
                     Path fileName = path.getFileName();
-                    name = fileName.toString();
+                    if (fileName != null) {
+                        name = fileName.toString();
+                    } else {
+                        name = "Untitled";
+                    }
                 }
             }
 
