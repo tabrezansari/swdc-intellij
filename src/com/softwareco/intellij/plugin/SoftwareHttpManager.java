@@ -64,6 +64,14 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
                 req.addHeader("Authorization", jwtToken);
             }
 
+            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            req.addHeader("X-SWDC-Plugin-Id", String.valueOf(SoftwareCoUtils.pluginId));
+            req.addHeader("X-SWDC-Plugin-Name", SoftwareCo.getPluginName());
+            req.addHeader("X-SWDC-Plugin-Version", SoftwareCo.getVersion());
+            req.addHeader("X-SWDC-Plugin-OS", SoftwareCoUtils.getOs());
+            req.addHeader("X-SWDC-Plugin-TZ", timesData.timezone);
+            req.addHeader("X-SWDC-Plugin-Offset", String.valueOf(timesData.offset));
+
             req.addHeader("Content-type", "application/json");
 
             if (payload != null) {
