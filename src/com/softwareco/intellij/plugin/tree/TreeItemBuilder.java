@@ -716,8 +716,8 @@ public class TreeItemBuilder {
                     public int compare(Map.Entry<String, FileChangeInfo> entryA,
                                        Map.Entry<String, FileChangeInfo> entryB) {
 
-                        Long a = new Long(entryA.getValue().kpm);
-                        Long b = new Long(entryB.getValue().kpm);
+                        Long a = entryA.getValue().kpm;
+                        Long b = entryB.getValue().kpm;
                         return a.compareTo(b);
                     }
                 }
@@ -734,8 +734,8 @@ public class TreeItemBuilder {
                     public int compare(Map.Entry<String, FileChangeInfo> entryA,
                                        Map.Entry<String, FileChangeInfo> entryB) {
 
-                        Long a = new Long(entryA.getValue().keystrokes);
-                        Long b = new Long(entryB.getValue().keystrokes);
+                        Long a = entryA.getValue().keystrokes;
+                        Long b = entryB.getValue().keystrokes;
                         return a.compareTo(b);
                     }
                 }
@@ -751,8 +751,8 @@ public class TreeItemBuilder {
                     @Override
                     public int compare(Map.Entry<String, FileChangeInfo> entryA,
                                        Map.Entry<String, FileChangeInfo> entryB) {
-                        Long a = new Long(entryA.getValue().duration_seconds);
-                        Long b = new Long(entryB.getValue().duration_seconds);
+                        Long a = entryA.getValue().duration_seconds;
+                        Long b = entryB.getValue().duration_seconds;
                         return a.compareTo(b);
                     }
                 }

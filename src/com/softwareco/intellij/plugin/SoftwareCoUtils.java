@@ -4,9 +4,8 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.google.gson.stream.JsonReader;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
@@ -64,7 +63,7 @@ public class SoftwareCoUtils {
     public static HttpClient httpClient;
     public static HttpClient pingClient;
 
-    public static JsonParser jsonParser = new JsonParser();
+    private static Gson gson = new Gson();
 
     public static KeystrokeCount latestPayload = null;
 
@@ -262,14 +261,8 @@ public class SoftwareCoUtils {
                             softwareResponse.setJsonStr(jsonStr);
                             // LOG.log(Level.INFO, "Code Time: API response {0}", jsonStr);
                             if (jsonStr != null && mimeType.indexOf("text/plain") == -1) {
-                                Object jsonEl = null;
-                                try {
-                                    jsonEl = jsonParser.parse(jsonStr);
-                                } catch (Exception e) {
-                                    //
-                                }
-
-                                if (jsonEl != null && jsonEl instanceof JsonElement) {
+                                JsonElement jsonEl = readAsJsonElement(jsonStr);
+                                if (jsonEl != null) {
                                     try {
                                         JsonElement el = (JsonElement)jsonEl;
                                         if (el.isJsonPrimitive()) {
@@ -967,6 +960,51 @@ public class SoftwareCoUtils {
         String gitFile = projectDir + File.separator + ".git";
         File f = new File(gitFile);
         return f.exists();
+    }
+
+    public static JsonArray readAsJsonArray(String data) {
+        try {
+            JsonArray jsonArray = gson.fromJson(buildJsonReader(data), JsonArray.class);
+            return jsonArray;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static JsonObject readAsJsonObject(String data) {
+        try {
+            JsonObject jsonObject = gson.fromJson(buildJsonReader(data), JsonObject.class);
+            return jsonObject;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static JsonElement readAsJsonElement(String data) {
+        try {
+            JsonElement jsonElement = gson.fromJson(buildJsonReader(data), JsonElement.class);
+            return jsonElement;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static JsonReader buildJsonReader(String data) {
+        // Clean the data
+        data = cleanJsonString(data);
+        JsonReader reader = new JsonReader(new StringReader(data));
+        reader.setLenient(true);
+        return reader;
+    }
+
+    /**
+     * Replace byte order mark, new lines, and trim
+     * @param data
+     * @return clean data
+     */
+    public static String cleanJsonString(String data) {
+        data = data.replace("\ufeff", "").replace("/\r\n/g", "").replace("/\n/g", "").trim();
+        return data;
     }
 
 }

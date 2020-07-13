@@ -1,8 +1,8 @@
 package com.softwareco.intellij.plugin.managers;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -19,7 +19,6 @@ import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.Semaphore;
@@ -135,30 +134,14 @@ public class FileManager {
 
     public static JsonArray getFileContentAsJsonArray(String file) {
         synchronized (semaphore) {
-            JsonParser parser = new JsonParser();
-            try {
-                Object obj = parser.parse(new FileReader(file));
-                JsonArray jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonArray();
-                return jsonArray;
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
-            }
+            return getJsonArrayFromFile(file);
         }
-        return new JsonArray();
     }
 
     public static JsonObject getFileContentAsJson(String file) {
         synchronized (semaphore) {
-            JsonParser parser = new JsonParser();
-            try {
-                Object obj = parser.parse(new FileReader(file));
-                JsonObject jsonArray = parser.parse(cleanJsonString(obj.toString())).getAsJsonObject();
-                return jsonArray;
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and parse " + file + ": " + e.getMessage());
-            }
+            return getJsonObjectFromFile(file);
         }
-        return new JsonObject();
     }
 
     public static void deleteFile(String file) {
@@ -218,7 +201,7 @@ public class FileManager {
                         payloads = payloads.substring(0, payloads.lastIndexOf(","));
                         payloads = "[" + payloads + "]";
 
-                        JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+                        JsonArray jsonArray = SoftwareCoUtils.readAsJsonArray(payloads);
 
                         // delete the file
                         deleteFile(file);
@@ -257,23 +240,6 @@ public class FileManager {
                 }
             }
         }
-    }
-
-    public static String getFileContent(String file) {
-        String content = null;
-
-        File f = new File(file);
-        if (f.exists()) {
-            synchronized (semaphore) {
-                try {
-                    byte[] encoded = Files.readAllBytes(Paths.get(file));
-                    content = new String(encoded, Charset.forName("UTF-8"));
-                } catch (Exception e) {
-                    log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
-                }
-            }
-        }
-        return content;
     }
 
     public static void saveFileContent(String file, String content) {
@@ -375,10 +341,10 @@ public class FileManager {
                 return;
             }
 
-            JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+            JsonArray jsonArray = SoftwareCoUtils.readAsJsonArray(payloads);
 
             JsonArray batch = new JsonArray();
-            int batch_size = 5;
+            int batch_size = 25;
             // go through the array about 8
             for (int i = 0; i < jsonArray.size(); i++) {
                 batch.add(jsonArray.get(i));
@@ -502,11 +468,6 @@ public class FileManager {
                 "Have any questions? Please email us at [support@software.com](mailto:support@software.com) and we’ll get back to you as soon as we can.\n";
     }
 
-    public static String cleanJsonString(String data) {
-        data = data.replace("/\r\n/g", "").replace("/\n/g", "").trim();
-        return data;
-    }
-
     public static String getItem(String key) {
         JsonObject sessionJson = getSoftwareSessionAsJson();
         if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
@@ -556,29 +517,55 @@ public class FileManager {
     }
 
     public static synchronized JsonObject getSoftwareSessionAsJson() {
-        JsonObject sessionJson = new JsonObject();
         String sessionFile = getSoftwareSessionFile(true);
-        File f = new File(sessionFile);
+        return getJsonObjectFromFile(sessionFile);
+    }
+
+    public static synchronized JsonObject getJsonObjectFromFile(String fileName) {
+        JsonObject jsonObject = new JsonObject();
+        String content = getFileContent(fileName);
+
+        if (content != null) {
+            // json parse it
+            jsonObject = SoftwareCoUtils.readAsJsonObject(content);
+        }
+
+        if (jsonObject == null) {
+            jsonObject = new JsonObject();
+        }
+        return jsonObject;
+    }
+
+    public static synchronized JsonArray getJsonArrayFromFile(String fileName) {
+        JsonArray jsonArray = new JsonArray();
+        String content = getFileContent(fileName);
+
+        if (content != null) {
+            // json parse it
+            jsonArray = SoftwareCoUtils.readAsJsonArray(content);
+        }
+
+        if (jsonArray == null) {
+            jsonArray = new JsonArray();
+        }
+        return jsonArray;
+    }
+
+    public static String getFileContent(String file) {
+        String content = null;
+
+        File f = new File(file);
         if (f.exists()) {
-            try {
-                Path p = Paths.get(sessionFile);
-
-                byte[] encoded = Files.readAllBytes(p);
-                String content = new String(encoded, Charset.defaultCharset());
-                if (content != null) {
-                    // json parse it
-                    sessionJson = SoftwareCo.jsonParser.parse(content).getAsJsonObject();
+            synchronized (semaphore) {
+                try {
+                    byte[] encoded = Files.readAllBytes(Paths.get(file));
+                    content = new String(encoded, Charset.forName("UTF-8"));
+                } catch (Exception e) {
+                    log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
                 }
-
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and json parse the session file.");
             }
         }
-        if (sessionJson == null) {
-            sessionJson = new JsonObject();
-        }
-        return sessionJson;
-
+        return content;
     }
 
     public static KeystrokeCount getLastSavedKeystrokeStats() {
@@ -592,7 +579,8 @@ public class FileManager {
 
     private static List<KeystrokeCount> convertPayloadsToList(String payloads) {
         if (StringUtils.isNotBlank(payloads)) {
-            JsonArray jsonArray = (JsonArray) SoftwareCo.jsonParser.parse(payloads);
+            JsonArray jsonArray = SoftwareCoUtils.readAsJsonArray(payloads);
+
             if (jsonArray != null && jsonArray.size() > 0) {
                 Type type = new TypeToken<List<KeystrokeCount>>() {
                 }.getType();
