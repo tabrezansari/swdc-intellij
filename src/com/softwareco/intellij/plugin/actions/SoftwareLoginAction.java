@@ -8,12 +8,13 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 
 public class SoftwareLoginAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        SoftwareCoSessionManager.launchLogin("software");
+        SoftwareCoSessionManager.launchLogin("software", UIInteractionType.keyboard);
     }
 
     @Override

@@ -10,6 +10,8 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.*;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpPost;
 
@@ -294,7 +296,7 @@ public class FileManager {
         }
     }
 
-    public static void openReadmeFile() {
+    public static void openReadmeFile(UIInteractionType interactionType) {
         ApplicationManager.getApplication().invokeLater(() -> {
             Project p = SoftwareCoUtils.getOpenProject();
             if (p == null) {
@@ -323,6 +325,14 @@ public class FileManager {
             VirtualFile vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(f);
             OpenFileDescriptor descriptor = new OpenFileDescriptor(p, vFile);
             FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
+
+            UIElementEntity elementEntity = new UIElementEntity();
+            elementEntity.element_name = "ct_learn_more_btn";
+            elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+            elementEntity.color = "yellow";
+            elementEntity.cta_text = "View the Code Time Readme to learn more";
+            elementEntity.icon_name = "document";
+            EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
 
         });
     }

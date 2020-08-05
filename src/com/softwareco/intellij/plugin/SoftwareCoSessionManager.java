@@ -10,8 +10,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventManager;
+import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.http.client.methods.HttpGet;
 
 import java.awt.event.MouseEvent;
@@ -122,12 +125,14 @@ public class SoftwareCoSessionManager {
         return null;
     }
 
-    public void statusBarClickHandler(MouseEvent mouseEvent, String id) {
-        EventManager.createCodeTimeEvent(
-                "mouse",
-                "click",
-                "ShowTreeView"
-        );
+    public void statusBarClickHandler(UIInteractionType interactionType) {
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = "ct_status_bar_metrics_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_status_bar" : "ct_command_palette";
+        elementEntity.color = null;
+        elementEntity.cta_text = "status bar metrics";
+        elementEntity.icon_name = "clock";
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
         CodeTimeToolWindowFactory.openToolWindow();
     }
 
@@ -152,15 +157,24 @@ public class SoftwareCoSessionManager {
         }
     }
 
-    public static void launchLogin(String loginType) {
+    public static void launchLogin(String loginType, UIInteractionType interactionType) {
         String jwt = FileManager.getItem("jwt");
 
         String url = "";
+        String element_name = "ct_sign_up_google_btn";
+        String icon_name = "google";
+        String cta_text = "Sign up with Google";
         if (loginType == null || loginType.equals("software") || loginType.equals("email")) {
+            element_name = "ct_sign_up_email_btn";
+            cta_text = "Sign up with email";
+            icon_name = "envelope";
             url = SoftwareCoUtils.launch_url + "/email-signup?token=" + jwt + "&plugin=codetime&auth=software";
         } else if (loginType.equals("google")) {
             url = SoftwareCoUtils.api_endpoint + "/auth/google?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
         } else if (loginType.equals("github")) {
+            element_name = "ct_sign_up_github_btn";
+            cta_text = "Sign up with GitHub";
+            icon_name = "github";
             url = SoftwareCoUtils.api_endpoint + "/auth/github?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
         }
 
@@ -170,16 +184,26 @@ public class SoftwareCoSessionManager {
 
         final Runnable service = () -> lazilyFetchUserStatus(20);
         AsyncManager.getInstance().executeOnceInSeconds(service, 10);
+
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = element_name;
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = null;
+        elementEntity.cta_text = cta_text;
+        elementEntity.icon_name = icon_name;
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
-    public static void launchWebDashboard() {
+    public static void launchWebDashboard(UIInteractionType interactionType) {
         String url = SoftwareCoUtils.launch_url + "/login";
         BrowserUtil.browse(url);
 
-        EventManager.createCodeTimeEvent(
-                "mouse",
-                "click",
-                "LaunchWebDashboard"
-        );
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = "ct_web_metrics_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = "blue";
+        elementEntity.cta_text = "See rich data visualizations in the web app";
+        elementEntity.icon_name = "paw";
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 }

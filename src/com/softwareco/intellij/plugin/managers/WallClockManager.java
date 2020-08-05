@@ -21,7 +21,7 @@ public class WallClockManager {
     private static final int DAY_CHECK_TIMER_INTERVAL = 60;
 
     private static WallClockManager instance = null;
-    private AsyncManager asyncManager = AsyncManager.getInstance();
+    private AsyncManager asyncManager;
 
     private static boolean dispatching = false;
 
@@ -37,6 +37,7 @@ public class WallClockManager {
     }
 
     private WallClockManager() {
+        asyncManager = AsyncManager.getInstance();
         // initialize the timer
         this.init();
     }

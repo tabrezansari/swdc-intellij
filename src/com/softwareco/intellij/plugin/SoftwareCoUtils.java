@@ -10,6 +10,7 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -23,8 +24,13 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
+import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import com.swdc.snowplow.tracker.entities.FileEntity;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -39,6 +45,9 @@ import javax.swing.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -50,6 +59,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class SoftwareCoUtils {
 
@@ -153,14 +163,66 @@ public class SoftwareCoUtils {
     public static Project getProjectForPath(String path) {
         Editor[] editors = EditorFactory.getInstance().getAllEditors();
         if (editors != null && editors.length > 0) {
-            for (int i = 0; i < editors.length; i++) {
-                Editor editor = editors[i];
-                if (path.indexOf(editor.getProject().getBasePath()) != -1) {
+            for (Editor editor : editors) {
+                String basePath = editor.getProject().getBasePath();
+                if (path.indexOf(basePath) != -1) {
                     return editor.getProject();
                 }
             }
         }
         return null;
+    }
+
+    public static FileDetails getFileDetails(String fullFileName) {
+        FileDetails fileDetails = new FileDetails();
+        if (StringUtils.isNotBlank(fullFileName)) {
+            fileDetails.full_file_name = fullFileName;
+            Project p = getProjectForPath(fullFileName);
+            if (p != null) {
+                fileDetails.project_directory = p.getBasePath();
+                fileDetails.project_name = p.getName();
+            }
+
+            File f = new File(fullFileName);
+
+            if (f.exists()) {
+                fileDetails.character_count = f.length();
+                fileDetails.file_name = f.getName();
+                if (StringUtils.isNotBlank(fileDetails.project_directory)) {
+                    // strip out the project_file_name
+                    fileDetails.project_file_name = fullFileName.split(fileDetails.project_directory)[1];
+                } else {
+                    fileDetails.project_file_name = fullFileName;
+                }
+                fileDetails.line_count = getLineCount(fullFileName);
+
+                VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(f);
+                if (vFile != null) {
+                    fileDetails.syntax = vFile.getFileType().getName();
+                }
+            }
+        }
+
+        return fileDetails;
+    }
+
+    public static int getLineCount(String fileName) {
+        Stream<String> stream = null;
+        try {
+            Path path = Paths.get(fileName);
+            stream = Files.lines(path);
+            return (int) stream.count();
+        } catch (Exception e) {
+            return 0;
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (Exception e) {
+                    //
+                }
+            }
+        }
     }
 
     public static String getUserHomeDir() {
@@ -349,13 +411,21 @@ public class SoftwareCoUtils {
         return showStatusText;
     }
 
-    public static void toggleStatusBar() {
+    public static void toggleStatusBar(UIInteractionType interactionType) {
         showStatusText = !showStatusText;
 
         WallClockManager.getInstance().dispatchStatusViewUpdate();
 
         // refresh the tree
         CodeTimeToolWindow.refresh();
+
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = "ct_toggle_status_bar_metrics_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = "blue";
+        elementEntity.cta_text = "Toggle the Code Time status bar metrics text";
+        elementEntity.icon_name = "slash-eye";
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     public static Project getOpenProject() {
@@ -532,8 +602,16 @@ public class SoftwareCoUtils {
         BrowserUtil.browse("https://github.com/swdotcom/swdc-intellij/issues");
     }
 
-    public static void submitFeedback() {
+    public static void submitFeedback(UIInteractionType interactionType) {
         BrowserUtil.browse("mailto:cody@software.com");
+
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = "ct_submit_feedback_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = null;
+        elementEntity.cta_text = "Submit feedback";
+        elementEntity.icon_name = "envelope";
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     public static void buildCodeTimeMetricsDashboard() {
@@ -607,17 +685,19 @@ public class SoftwareCoUtils {
         FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
     }
 
-    public static void launchCodeTimeMetricsDashboard() {
+    public static void launchCodeTimeMetricsDashboard(UIInteractionType interactionType) {
         buildCodeTimeMetricsDashboard();
 
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         launchFile(codeTimeFile);
 
-        EventManager.createCodeTimeEvent(
-                "mouse",
-                "click",
-                "LaunchDashboard"
-        );
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = "ct_summary_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = "purple";
+        elementEntity.cta_text = "View your latest coding metrics right here in your editor";
+        elementEntity.icon_name = "guage";
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     private static String getSingleLineResult(List<String> cmd, int maxLen) {

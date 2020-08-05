@@ -26,10 +26,6 @@ public class SoftwareCoRepoManager {
         return instance;
     }
 
-    private String buildRepoKey(String identifier, String branch, String tag) {
-        return identifier + "_" + branch + "_" + tag;
-    }
-
     public JsonObject getLatestCommit(String projectDir) {
         ResourceInfo resource = GitUtil.getResourceInfo(projectDir);
         if (resource != null && resource.getIdentifier() != null) {

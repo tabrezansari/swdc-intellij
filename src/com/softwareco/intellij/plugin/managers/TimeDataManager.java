@@ -3,7 +3,6 @@ package com.softwareco.intellij.plugin.managers;
 import com.google.gson.JsonArray;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Timed;
 import com.softwareco.intellij.plugin.KeystrokeProject;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;

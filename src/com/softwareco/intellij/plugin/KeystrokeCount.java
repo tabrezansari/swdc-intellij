@@ -7,15 +7,11 @@ package com.softwareco.intellij.plugin;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
-import com.softwareco.intellij.plugin.managers.FileManager;
-import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.managers.SessionDataManager;
-import com.softwareco.intellij.plugin.managers.TimeDataManager;
-import com.softwareco.intellij.plugin.managers.WallClockManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -115,6 +111,7 @@ public class KeystrokeCount {
     public static class FileInfo {
         public Integer add = 0;
         public Integer paste = 0;
+        public Integer charsPasted = 0;
         public Integer open = 0;
         public Integer close = 0;
         public Integer delete = 0;
@@ -176,10 +173,6 @@ public class KeystrokeCount {
         return fileInfoData;
     }
 
-    public String getSource() {
-        return SoftwareCo.gson.toJson(source);
-    }
-
     public void endPreviousModifiedFiles(String fileName) {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         if (this.source != null) {
@@ -194,6 +187,10 @@ public class KeystrokeCount {
                 }
             }
         }
+    }
+
+    public Map<String, FileInfo> getFileInfos() {
+        return this.source;
     }
 
     // update each source with it's true amount of keystrokes
@@ -254,6 +251,9 @@ public class KeystrokeCount {
 
                 // update the file aggregate info.
                 this.updateAggregates(eTime.sessionSeconds);
+
+                // send the event to the event tracker
+                EventTrackerManager.getInstance().trackCodeTimeEvent(this);
 
                 final String payload = SoftwareCo.gson.toJson(this);
 

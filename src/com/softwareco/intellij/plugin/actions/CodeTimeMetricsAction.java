@@ -7,6 +7,7 @@ package com.softwareco.intellij.plugin.actions;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 
 /**
  * This is the code time metrics action for the menu items
@@ -15,7 +16,7 @@ public class CodeTimeMetricsAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+        SoftwareCoUtils.launchCodeTimeMetricsDashboard(UIInteractionType.keyboard);
     }
 
     @Override

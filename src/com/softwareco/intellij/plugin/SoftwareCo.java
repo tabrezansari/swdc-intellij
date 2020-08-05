@@ -5,6 +5,7 @@
 package com.softwareco.intellij.plugin;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
@@ -15,8 +16,10 @@ import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.managers.EventManager;
+import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -30,12 +33,15 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static JsonParser jsonParser = new JsonParser();
     public static final Logger log = Logger.getLogger("SoftwareCo");
-    public static Gson gson;
+    public static final Gson gson = new GsonBuilder().create();
 
     public static MessageBusConnection connection;
 
     private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private AsyncManager asyncManager = AsyncManager.getInstance();
+
+    // activate the tracker
+    private EventTrackerManager tracker;
 
     private static int retry_counter = 0;
 
@@ -117,13 +123,16 @@ public class SoftwareCo implements ApplicationComponent {
 
         log.info(plugName + ": Loaded v" + getVersion());
 
-        gson = new Gson();
-
         log.info(plugName + ": Finished initializing SoftwareCo plugin");
 
         initializeUserInfoWhenProjectsReady(initializedUser);
     }
 
+    /**
+     * This logic waits until the user has selected a project.
+     * Once that happens we can continue initializing the plugin.
+     * @param initializedUser
+     */
     private void initializeUserInfoWhenProjectsReady(boolean initializedUser) {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
@@ -135,11 +144,15 @@ public class SoftwareCo implements ApplicationComponent {
                 }
             }, 5000);
         } else {
-            // store the activate event
-            EventManager.createCodeTimeEvent("resource", "load", "EditorActivate");
+            // init user info
             initializeUserInfo(initializedUser);
 
+            // setup the doc listeners
             setupFileEditorEventListeners(p);
+
+            // send the activate event
+            tracker = EventTrackerManager.getInstance();
+            tracker.trackEditorAction("editor", "activate");
         }
     }
 
@@ -177,7 +190,7 @@ public class SoftwareCo implements ApplicationComponent {
         if (readmeDisplayed == null || Boolean.valueOf(readmeDisplayed) == false) {
             // send an initial plugin payload
             this.sendInstallPayload();
-            FileManager.openReadmeFile();
+            FileManager.openReadmeFile(UIInteractionType.keyboard);
             FileManager.setItem("intellij_CtReadme", "true");
         }
 
@@ -241,7 +254,7 @@ public class SoftwareCo implements ApplicationComponent {
 
     public void disposeComponent() {
         // store the activate event
-        EventManager.createCodeTimeEvent("resource", "unload", "EditorDeactivate");
+        tracker.trackEditorAction("editor", "deactivate");
 
         try {
             if (connection != null) {

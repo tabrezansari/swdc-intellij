@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,8 +23,9 @@ public class SoftwareCoEventManager {
 
     private static SoftwareCoEventManager instance = null;
 
-    private KeystrokeManager keystrokeMgr = KeystrokeManager.getInstance();
-    private SoftwareCoSessionManager sessionMgr = SoftwareCoSessionManager.getInstance();
+    private EventTrackerManager tracker;
+    private KeystrokeManager keystrokeMgr;
+    private SoftwareCoSessionManager sessionMgr;
 
     public static SoftwareCoEventManager getInstance() {
         if (instance == null) {
@@ -32,20 +34,10 @@ public class SoftwareCoEventManager {
         return instance;
     }
 
-    protected int getLineCount(String fileName) {
-        try {
-            Path path = Paths.get(fileName);
-            Stream<String> stream = Files.lines(path);
-            int count = (int) stream.count();
-            try {
-                stream.close();
-            } catch (Exception e) {
-                //
-            }
-            return count;
-        } catch (Exception e) {
-            return 0;
-        }
+    private SoftwareCoEventManager() {
+        keystrokeMgr = KeystrokeManager.getInstance();
+        sessionMgr = SoftwareCoSessionManager.getInstance();
+        tracker = EventTrackerManager.getInstance();
     }
 
     private KeystrokeCount getCurrentKeystrokeCount(String projectName, String projectDir) {
@@ -85,9 +77,10 @@ public class SoftwareCoEventManager {
         }
         keystrokeCount.endPreviousModifiedFiles(fileName);
         fileInfo.open = fileInfo.open + 1;
-        int documentLineCount = getLineCount(fileName);
+        int documentLineCount = SoftwareCoUtils.getLineCount(fileName);
         fileInfo.lines = documentLineCount;
         LOG.info("Code Time: file opened: " + fileName);
+        tracker.trackEditorAction("file", "close", fileName);
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {
@@ -99,6 +92,7 @@ public class SoftwareCoEventManager {
         }
         fileInfo.close = fileInfo.close + 1;
         LOG.info("Code Time: file closed: " + fileName);
+        tracker.trackEditorAction("file", "close", fileName);
     }
 
     /**
@@ -150,16 +144,17 @@ public class SoftwareCoEventManager {
                                 }
                                 if (documentEvent.getOldLength() > 0) {
                                     //it's a delete
-                                    fileInfo.delete = fileInfo.delete + 1;
+                                    fileInfo.delete += 1;
                                     fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                     LOG.info("Code Time: delete incremented");
                                 } else {
                                     // it's an add
-                                    if (documentEvent.getNewLength() > 1) {
+                                    if (documentEvent.getNewLength() > 8) {
                                         // it's a paste
-                                        fileInfo.paste = fileInfo.paste + 1;
+                                        fileInfo.paste += 1;
+                                        fileInfo.charsPasted += documentEvent.getNewLength();
                                     } else {
-                                        fileInfo.add = fileInfo.add + 1;
+                                        fileInfo.add += 1;
                                         fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                         LOG.info("Code Time: add incremented");
                                     }

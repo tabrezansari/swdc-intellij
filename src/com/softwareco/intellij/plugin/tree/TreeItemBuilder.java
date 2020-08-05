@@ -7,13 +7,11 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
-import com.softwareco.intellij.plugin.managers.EventManager;
-import com.softwareco.intellij.plugin.managers.FileManager;
-import com.softwareco.intellij.plugin.managers.ReportManager;
+import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.*;
 import com.softwareco.intellij.plugin.repo.GitUtil;
-import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
 
 import javax.swing.*;
@@ -125,11 +123,11 @@ public class TreeItemBuilder {
                     JLabel lbl = lst.getSelectedValue();
                     if (lbl != null) {
                         if (lbl.getName().equals("signup-google")) {
-                            SoftwareCoSessionManager.launchLogin("google");
+                            SoftwareCoSessionManager.launchLogin("google", UIInteractionType.click);
                         } else if (lbl.getName().equals("signup-github")) {
-                            SoftwareCoSessionManager.launchLogin("github");
+                            SoftwareCoSessionManager.launchLogin("github", UIInteractionType.click);
                         } else if (lbl.getName().equals("signup-email")) {
-                            SoftwareCoSessionManager.launchLogin("software");
+                            SoftwareCoSessionManager.launchLogin("software", UIInteractionType.click);
                         }
                     }
                 }
@@ -184,18 +182,18 @@ public class TreeItemBuilder {
                         // if they're not logged in, launch the onboarding
                         boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
                         if (!isLoggedIn) {
-                            SoftwareCoSessionManager.launchLogin("software");
+                            SoftwareCoSessionManager.launchLogin("software", UIInteractionType.click);
                         } else {
-                            SoftwareCoSessionManager.launchWebDashboard();
+                            SoftwareCoSessionManager.launchWebDashboard(UIInteractionType.click);
                         }
                     } else if (lbl.getName().equals("editordashboard")) {
-                        SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+                        SoftwareCoUtils.launchCodeTimeMetricsDashboard(UIInteractionType.click);
                     } else if (lbl.getName().equals("submitfeedback")) {
-                        SoftwareCoUtils.submitFeedback();
+                        SoftwareCoUtils.submitFeedback(UIInteractionType.click);
                     } else if (lbl.getName().equals("learnmore")) {
-                        FileManager.openReadmeFile();
+                        FileManager.openReadmeFile(UIInteractionType.click);
                     } else if (lbl.getName().equals("togglestatus")) {
-                        SoftwareCoUtils.toggleStatusBar();
+                        SoftwareCoUtils.toggleStatusBar(UIInteractionType.click);
                     }
                 }
             }
@@ -699,9 +697,17 @@ public class TreeItemBuilder {
                     SoftwareCoUtils.launchFile(fsPath);
                 } else if (selectedNode.getPath() != null && selectedNode.getData() instanceof String &&
                     String.valueOf(selectedNode.getData()).indexOf("http") != -1) {
-                    // launch the url
+                    // launch the commit url
                     String url = String.valueOf(selectedNode.getData());
                     BrowserUtil.browse(url);
+
+                    UIElementEntity elementEntity = new UIElementEntity();
+                    elementEntity.element_name = "ct_contributor_last_commit_url_link";
+                    elementEntity.element_location = "ct_contributors_tree";
+                    elementEntity.color = null;
+                    elementEntity.cta_text = "View your commit report";
+                    elementEntity.icon_name = null;
+                    EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
                 }
             }
         }
