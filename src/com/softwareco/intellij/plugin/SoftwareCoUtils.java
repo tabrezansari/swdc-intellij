@@ -692,11 +692,11 @@ public class SoftwareCoUtils {
         launchFile(codeTimeFile);
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_summary_btn";
-        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = "purple";
-        elementEntity.cta_text = "View your latest coding metrics right here in your editor";
-        elementEntity.icon_name = "guage";
+        elementEntity.element_name = "ct_contributor_repo_identifier_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_contributors_tree" : "ct_command_palette";
+        elementEntity.color = "white";
+        elementEntity.cta_text = "View your commit summary report";
+        elementEntity.icon_name = "repo";
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
