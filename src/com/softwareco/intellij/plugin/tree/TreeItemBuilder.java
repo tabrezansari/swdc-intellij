@@ -702,11 +702,11 @@ public class TreeItemBuilder {
                     BrowserUtil.browse(url);
 
                     UIElementEntity elementEntity = new UIElementEntity();
-                    elementEntity.element_name = "ct_contributor_last_commit_url_link";
+                    elementEntity.element_name = "ct_contributor_repo_identifier_btn";
                     elementEntity.element_location = "ct_contributors_tree";
                     elementEntity.color = null;
                     elementEntity.cta_text = "View your commit report";
-                    elementEntity.icon_name = null;
+                    elementEntity.icon_name = "repo";
                     EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
                 }
             }

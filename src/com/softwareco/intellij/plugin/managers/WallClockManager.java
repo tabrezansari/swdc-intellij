@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.EditorFactory;
 import com.softwareco.intellij.plugin.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.SessionSummary;
@@ -129,17 +130,19 @@ public class WallClockManager {
     }
 
     private void updateWallClockTime() {
-        boolean isActive = ApplicationManager.getApplication().isActive();
-        KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
-        boolean hasLatestPayload = latestPayload != null;
-        if (isActive || hasLatestPayload) {
-            long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
-            FileManager.setNumericItem("wctime", wctime);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            boolean isActive = ApplicationManager.getApplication().isActive();
+            KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
+            boolean hasLatestPayload = latestPayload != null;
+            if (isActive || hasLatestPayload) {
+                long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
+                FileManager.setNumericItem("wctime", wctime);
 
-            // update the json time data file
-            TimeDataManager.incrementEditorSeconds(SECONDS_INCREMENT);
-        }
-        dispatchStatusViewUpdate();
+                // update the json time data file
+                TimeDataManager.incrementEditorSeconds(SECONDS_INCREMENT);
+            }
+            dispatchStatusViewUpdate();
+        });
     }
 
     public synchronized void dispatchStatusViewUpdate() {

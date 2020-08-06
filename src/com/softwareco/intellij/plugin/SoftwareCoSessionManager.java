@@ -9,7 +9,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
-import com.softwareco.intellij.plugin.managers.EventManager;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;

@@ -10,7 +10,6 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
@@ -27,7 +26,6 @@ import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
-import com.swdc.snowplow.tracker.entities.FileEntity;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
@@ -692,11 +690,11 @@ public class SoftwareCoUtils {
         launchFile(codeTimeFile);
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_contributor_repo_identifier_btn";
-        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_contributors_tree" : "ct_command_palette";
+        elementEntity.element_name = "ct_summary_btn";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
         elementEntity.color = "white";
-        elementEntity.cta_text = "View your commit summary report";
-        elementEntity.icon_name = "repo";
+        elementEntity.cta_text = "View your summary report";
+        elementEntity.icon_name = "guage";
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
