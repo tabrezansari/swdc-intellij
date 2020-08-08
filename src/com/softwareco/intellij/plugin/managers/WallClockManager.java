@@ -128,17 +128,20 @@ public class WallClockManager {
     }
 
     private void updateWallClockTime() {
-        boolean isActive = ApplicationManager.getApplication().isActive();
-        KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
-        boolean hasLatestPayload = latestPayload != null;
-        if (isActive || hasLatestPayload) {
-            long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
-            FileManager.setNumericItem("wctime", wctime);
+        // pass control from a background thread to the event dispatch thread,
+        ApplicationManager.getApplication().invokeLater(() -> {
+            boolean isActive = ApplicationManager.getApplication().isActive();
+            KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
+            boolean hasLatestPayload = latestPayload != null;
+            if (isActive || hasLatestPayload) {
+                long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
+                FileManager.setNumericItem("wctime", wctime);
 
-            // update the json time data file
-            TimeDataManager.incrementEditorSeconds(SECONDS_INCREMENT);
-        }
-        dispatchStatusViewUpdate();
+                // update the json time data file
+                TimeDataManager.incrementEditorSeconds(SECONDS_INCREMENT);
+            }
+            dispatchStatusViewUpdate();
+        });
     }
 
     public synchronized void dispatchStatusViewUpdate() {
