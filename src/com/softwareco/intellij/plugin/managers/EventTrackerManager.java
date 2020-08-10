@@ -18,6 +18,8 @@ import com.swdc.snowplow.tracker.manager.TrackerManager;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Logger;
 
 public class EventTrackerManager {
@@ -78,7 +80,7 @@ public class EventTrackerManager {
             event.repoEntity = this.getRepoEntity(resourceInfo);
 
             // execute async
-            asyncManager.executeOnceInSeconds(new Runnable() {
+            new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
                     trackerMgr.trackCodeTimeEvent(event);
@@ -101,7 +103,7 @@ public class EventTrackerManager {
         event.pluginEntity = this.getPluginEntity();
 
         // execute async
-        asyncManager.executeOnceInSeconds(new Runnable() {
+        new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 trackerMgr.trackUIInteraction(event);
@@ -127,11 +129,11 @@ public class EventTrackerManager {
         event.pluginEntity = this.getPluginEntity();
         event.projectEntity = this.getProjectEntity();
         event.fileEntity = this.getFileEntityFromFileName(full_file_name);
-        ResourceInfo resourceInfo = GitUtil.getResourceInfo(event.project_directory, false);
+        ResourceInfo resourceInfo = GitUtil.getResourceInfo(event.projectEntity.project_directory, false);
         event.repoEntity = this.getRepoEntity(resourceInfo);
 
         // execute async
-        asyncManager.executeOnceInSeconds(new Runnable() {
+        new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
                 trackerMgr.trackEditorAction(event);

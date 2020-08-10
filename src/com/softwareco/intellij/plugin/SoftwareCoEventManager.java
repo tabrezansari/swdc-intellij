@@ -80,7 +80,7 @@ public class SoftwareCoEventManager {
         int documentLineCount = SoftwareCoUtils.getLineCount(fileName);
         fileInfo.lines = documentLineCount;
         LOG.info("Code Time: file opened: " + fileName);
-        tracker.trackEditorAction("file", "close", fileName);
+        tracker.trackEditorAction("file", "open", fileName);
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {
