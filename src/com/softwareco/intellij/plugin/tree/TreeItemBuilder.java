@@ -72,6 +72,14 @@ public class TreeItemBuilder {
                         if (lbl != null) {
                             if (lbl.getName().equals("contributor_title")) {
                                 ReportManager.displayProjectContributorSummaryDashboard(lbl.getText());
+
+                                UIElementEntity elementEntity = new UIElementEntity();
+                                elementEntity.element_name = "ct_contributor_repo_identifier_btn";
+                                elementEntity.element_location = "ct_contributors_tree";
+                                elementEntity.color = null;
+                                elementEntity.cta_text = "redacted";
+                                elementEntity.icon_name = "repo";
+                                EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
                             }
                         }
                     }
@@ -700,14 +708,6 @@ public class TreeItemBuilder {
                     // launch the commit url
                     String url = String.valueOf(selectedNode.getData());
                     BrowserUtil.browse(url);
-
-                    UIElementEntity elementEntity = new UIElementEntity();
-                    elementEntity.element_name = "ct_contributor_repo_identifier_btn";
-                    elementEntity.element_location = "ct_contributors_tree";
-                    elementEntity.color = null;
-                    elementEntity.cta_text = "View your commit report";
-                    elementEntity.icon_name = "repo";
-                    EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
                 }
             }
         }

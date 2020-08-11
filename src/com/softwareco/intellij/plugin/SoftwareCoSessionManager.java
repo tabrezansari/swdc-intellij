@@ -200,8 +200,8 @@ public class SoftwareCoSessionManager {
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = "ct_web_metrics_btn";
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = "blue";
-        elementEntity.cta_text = "See rich data visualizations in the web app";
+        elementEntity.color = "grey";
+        elementEntity.cta_text = "View web analytics";
         elementEntity.icon_name = "paw";
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }

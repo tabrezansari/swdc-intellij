@@ -330,7 +330,7 @@ public class FileManager {
             elementEntity.element_name = "ct_learn_more_btn";
             elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
             elementEntity.color = "yellow";
-            elementEntity.cta_text = "View the Code Time Readme to learn more";
+            elementEntity.cta_text = "Learn more";
             elementEntity.icon_name = "document";
             EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
 

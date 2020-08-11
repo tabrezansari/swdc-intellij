@@ -23,7 +23,7 @@ public class WallClockManager {
 
     private static WallClockManager instance = null;
     private AsyncManager asyncManager;
-
+    private static boolean isCurrentlyActive = true;
     private static boolean dispatching = false;
 
     public static WallClockManager getInstance() {
@@ -127,6 +127,24 @@ public class WallClockManager {
             // save the file
             FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
         }
+    }
+
+    public static void activeStateChangeHandler(KeystrokeCount keystrokeCount) {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            boolean isActive = ApplicationManager.getApplication().isActive();
+            if (isActive != isCurrentlyActive) {
+                if (isActive) {
+                    EventTrackerManager.getInstance().trackEditorAction("editor", "focus");
+                } else {
+                    EventTrackerManager.getInstance().trackEditorAction("editor", "unfocus");
+                }
+                // send off the payload
+                keystrokeCount.triggered = false;
+                keystrokeCount.processKeystrokes();
+
+                isCurrentlyActive = isActive;
+            }
+        });
     }
 
     private void updateWallClockTime() {

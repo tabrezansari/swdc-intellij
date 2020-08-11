@@ -44,8 +44,7 @@ public class KeystrokeCount {
     public String hostname = "";
     public String project_null_error = "";
 
-    private boolean triggered = false;
-
+    public boolean triggered = false;
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -139,10 +138,25 @@ public class KeystrokeCount {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    processKeystrokes();
+                    if (triggered) {
+                        processKeystrokes();
+                    }
                     triggered = false;
                 }
             }, 1000 * 60);
+
+            // in 30 seconds we'll check if the window is active or not.
+            // if its not active we'll process the keystroke data.
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    if (triggered) {
+                        checkActiveState();
+                    }
+                    // set triggered to false so the other timer is prevented from processing keystrokes
+                    triggered = false;
+                }
+            }, 1000 * 30);
         }
 
         // Fetch the FileInfo
@@ -216,6 +230,10 @@ public class KeystrokeCount {
         return foundKpmData;
     }
 
+    public void checkActiveState() {
+        WallClockManager.getInstance().activeStateChangeHandler(this);
+    }
+
     public void processKeystrokes() {
         try {
             if (this.hasData()) {
@@ -265,11 +283,11 @@ public class KeystrokeCount {
 
                 // set the latest payload
                 SoftwareCoUtils.setLatestPayload(this);
-            }
 
-            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-            // set the latest payload timestamp utc so help with session time calculations
-            FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+                SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+                // set the latest payload timestamp utc so help with session time calculations
+                FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+            }
         } catch (Exception e) {
             //
         }
