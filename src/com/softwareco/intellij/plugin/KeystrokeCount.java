@@ -153,8 +153,6 @@ public class KeystrokeCount {
                     if (triggered) {
                         checkActiveState();
                     }
-                    // set triggered to false so the other timer is prevented from processing keystrokes
-                    triggered = false;
                 }
             }, 1000 * 30);
         }
@@ -219,7 +217,6 @@ public class KeystrokeCount {
         // tally the metrics to set the keystrokes for each source key
         Map<String, FileInfo> fileInfoDataSet = this.source;
         for ( FileInfo data : fileInfoDataSet.values() ) {
-            data.keystrokes = data.add + data.paste + data.delete + data.linesAdded + data.linesRemoved;
             keystrokesTally += data.keystrokes;
         }
 

@@ -5,6 +5,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
+import com.intellij.openapi.editor.impl.event.DocumentEventImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -142,18 +143,24 @@ public class SoftwareCoEventManager {
                                         //
                                     }
                                 }
-                                if (documentEvent.getOldLength() > 0) {
+
+                                boolean hasDeleteChars = documentEvent.getOldLength() > 0;
+                                boolean hasPasteChars = documentEvent.getNewLength() > 4;
+                                boolean hasAddChars = documentEvent.getNewLength() > 0;
+                                boolean isNewLine = (documentEvent.getNewFragment() != null && documentEvent.getNewFragment().toString().equals("\n"));
+
+                                if (hasDeleteChars) {
                                     //it's a delete
                                     fileInfo.delete += 1;
                                     fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                     LOG.info("Code Time: delete incremented");
                                 } else {
                                     // it's an add
-                                    if (documentEvent.getNewLength() > 8) {
+                                    if (hasPasteChars) {
                                         // it's a paste
                                         fileInfo.paste += 1;
                                         fileInfo.charsPasted += documentEvent.getNewLength();
-                                    } else {
+                                    } else if (hasAddChars && !isNewLine) {
                                         fileInfo.add += 1;
                                         fileInfo.netkeys = fileInfo.add - fileInfo.delete;
                                         LOG.info("Code Time: add incremented");
@@ -164,12 +171,12 @@ public class SoftwareCoEventManager {
 
                                 int documentLineCount = document.getLineCount();
                                 int savedLines = fileInfo.lines;
-                                if (savedLines > 0) {
+                                if (savedLines > 0 || isNewLine) {
                                     int diff = documentLineCount - savedLines;
                                     if (diff < 0) {
                                         fileInfo.linesRemoved = fileInfo.linesRemoved + Math.abs(diff);
                                         LOG.info("Code Time: lines removed incremented");
-                                    } else if (diff > 0) {
+                                    } else if (diff > 0 || isNewLine) {
                                         fileInfo.linesAdded = fileInfo.linesAdded + diff;
                                         LOG.info("Code Time: lines added incremented");
                                     }
