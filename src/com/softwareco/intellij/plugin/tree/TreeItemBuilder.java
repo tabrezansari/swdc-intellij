@@ -680,6 +680,29 @@ public class TreeItemBuilder {
         return tree;
     }
 
+    private static List<String> toggleItems = Arrays.asList("ct_codetime_toggle_node",
+            "ct_active_codetime_toggle_node",
+            "ct_lines_added_toggle_node",
+            "ct_lines_removed_toggle_node",
+            "ct_keystrokes_toggle_node",
+            "ct_files_changed_toggle_node",
+            "ct_top_files_by_kpm_toggle_node",
+            "ct_top_files_by_keystrokes_toggle_node",
+            "ct_top_files_by_codetime_toggle_node",
+            "ct_open_changes_toggle_node",
+            "ct_commited_today_toggle_node");
+
+    private static String getToggleItem(String normalizedLabel) {
+        for (String toggleItem : toggleItems) {
+            // strip off "ct_" and "_toggle_node" and replace the "_" with ""
+            String normalizedToggleItem = toggleItem.replace("ct_", "").replace("_toggle_node", "").replaceAll("_", "");
+            if (normalizedLabel.toLowerCase().indexOf(normalizedToggleItem) != -1) {
+                return toggleItem;
+            }
+        }
+        return null;
+    }
+
     private static void updateExpandState(TreeExpansionEvent e, boolean expanded) {
         TreePath path = e.getPath();
 
@@ -687,6 +710,16 @@ public class TreeItemBuilder {
         DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
         MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
         String id = mtNode.getId();
+
+        // label will look like "Linesadded" or ct_lines_added_toggle_node
+        String toggleItemName = getToggleItem(id);
+        if (toggleItemName != null) {
+            UIElementEntity uiElementEntity = new UIElementEntity();
+            uiElementEntity.element_location = "ct_metrics_tree";
+            uiElementEntity.element_name = toggleItemName;
+            uiElementEntity.cta_text = id;
+            EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, uiElementEntity);
+        }
 
         if (expanded) {
             EventManager.createCodeTimeEvent("mouse", "click", "TreeViewItemExpand_" + id);
