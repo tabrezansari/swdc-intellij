@@ -31,7 +31,7 @@ public class SoftwareCoStatusBarKpmIconWidget implements StatusBarWidget {
         eventHandler = new Consumer<MouseEvent>() {
             @Override
             public void consume(MouseEvent mouseEvent) {
-                sessionMgr.statusBarClickHandler(UIInteractionType.keyboard);
+                sessionMgr.statusBarClickHandler();
             }
         };
     }

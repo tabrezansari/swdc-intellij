@@ -60,9 +60,9 @@ public class SoftwareCoSessionManager {
     public static String getReadmeFile() {
         String file = getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
-            file += "\\jetbrainsCt_README.md";
+            file += "\\jetbrainsCt_README.txt";
         } else {
-            file += "/jetbrainsCt_README.md";
+            file += "/jetbrainsCt_README.txt";
         }
         return file;
     }
@@ -124,14 +124,14 @@ public class SoftwareCoSessionManager {
         return null;
     }
 
-    public void statusBarClickHandler(UIInteractionType interactionType) {
+    public void statusBarClickHandler() {
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = "ct_status_bar_metrics_btn";
-        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_status_bar" : "ct_command_palette";
+        elementEntity.element_location = "ct_status_bar";
         elementEntity.color = null;
         elementEntity.cta_text = "status bar metrics";
         elementEntity.icon_name = "clock";
-        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
+        EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
         CodeTimeToolWindowFactory.openToolWindow();
     }
 
@@ -163,10 +163,12 @@ public class SoftwareCoSessionManager {
         String element_name = "ct_sign_up_google_btn";
         String icon_name = "google";
         String cta_text = "Sign up with Google";
+        String icon_color = null;
         if (loginType == null || loginType.equals("software") || loginType.equals("email")) {
             element_name = "ct_sign_up_email_btn";
             cta_text = "Sign up with email";
             icon_name = "envelope";
+            icon_color = "gray";
             url = SoftwareCoUtils.launch_url + "/email-signup?token=" + jwt + "&plugin=codetime&auth=software";
         } else if (loginType.equals("google")) {
             url = SoftwareCoUtils.api_endpoint + "/auth/google?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
@@ -187,7 +189,7 @@ public class SoftwareCoSessionManager {
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = element_name;
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = null;
+        elementEntity.color = icon_color;
         elementEntity.cta_text = cta_text;
         elementEntity.icon_name = icon_name;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
@@ -198,11 +200,11 @@ public class SoftwareCoSessionManager {
         BrowserUtil.browse(url);
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_web_metrics_btn";
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_web_metrics_btn" : "ct_web_metrics_cmd";
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = "grey";
-        elementEntity.cta_text = "View web analytics";
-        elementEntity.icon_name = "paw";
+        elementEntity.color = interactionType == UIInteractionType.click ? "gray" : null;
+        elementEntity.cta_text = "See advanced metrics";
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "paw" : null;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 }

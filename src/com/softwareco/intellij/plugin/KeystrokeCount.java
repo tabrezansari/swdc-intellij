@@ -228,7 +228,7 @@ public class KeystrokeCount {
     }
 
     public void checkActiveState() {
-        WallClockManager.getInstance().activeStateChangeHandler(this);
+        WallClockManager.getInstance().unfocusStateChangeHandler(this);
     }
 
     public void processKeystrokes() {

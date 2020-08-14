@@ -15,7 +15,6 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
-import com.softwareco.intellij.plugin.managers.EventManager;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
@@ -179,8 +178,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     private void processHourlyTasks() {
         SoftwareCoUtils.sendHeartbeat("HOURLY");
-        // send the events data
-        EventManager.sendOfflineEvents();
     }
 
     // The app is ready and has a selected project
@@ -208,9 +205,9 @@ public class SoftwareCo implements ApplicationComponent {
         asyncManager.scheduleService(
                 repoTaskRunner, "repoTaskRunner", 90, 60 * 25);
 
-        // every 15 minutes
+        // every 5 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 30, 60 * 15);
+        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 30, 60 * 5);
 
         // every hour
         final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();

@@ -34,6 +34,7 @@ public class TreeItemBuilder {
     private static String dayStr = "";
 
     private static boolean expandInitNodes = false;
+    private static String selectedNodeName = null;
 
     public static void initializeSessionSummary(boolean initializing) {
         sessionSummary = SessionDataManager.getSessionSummaryData();
@@ -507,11 +508,13 @@ public class TreeItemBuilder {
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, true);
             }
 
             @Override
             public void treeCollapsed(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, false);
             }
         });
@@ -620,11 +623,13 @@ public class TreeItemBuilder {
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, true);
             }
 
             @Override
             public void treeCollapsed(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, false);
             }
         });
@@ -690,7 +695,7 @@ public class TreeItemBuilder {
             "ct_top_files_by_keystrokes_toggle_node",
             "ct_top_files_by_codetime_toggle_node",
             "ct_open_changes_toggle_node",
-            "ct_commited_today_toggle_node");
+            "ct_committed_today_toggle_node");
 
     private static String getToggleItem(String normalizedLabel) {
         for (String toggleItem : toggleItems) {
@@ -703,6 +708,16 @@ public class TreeItemBuilder {
         return null;
     }
 
+    private static String getSelectedNodeName(TreeExpansionEvent e) {
+        MetricTree mTree = (MetricTree)e.getSource();
+        DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+        MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+        if (mtNode != null && mtNode.getUserObject() != null) {
+            return mtNode.getUserObject().toString();
+        }
+        return null;
+    }
+
     private static void updateExpandState(TreeExpansionEvent e, boolean expanded) {
         TreePath path = e.getPath();
 
@@ -710,19 +725,32 @@ public class TreeItemBuilder {
         DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
         MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
         String id = mtNode.getId();
+        String nodeName = getSelectedNodeName(e);
 
-        // label will look like "Linesadded" or ct_lines_added_toggle_node
-        String toggleItemName = getToggleItem(id);
-        if (toggleItemName != null) {
-            UIElementEntity uiElementEntity = new UIElementEntity();
-            uiElementEntity.element_location = "ct_metrics_tree";
-            uiElementEntity.element_name = toggleItemName;
-            uiElementEntity.cta_text = id;
-            EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, uiElementEntity);
+        // this gets called when the tree is initialized, prevent sending these events during that time
+        List<CodeTimeToolWindow.ExpandState> nodeStates = CodeTimeToolWindow.getExpandState(id);
+        // only update if the nodeStates is not null and the state doesn't match the one coming in
+        boolean updateState = false;
+        if (nodeStates != null) {
+            for (CodeTimeToolWindow.ExpandState existingState : nodeStates) {
+                if (existingState.path.toString().equals(path.toString())) {
+                    if (existingState.expand != expanded) {
+                        updateState = true;
+                    }
+                    break;
+                }
+            }
         }
-
-        if (expanded) {
-            EventManager.createCodeTimeEvent("mouse", "click", "TreeViewItemExpand_" + id);
+        if (updateState) {
+            // label will look like "Linesadded" or ct_lines_added_toggle_node
+            String toggleItemName = getToggleItem(id);
+            if (toggleItemName != null) {
+                UIElementEntity uiElementEntity = new UIElementEntity();
+                uiElementEntity.element_location = "ct_metrics_tree";
+                uiElementEntity.element_name = toggleItemName;
+                uiElementEntity.cta_text = nodeName;
+                EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, uiElementEntity);
+            }
         }
 
         CodeTimeToolWindow.updateExpandState(id, path, expanded);

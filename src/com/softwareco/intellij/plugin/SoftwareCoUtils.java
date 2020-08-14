@@ -64,9 +64,9 @@ public class SoftwareCoUtils {
     public static final Logger LOG = Logger.getLogger("SoftwareCoUtils");
 
     // set the api endpoint to use
-    public final static String api_endpoint = "https://stagingapi.software.com";//"https://api.software.com";
+    public final static String api_endpoint = "https://api.software.com";
     // set the launch url to use
-    public final static String launch_url = "https://staging.software.com";//""https://app.software.com";
+    public final static String launch_url = "https://app.software.com";
 
     public static HttpClient httpClient;
     public static HttpClient pingClient;
@@ -410,6 +410,7 @@ public class SoftwareCoUtils {
     }
 
     public static void toggleStatusBar(UIInteractionType interactionType) {
+        String cta_text = !showStatusText ? "Show status bar metrics" : "Hide status bar metrics";
         showStatusText = !showStatusText;
 
         WallClockManager.getInstance().dispatchStatusViewUpdate();
@@ -418,11 +419,11 @@ public class SoftwareCoUtils {
         CodeTimeToolWindow.refresh();
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_toggle_status_bar_metrics_btn";
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_toggle_status_bar_metrics_btn" : "ct_toggle_status_bar_metrics_cmd";
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = "blue";
-        elementEntity.cta_text = "Toggle the Code Time status bar metrics text";
-        elementEntity.icon_name = "slash-eye";
+        elementEntity.color = interactionType == UIInteractionType.click ? "blue" : null;
+        elementEntity.cta_text = cta_text;
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "slash-eye" : null;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
@@ -604,11 +605,11 @@ public class SoftwareCoUtils {
         BrowserUtil.browse("mailto:cody@software.com");
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_submit_feedback_btn";
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_submit_feedback_btn" : "ct_submit_feedback_cmd";
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
         elementEntity.color = null;
         elementEntity.cta_text = "Submit feedback";
-        elementEntity.icon_name = "envelope";
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "text-bubble" : null;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
@@ -690,11 +691,11 @@ public class SoftwareCoUtils {
         launchFile(codeTimeFile);
 
         UIElementEntity elementEntity = new UIElementEntity();
-        elementEntity.element_name = "ct_summary_btn";
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_summary_btn" : "ct_summary_cmd";
         elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
-        elementEntity.color = "purple";
+        elementEntity.color = interactionType == UIInteractionType.click ? "purple" : null;
         elementEntity.cta_text = "View summary";
-        elementEntity.icon_name = "guage";
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "guage" : null;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
