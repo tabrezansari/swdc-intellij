@@ -124,6 +124,9 @@ public class SoftwareCo implements ApplicationComponent {
 
         log.info(plugName + ": Finished initializing SoftwareCo plugin");
 
+        // send the activate event
+        EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
+
         initializeUserInfoWhenProjectsReady(initializedUser);
     }
 
@@ -148,10 +151,6 @@ public class SoftwareCo implements ApplicationComponent {
 
             // setup the doc listeners
             setupFileEditorEventListeners(p);
-
-            // send the activate event
-            tracker = EventTrackerManager.getInstance();
-            tracker.trackEditorAction("editor", "activate");
         }
     }
 

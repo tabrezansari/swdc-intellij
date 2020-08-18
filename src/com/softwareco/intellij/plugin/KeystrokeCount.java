@@ -157,23 +157,14 @@ public class KeystrokeCount {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
+                    // check if its still in a triggered (true) state before processing
+                    // it, as the unfocus event can also process the keystrokes
                     if (triggered) {
                         processKeystrokes();
                     }
                     triggered = false;
                 }
             }, 1000 * 60);
-
-            // in 30 seconds we'll check if the window is active or not.
-            // if its not active we'll process the keystroke data.
-            new Timer().schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    if (triggered) {
-                        checkActiveState();
-                    }
-                }
-            }, 1000 * 30);
         }
 
         // Fetch the FileInfo
@@ -226,28 +217,7 @@ public class KeystrokeCount {
 
     // update each source with it's true amount of keystrokes
     public boolean hasData() {
-        boolean foundKpmData = false;
-        if (this.keystrokes > 0 || this.hasOpenAndCloseMetrics()) {
-            foundKpmData = true;
-        }
-
-        int keystrokesTally = 0;
-
-        // tally the metrics to set the keystrokes for each source key
-        Map<String, FileInfo> fileInfoDataSet = this.source;
-        for ( FileInfo data : fileInfoDataSet.values() ) {
-            keystrokesTally += data.keystrokes;
-        }
-
-        if (keystrokesTally > this.keystrokes) {
-            this.keystrokes = keystrokesTally;
-        }
-
-        return foundKpmData;
-    }
-
-    public void checkActiveState() {
-        WallClockManager.getInstance().unfocusStateChangeHandler(this);
+        return this.keystrokes > 0 ? true : false;
     }
 
     public void processKeystrokes() {

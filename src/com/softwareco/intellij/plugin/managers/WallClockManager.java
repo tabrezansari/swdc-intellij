@@ -18,14 +18,11 @@ public class WallClockManager {
 
     public static final Logger log = Logger.getLogger("WallClockManager");
 
-    private static final int FOCUS_STATE_INTERVAL_SECONDS = 5;
     private static final int SECONDS_INCREMENT = 30;
     private static final int DAY_CHECK_TIMER_INTERVAL = 60;
 
     private static WallClockManager instance = null;
     private AsyncManager asyncManager;
-    private static boolean isCurrentlyActive = true;
-    private static boolean processKeystrokePayloads = false;
     private static boolean dispatching = false;
 
     public static WallClockManager getInstance() {
@@ -53,10 +50,6 @@ public class WallClockManager {
         final Runnable newDayCheckerTimer = () -> newDayChecker();
         asyncManager.scheduleService(
                 newDayCheckerTimer, "newDayCheckerTimer", 30, DAY_CHECK_TIMER_INTERVAL);
-
-        final Runnable checkFocusStateTimer = () -> checkFocusState();
-        asyncManager.scheduleService(
-                checkFocusStateTimer, "checkFocusStateTimer", 0, FOCUS_STATE_INTERVAL_SECONDS);
 
         dispatchStatusViewUpdate();
     }
@@ -130,35 +123,6 @@ public class WallClockManager {
             // save the file
             FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
         }
-    }
-
-    public void unfocusStateChangeHandler(KeystrokeCount keystrokeCount) {
-        if (processKeystrokePayloads) {
-            // send off the payload
-            keystrokeCount.triggered = false;
-            keystrokeCount.processKeystrokes();
-            processKeystrokePayloads = false;
-        }
-    }
-
-    private void checkFocusState() {
-        ApplicationManager.getApplication().invokeLater(() -> {
-            boolean isActive = ApplicationManager.getApplication().isActive();
-            if (isActive != isCurrentlyActive) {
-                if (!isActive) {
-                    // set the flag the "unfocusStateChangeHandler" will look for in order to process payloads early
-                    processKeystrokePayloads = true;
-                    EventTrackerManager.getInstance().trackEditorAction("editor", "unfocus");
-                } else {
-                    // just set the process keystrokes payload to false since we're focused again
-                    processKeystrokePayloads = false;
-                    EventTrackerManager.getInstance().trackEditorAction("editor", "focus");
-                }
-
-                // update the currently active flag
-                isCurrentlyActive = isActive;
-            }
-        });
     }
 
     private void updateWallClockTime() {

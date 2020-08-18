@@ -10,6 +10,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
+import com.softwareco.intellij.plugin.managers.WallClockManager;
 import org.apache.commons.lang.StringUtils;
 
 import java.nio.file.Files;
@@ -27,11 +28,15 @@ public class SoftwareCoEventManager {
 
     private static SoftwareCoEventManager instance = null;
 
+    private static final int FOCUS_STATE_INTERVAL_SECONDS = 5;
     private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
+
+    private static boolean isCurrentlyActive = true;
 
     private EventTrackerManager tracker;
     private KeystrokeManager keystrokeMgr;
     private SoftwareCoSessionManager sessionMgr;
+    private AsyncManager asyncManager;
 
     public static SoftwareCoEventManager getInstance() {
         if (instance == null) {
@@ -44,6 +49,34 @@ public class SoftwareCoEventManager {
         keystrokeMgr = KeystrokeManager.getInstance();
         sessionMgr = SoftwareCoSessionManager.getInstance();
         tracker = EventTrackerManager.getInstance();
+        asyncManager = AsyncManager.getInstance();
+
+        final Runnable checkFocusStateTimer = () -> checkFocusState();
+        asyncManager.scheduleService(
+                checkFocusStateTimer, "checkFocusStateTimer", 0, FOCUS_STATE_INTERVAL_SECONDS);
+    }
+
+    private void checkFocusState() {
+        ApplicationManager.getApplication().invokeLater(() -> {
+            boolean isActive = ApplicationManager.getApplication().isActive();
+            if (isActive != isCurrentlyActive) {
+                if (!isActive) {
+                    KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
+                    if (keystrokeCount != null) {
+                        // set the flag the "unfocusStateChangeHandler" will look for in order to process payloads early
+                        keystrokeCount.triggered = false;
+                        keystrokeCount.processKeystrokes();
+                    }
+                    EventTrackerManager.getInstance().trackEditorAction("editor", "unfocus");
+                } else {
+                    // just set the process keystrokes payload to false since we're focused again
+                    EventTrackerManager.getInstance().trackEditorAction("editor", "focus");
+                }
+
+                // update the currently active flag
+                isCurrentlyActive = isActive;
+            }
+        });
     }
 
     private int getNewlineCount(String text) {
@@ -73,7 +106,7 @@ public class SoftwareCoEventManager {
         return keystrokeCount;
     }
 
-    private void updateFileInfoMetrics(Document document, DocumentEvent documentEvent, KeystrokeCount.FileInfo fileInfo) {
+    private void updateFileInfoMetrics(Document document, DocumentEvent documentEvent, KeystrokeCount.FileInfo fileInfo, KeystrokeCount keystrokeCount) {
 
         String text = documentEvent.getNewFragment() != null ? documentEvent.getNewFragment().toString() : "";
         String oldText = documentEvent.getOldFragment() != null ? documentEvent.getOldFragment().toString() : "";
@@ -143,6 +176,8 @@ public class SoftwareCoEventManager {
 
         fileInfo.lines = new_line_count;
         fileInfo.keystrokes += 1;
+        keystrokeCount.keystrokes += 1;
+
     }
 
     // this is used to close unended files
@@ -230,7 +265,7 @@ public class SoftwareCoEventManager {
                                     } catch (Exception e) {}
                                 }
 
-                                updateFileInfoMetrics(document, documentEvent, fileInfo);
+                                updateFileInfoMetrics(document, documentEvent, fileInfo, keystrokeCount);
 
                                 // update the latest payload
                                 keystrokeCount.updateLatestPayloadLazily();
