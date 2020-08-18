@@ -64,9 +64,9 @@ public class SoftwareCoUtils {
     public static final Logger LOG = Logger.getLogger("SoftwareCoUtils");
 
     // set the api endpoint to use
-    public final static String api_endpoint = "https://api.software.com";
+    public final static String api_endpoint = "https://stagingapi.software.com";//"https://api.software.com";
     // set the launch url to use
-    public final static String launch_url = "https://app.software.com";
+    public final static String launch_url = "https://staging.software.com";//""https://app.software.com";
 
     public static HttpClient httpClient;
     public static HttpClient pingClient;
