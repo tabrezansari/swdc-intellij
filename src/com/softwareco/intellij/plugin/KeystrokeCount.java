@@ -110,7 +110,6 @@ public class KeystrokeCount {
     public static class FileInfo {
         public Integer add = 0;
         public Integer paste = 0;
-        public Integer charsPasted = 0;
         public Integer open = 0;
         public Integer close = 0;
         public Integer delete = 0;
@@ -128,6 +127,26 @@ public class KeystrokeCount {
         public long duration_seconds = 0;
         public String fsPath = "";
         public String name = "";
+        // new attributes for snowplow
+        public int characters_added = 0; // chars added
+        public int characters_deleted = 0; // chars deleted
+        public int single_deletes = 0; // single char or single line delete
+        public int multi_deletes = 0; // multi char or multi line delete
+        public int single_adds = 0; // single char or single line add
+        public int multi_adds = 0; // multi char or multi line add
+        public int auto_indents = 0;
+        public int replacements = 0;
+
+        @Override
+        public String toString() {
+            return "FileInfo [add=" + add + ", paste=" + paste + ", open=" + open
+                    + "\n, close=" + close + ", delete=" + delete + ", length=" + length + ", lines=" + lines
+                    + "\n, linesAdded=" + linesAdded + ", linesRemoved=" + linesRemoved + ", keystrokes=" + keystrokes
+                    + "\n, syntax=" + syntax + ", characters_added=" + characters_added + ", characters_deleted="
+                    + characters_deleted + "\n, single_deletes=" + single_deletes + ", multi_deletes=" + multi_deletes
+                    + "\n, single_adds=" + single_adds + ", multi_adds=" + multi_adds + ", auto_indents=" + auto_indents
+                    + "\n, replacements=" + replacements + "]";
+        }
     }
 
     public FileInfo getSourceByFileName(String fileName) {
