@@ -30,6 +30,8 @@ public class SoftwareCoEventManager {
 
     private static final int FOCUS_STATE_INTERVAL_SECONDS = 5;
     private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
+    private static final Pattern NEW_LINE_TAB_PATTERN = Pattern.compile("\n\t");
+    private static final Pattern TAB_PATTERN = Pattern.compile("\t");
 
     private static boolean isCurrentlyActive = true;
 
@@ -121,17 +123,18 @@ public class SoftwareCoEventManager {
 
         // count the newline chars
         int linesAdded = this.getNewlineCount(text);
-        if (linesAdded > 1) {
-            // if it's 2, it's actually 3 lines as all we're doing is counting the \n chars
-            linesAdded += 1;
-        }
         int linesRemoved = this.getNewlineCount(oldText);
 
         // check if its an auto indent
-        boolean hasAutoIndent = text.matches("^\\s{2,4}$");
+        boolean hasAutoIndent = text.matches("^\\s{2,4}$") || TAB_PATTERN.matcher(text).find();
+        boolean newLineAutoIndent = text.matches("^\n\\s{2,4}$") || NEW_LINE_TAB_PATTERN.matcher(text).find();
 
         // event updates
-        if (hasAutoIndent) {
+        if (newLineAutoIndent) {
+            // it's a new line with auto-indent
+            fileInfo.auto_indents += 1;
+            fileInfo.linesAdded += 1;
+        } else if (hasAutoIndent) {
             // it's an auto indent action
             fileInfo.auto_indents += 1;
         } else if (linesAdded == 1) {
@@ -144,6 +147,11 @@ public class SoftwareCoEventManager {
             fileInfo.paste += 1;
             fileInfo.multi_adds += 1;
             fileInfo.characters_added += Math.abs(numKeystrokes - linesAdded);
+        } else if (numDeleteKeystrokes > 0 && numKeystrokes > 0) {
+            // it's a replacement
+            fileInfo.replacements += 1;
+            fileInfo.characters_added += numKeystrokes;
+            fileInfo.characters_deleted += numDeleteKeystrokes;
         } else if (numKeystrokes > 1) {
             // pasted characters (multi_adds)
             fileInfo.paste += 1;
