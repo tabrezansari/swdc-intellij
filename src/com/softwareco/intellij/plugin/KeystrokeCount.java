@@ -253,7 +253,7 @@ public class KeystrokeCount {
                 // end the file end times.
                 this.preProcessKeystrokeData(eTime.sessionSeconds, eTime.elapsedSeconds);
 
-                // update the file aggregate info.
+                // update the file aggregate info
                 this.updateAggregates(eTime.sessionSeconds);
 
                 // send the event to the event tracker
@@ -275,7 +275,6 @@ public class KeystrokeCount {
                 FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
             }
         } catch (Exception e) {
-            //
         }
 
         this.resetData();

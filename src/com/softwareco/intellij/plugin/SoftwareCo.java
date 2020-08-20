@@ -4,6 +4,7 @@
  */
 package com.softwareco.intellij.plugin;
 
+import co.libly.resourceloader.SharedLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParser;
@@ -20,6 +21,13 @@ import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -175,10 +183,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     }
 
-    private void processHourlyTasks() {
-        SoftwareCoUtils.sendHeartbeat("HOURLY");
-    }
-
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
@@ -207,10 +211,6 @@ public class SoftwareCo implements ApplicationComponent {
         // every 5 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
         asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 30, 60 * 5);
-
-        // every hour
-        final Runnable hourlyTaskRunner = () -> this.processHourlyTasks();
-        asyncManager.scheduleService(hourlyTaskRunner, "hourlyTaskRunner", 120, 60 * 60);
 
         // initialize the wallclock manager
         WallClockManager.getInstance().updateSessionSummaryFromServer();

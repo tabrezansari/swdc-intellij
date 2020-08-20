@@ -865,29 +865,6 @@ public class SoftwareCoUtils {
         return loggedIn;
     }
 
-    public static void sendHeartbeat(String reason) {
-        boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-        String jwt = FileManager.getItem("jwt");
-        if (serverIsOnline && jwt != null) {
-
-            long start = Math.round(System.currentTimeMillis() / 1000);
-
-            JsonObject payload = new JsonObject();
-            payload.addProperty("pluginId", pluginId);
-            payload.addProperty("os", getOs());
-            payload.addProperty("start", start);
-            payload.addProperty("version", VERSION);
-            payload.addProperty("hostname", getHostname());
-            payload.addProperty("trigger_annotation", reason);
-
-            String api = "/data/heartbeat";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payload.toString(), jwt);
-            if (!resp.isOk()) {
-                LOG.log(Level.WARNING, pluginName + ": unable to send heartbeat ping");
-            }
-        }
-    }
-
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
         final String reconnectMsg = (isTenMinuteReconnect) ? "in ten minutes. " : "soon. ";
         ApplicationManager.getApplication().invokeLater(new Runnable() {

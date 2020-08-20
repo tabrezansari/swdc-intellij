@@ -85,6 +85,7 @@ public class EventTrackerManager {
             event.repoEntity = this.getRepoEntity(resourceInfo);
 
             // execute async
+            log.info("code time event processed");
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -108,6 +109,7 @@ public class EventTrackerManager {
         event.pluginEntity = this.getPluginEntity();
 
         // execute async
+        log.info("ui interaction event processed");
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -138,6 +140,7 @@ public class EventTrackerManager {
         event.repoEntity = this.getRepoEntity(resourceInfo);
 
         // execute async
+        log.info("editor action event processed");
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
