@@ -4,10 +4,8 @@
  */
 package com.softwareco.intellij.plugin;
 
-import co.libly.resourceloader.SharedLibraryLoader;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParser;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
@@ -21,13 +19,6 @@ import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
@@ -38,19 +29,15 @@ import java.util.logging.Logger;
  */
 public class SoftwareCo implements ApplicationComponent {
 
-    public static JsonParser jsonParser = new JsonParser();
     public static final Logger log = Logger.getLogger("SoftwareCo");
     public static final Gson gson = new GsonBuilder().create();
 
     public static MessageBusConnection connection;
 
-    private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
-    private AsyncManager asyncManager = AsyncManager.getInstance();
+    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
+    private final AsyncManager asyncManager = AsyncManager.getInstance();
 
-    // activate the tracker
-    private EventTrackerManager tracker;
-
-    private static int retry_counter = 0;
+    private static final int retry_counter = 0;
 
     public SoftwareCo() {
     }
@@ -130,12 +117,12 @@ public class SoftwareCo implements ApplicationComponent {
 
         log.info(plugName + ": Loaded v" + getVersion());
 
-        log.info(plugName + ": Finished initializing SoftwareCo plugin");
-
         // send the activate event
         EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
 
         initializeUserInfoWhenProjectsReady(initializedUser);
+
+        log.info(plugName + ": Finished initializing SoftwareCo plugin");
     }
 
     /**
@@ -172,17 +159,6 @@ public class SoftwareCo implements ApplicationComponent {
         }).start();
     }
 
-    private void processRepoTasks() {
-        Project p = SoftwareCoUtils.getFirstActiveProject();
-        if (p != null) {
-            SoftwareCoRepoManager repoMgr = SoftwareCoRepoManager.getInstance();
-            repoMgr.getHistoricalCommits(p.getBasePath());
-
-            repoMgr.processRepoMembersInfo(p.getBasePath());
-        }
-
-    }
-
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
 
@@ -202,11 +178,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
-
-        // every 25 min
-        final Runnable repoTaskRunner = () -> this.processRepoTasks();
-        asyncManager.scheduleService(
-                repoTaskRunner, "repoTaskRunner", 90, 60 * 25);
 
         // every 5 minutes
         final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
@@ -250,7 +221,7 @@ public class SoftwareCo implements ApplicationComponent {
 
     public void disposeComponent() {
         // store the activate event
-        tracker.trackEditorAction("editor", "deactivate");
+        EventTrackerManager.getInstance().trackEditorAction("editor", "deactivate");
 
         try {
             if (connection != null) {

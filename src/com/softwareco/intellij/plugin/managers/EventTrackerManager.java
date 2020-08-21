@@ -1,7 +1,6 @@
 package com.softwareco.intellij.plugin.managers;
 
 import com.intellij.openapi.project.Project;
-import com.softwareco.intellij.plugin.AsyncManager;
 import com.softwareco.intellij.plugin.KeystrokeCount;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
@@ -28,7 +27,6 @@ public class EventTrackerManager {
     private static EventTrackerManager instance = null;
 
     private TrackerManager trackerMgr;
-    private AsyncManager asyncManager;
     private boolean ready = false;
 
     public static EventTrackerManager getInstance() {
@@ -39,7 +37,6 @@ public class EventTrackerManager {
     }
 
     private EventTrackerManager() {
-        asyncManager = AsyncManager.getInstance();
         this.init();
     }
 

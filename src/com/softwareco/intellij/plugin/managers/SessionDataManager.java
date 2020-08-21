@@ -41,7 +41,7 @@ public class SessionDataManager {
             // make sure it's a boolean and not a number
             if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
                 // set it to boolean
-                boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
+                boolean newVal = lastUpdatedToday.getAsInt() != 0;
                 jsonObj.addProperty("lastUpdatedToday", newVal);
             }
         }
@@ -50,7 +50,7 @@ public class SessionDataManager {
             // make sure it's a boolean and not a number
             if (!inFlow.getAsJsonPrimitive().isBoolean()) {
                 // set it to boolean
-                boolean newVal = inFlow.getAsInt() == 0 ? false : true;
+                boolean newVal = inFlow.getAsInt() != 0;
                 jsonObj.addProperty("inFlow", newVal);
             }
         }

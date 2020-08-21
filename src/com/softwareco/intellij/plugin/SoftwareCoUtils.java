@@ -41,7 +41,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -64,14 +63,14 @@ public class SoftwareCoUtils {
     public static final Logger LOG = Logger.getLogger("SoftwareCoUtils");
 
     // set the api endpoint to use
-    public final static String api_endpoint = "https://stagingapi.software.com";//"https://api.software.com";
+    public final static String api_endpoint = "https://api.software.com";
     // set the launch url to use
-    public final static String launch_url = "https://staging.software.com";//""https://app.software.com";
+    public final static String launch_url = "https://app.software.com";
 
     public static HttpClient httpClient;
     public static HttpClient pingClient;
 
-    private static Gson gson = new Gson();
+    private static final Gson gson = new Gson();
 
     public static KeystrokeCount latestPayload = null;
 
@@ -86,15 +85,15 @@ public class SoftwareCoUtils {
     private static boolean appAvailable = true;
     private static boolean showStatusText = true;
 
-    private static int lastDayOfMonth = 0;
+    private static final int lastDayOfMonth = 0;
 
-    private static int DASHBOARD_LABEL_WIDTH = 25;
-    private static int DASHBOARD_VALUE_WIDTH = 25;
+    private static final int DASHBOARD_LABEL_WIDTH = 25;
+    private static final int DASHBOARD_VALUE_WIDTH = 25;
 
-    private static String SERVICE_NOT_AVAIL =
+    private static final String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
-    private static long DAYS_IN_SECONDS = 60 * 60 * 24;
+    private static final long DAYS_IN_SECONDS = 60 * 60 * 24;
 
     private static String workspace_name = null;
 
@@ -124,10 +123,7 @@ public class SoftwareCoUtils {
 
     public static boolean isLoggedIn() {
         String name = FileManager.getItem("name");
-        if (name != null && !name.equals("")) {
-            return true;
-        }
-        return false;
+        return name != null && !name.equals("");
     }
 
 
@@ -253,7 +249,7 @@ public class SoftwareCoUtils {
     }
 
     public static boolean isLinux() {
-        return (isWindows() || isMac()) ? false : true;
+        return !isWindows() && !isMac();
     }
 
     public static boolean isWindows() {
@@ -324,7 +320,7 @@ public class SoftwareCoUtils {
                                 JsonElement jsonEl = readAsJsonElement(jsonStr);
                                 if (jsonEl != null) {
                                     try {
-                                        JsonElement el = (JsonElement)jsonEl;
+                                        JsonElement el = jsonEl;
                                         if (el.isJsonPrimitive()) {
                                             if (statusCode < 300) {
                                                 softwareResponse.setDataMessage(el.getAsString());
@@ -332,7 +328,7 @@ public class SoftwareCoUtils {
                                                 softwareResponse.setErrorMessage(el.getAsString());
                                             }
                                         } else {
-                                            jsonObj = ((JsonElement) jsonEl).getAsJsonObject();
+                                            jsonObj = jsonEl.getAsJsonObject();
                                             softwareResponse.setJsonObj(jsonObj);
                                         }
                                     } catch (Exception e) {
@@ -385,7 +381,7 @@ public class SoftwareCoUtils {
 
         StringBuffer sb = new StringBuffer();
         InputStreamReader reader;
-        reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+        reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
         BufferedReader br = new BufferedReader(reader);
         boolean done = false;
@@ -515,7 +511,7 @@ public class SoftwareCoUtils {
             try {
                 str = String.format("%.1f", hours) + " hrs";
             } catch (Exception e) {
-                str = String.format("%s hrs", String.valueOf(Math.round(hours)));
+                str = String.format("%s hrs", Math.round(hours));
             }
         } else if (minutes == 1) {
             str = "1 min";
@@ -805,8 +801,8 @@ public class SoftwareCoUtils {
         return null;
     }
 
-    private static String regex = "^\\S+@\\S+\\.\\S+$";
-    private static Pattern pattern = Pattern.compile(regex);
+    private static final String regex = "^\\S+@\\S+\\.\\S+$";
+    private static final Pattern pattern = Pattern.compile(regex);
 
     private static boolean validateEmail(String email) {
         return pattern.matcher(email).matches();
@@ -963,10 +959,7 @@ public class SoftwareCoUtils {
     public static boolean isNewDay() {
         String currentDay = FileManager.getItem("currentDay", "");
         String day = SoftwareCoUtils.getTodayInStandardFormat();
-        if (!day.equals(currentDay)) {
-            return true;
-        }
-        return false;
+        return !day.equals(currentDay);
     }
 
     public static String getDashboardRow(String label, String value) {

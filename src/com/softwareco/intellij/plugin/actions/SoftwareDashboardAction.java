@@ -21,8 +21,7 @@ public class SoftwareDashboardAction extends AnAction {
     public void update(AnActionEvent event) {
         boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
         boolean hasJwt = SoftwareCoSessionManager.jwtExists();
-        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isLoggedIn())
-                ? false : true;
+        boolean isLoggedIn = sessionFileExists && hasJwt && SoftwareCoUtils.isLoggedIn();
         event.getPresentation().setVisible(isLoggedIn);
         event.getPresentation().setEnabled(true);
     }

@@ -110,7 +110,7 @@ public class GitUtil {
                     resourceInfo.setIdentifier(identifier);
 
                     // get the ownerId and repoName out of the identifier
-                    String parts[] = identifier.split("/");
+                    String[] parts = identifier.split("/");
                     if (parts.length > 2) {
                         // get the last part
                         String repoNamePart = parts[parts.length - 1];

@@ -21,8 +21,7 @@ public class SoftwareLoginAction extends AnAction {
     public void update(AnActionEvent event) {
         boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
         boolean hasJwt = SoftwareCoSessionManager.jwtExists();
-        boolean isLoggedIn = (!sessionFileExists || !hasJwt || !SoftwareCoUtils.isLoggedIn())
-                ? false : true;
+        boolean isLoggedIn = sessionFileExists && hasJwt && SoftwareCoUtils.isLoggedIn();
         boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
         // only show the login menu item if the server is online
         // and they're not logged on

@@ -17,7 +17,7 @@ public class SoftwareCoRepoManager {
 
     private static SoftwareCoRepoManager instance = null;
 
-    private JsonObject currentTrack = new JsonObject();
+    private final JsonObject currentTrack = new JsonObject();
 
     public static SoftwareCoRepoManager getInstance() {
         if (instance == null) {

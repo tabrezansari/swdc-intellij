@@ -25,7 +25,7 @@ public class CodeTimeToolWindow {
     private JScrollPane scrollPane;
     private JPanel dataPanel;
 
-    private static Map<String, List<ExpandState>> expandStateMap = new HashMap<>();
+    private static final Map<String, List<ExpandState>> expandStateMap = new HashMap<>();
 
     private static CodeTimeToolWindow win;
     private static boolean refreshing = false;
@@ -38,7 +38,7 @@ public class CodeTimeToolWindow {
         this.rebuildTreeView(true);
 
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        codetimeWindowContent.setBackground((Color) null);
+        codetimeWindowContent.setBackground(null);
 
         win = this;
     }
@@ -110,7 +110,7 @@ public class CodeTimeToolWindow {
         Component component = dataPanel.getComponent(dataPanel.getComponentCount() - 1);
 
         dataPanel.removeAll();
-        dataPanel.setBackground((Color) null);
+        dataPanel.setBackground(null);
 
         JBList<JLabel> signupLabels = TreeItemBuilder.buildSignupLabels();
         dataPanel.add(signupLabels, gridConstraints(dataPanel.getComponentCount(), 1, 2, 0, 3, 0));

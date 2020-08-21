@@ -189,7 +189,7 @@ public class TreeItemBuilder {
                 if (lbl != null) {
                     if (lbl.getName().equals("webdashboard")) {
                         // if they're not logged in, launch the onboarding
-                        boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
+                        boolean isLoggedIn = SoftwareCoUtils.isLoggedIn();
                         if (!isLoggedIn) {
                             SoftwareCoSessionManager.launchLogin("software", UIInteractionType.click);
                         } else {
@@ -530,7 +530,7 @@ public class TreeItemBuilder {
             }
         });
 
-        tree.setBackground((Color)null);
+        tree.setBackground(null);
         TreePath p = new TreePath(model.getPathToRoot(openChangesNode));
 
         // set the expansion
@@ -652,7 +652,7 @@ public class TreeItemBuilder {
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
 
-        tree.setBackground((Color)null);
+        tree.setBackground(null);
         TreePath p = new TreePath(model.getPathToRoot(node));
 
         // set the expansion
@@ -682,7 +682,7 @@ public class TreeItemBuilder {
         return tree;
     }
 
-    private static List<String> toggleItems = Arrays.asList("ct_codetime_toggle_node",
+    private static final List<String> toggleItems = Arrays.asList("ct_codetime_toggle_node",
             "ct_active_codetime_toggle_node",
             "ct_lines_added_toggle_node",
             "ct_lines_removed_toggle_node",

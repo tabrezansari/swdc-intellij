@@ -7,7 +7,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 public class SoftwareCoFileEditorListener implements FileEditorManagerListener {
 
-    private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
+    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
 
     @Override
     public void fileOpened(FileEditorManager manager, VirtualFile file) {

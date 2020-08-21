@@ -10,7 +10,7 @@ import com.intellij.openapi.editor.event.DocumentListener;
 
 public class SoftwareCoDocumentListener implements DocumentListener {
 
-    private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
+    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
 
     @Override
     public void beforeDocumentChange(DocumentEvent documentEvent) {

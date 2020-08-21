@@ -29,8 +29,8 @@ public class FileManager {
 
     // a semaphore with 1 permit is the same as a mutex
     // multiple windows will have their own static lock object instance
-    private static Object WRITE_DATA = new Object();
-    private static Object APPEND_DATA = new Object();
+    private static final Object WRITE_DATA = new Object();
+    private static final Object APPEND_DATA = new Object();
 
     public static void clearLastSavedKeystrokeStats() {
         lastSavedKeystrokeStats = null;
@@ -94,7 +94,7 @@ public class FileManager {
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(f), Charset.forName("UTF-8")));
+                        new FileOutputStream(f), StandardCharsets.UTF_8));
                 writer.write(content);
             } catch (IOException e) {
                 log.warning("Code Time: Error writing content: " + e.getMessage());
@@ -239,7 +239,7 @@ public class FileManager {
             Writer writer = null;
             try {
                 writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(f), Charset.forName("UTF-8")));
+                        new FileOutputStream(f), StandardCharsets.UTF_8));
                 writer.write(content);
             } catch (IOException ex) {
                 // Report
@@ -466,10 +466,7 @@ public class FileManager {
         if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
             return sessionJson.get(key).getAsString();
         }
-        if (defaultVal != null) {
-            return defaultVal;
-        }
-        return null;
+        return defaultVal;
     }
 
     public static void setNumericItem(String key, long val) {
@@ -543,7 +540,7 @@ public class FileManager {
         if (f.exists()) {
             try {
                 byte[] encoded = Files.readAllBytes(Paths.get(file));
-                content = new String(encoded, Charset.forName("UTF-8"));
+                content = new String(encoded, StandardCharsets.UTF_8);
             } catch (Exception e) {
                 log.warning("Code Time: Error trying to read and parse: " + e.getMessage());
             }

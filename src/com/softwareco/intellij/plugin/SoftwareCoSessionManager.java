@@ -44,7 +44,7 @@ public class SoftwareCoSessionManager {
 
     public static boolean jwtExists() {
         String jwt = FileManager.getItem("jwt");
-        return (jwt != null && !jwt.equals("")) ? true : false;
+        return jwt != null && !jwt.equals("");
     }
 
     public static String getCodeTimeDashboardFile() {
@@ -92,7 +92,7 @@ public class SoftwareCoSessionManager {
             file += "/SummaryInfo.txt";
         }
         return file;
-    };
+    }
 
     public static String getSoftwareSessionFile(boolean autoCreate) {
         String file = getSoftwareDir(autoCreate);
@@ -107,7 +107,7 @@ public class SoftwareCoSessionManager {
     public synchronized static boolean isServerOnline() {
         long nowInSec = Math.round(System.currentTimeMillis() / 1000);
         // 5 min threshold
-        boolean pastThreshold = (nowInSec - lastAppAvailableCheck > (60 * 5)) ? true : false;
+        boolean pastThreshold = nowInSec - lastAppAvailableCheck > (60 * 5);
         if (pastThreshold) {
             SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
             SoftwareCoUtils.updateServerStatus(resp.isOk());
