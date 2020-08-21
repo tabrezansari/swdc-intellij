@@ -55,7 +55,7 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
         this.iconName = iconName;
     }
 
-    public Object getData() { return data; };
+    public Object getData() { return data; }
 
     public void setData(Object obj) {
         this.data = obj;

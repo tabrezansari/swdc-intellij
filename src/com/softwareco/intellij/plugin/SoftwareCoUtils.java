@@ -23,8 +23,12 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
+import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -37,8 +41,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import javax.swing.*;
 import java.io.*;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.time.*;
@@ -50,6 +56,7 @@ import java.util.concurrent.Future;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class SoftwareCoUtils {
 
@@ -63,7 +70,7 @@ public class SoftwareCoUtils {
     public static HttpClient httpClient;
     public static HttpClient pingClient;
 
-    private static Gson gson = new Gson();
+    private static final Gson gson = new Gson();
 
     public static KeystrokeCount latestPayload = null;
 
@@ -78,15 +85,15 @@ public class SoftwareCoUtils {
     private static boolean appAvailable = true;
     private static boolean showStatusText = true;
 
-    private static int lastDayOfMonth = 0;
+    private static final int lastDayOfMonth = 0;
 
-    private static int DASHBOARD_LABEL_WIDTH = 25;
-    private static int DASHBOARD_VALUE_WIDTH = 25;
+    private static final int DASHBOARD_LABEL_WIDTH = 25;
+    private static final int DASHBOARD_VALUE_WIDTH = 25;
 
-    private static String SERVICE_NOT_AVAIL =
+    private static final String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
 
-    private static long DAYS_IN_SECONDS = 60 * 60 * 24;
+    private static final long DAYS_IN_SECONDS = 60 * 60 * 24;
 
     private static String workspace_name = null;
 
@@ -116,10 +123,7 @@ public class SoftwareCoUtils {
 
     public static boolean isLoggedIn() {
         String name = FileManager.getItem("name");
-        if (name != null && !name.equals("")) {
-            return true;
-        }
-        return false;
+        return name != null && !name.equals("");
     }
 
 
@@ -153,14 +157,66 @@ public class SoftwareCoUtils {
     public static Project getProjectForPath(String path) {
         Editor[] editors = EditorFactory.getInstance().getAllEditors();
         if (editors != null && editors.length > 0) {
-            for (int i = 0; i < editors.length; i++) {
-                Editor editor = editors[i];
-                if (path.indexOf(editor.getProject().getBasePath()) != -1) {
+            for (Editor editor : editors) {
+                String basePath = editor.getProject().getBasePath();
+                if (path.indexOf(basePath) != -1) {
                     return editor.getProject();
                 }
             }
         }
         return null;
+    }
+
+    public static FileDetails getFileDetails(String fullFileName) {
+        FileDetails fileDetails = new FileDetails();
+        if (StringUtils.isNotBlank(fullFileName)) {
+            fileDetails.full_file_name = fullFileName;
+            Project p = getProjectForPath(fullFileName);
+            if (p != null) {
+                fileDetails.project_directory = p.getBasePath();
+                fileDetails.project_name = p.getName();
+            }
+
+            File f = new File(fullFileName);
+
+            if (f.exists()) {
+                fileDetails.character_count = f.length();
+                fileDetails.file_name = f.getName();
+                if (StringUtils.isNotBlank(fileDetails.project_directory)) {
+                    // strip out the project_file_name
+                    fileDetails.project_file_name = fullFileName.split(fileDetails.project_directory)[1];
+                } else {
+                    fileDetails.project_file_name = fullFileName;
+                }
+                fileDetails.line_count = getLineCount(fullFileName);
+
+                VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(f);
+                if (vFile != null) {
+                    fileDetails.syntax = vFile.getFileType().getName();
+                }
+            }
+        }
+
+        return fileDetails;
+    }
+
+    public static int getLineCount(String fileName) {
+        Stream<String> stream = null;
+        try {
+            Path path = Paths.get(fileName);
+            stream = Files.lines(path);
+            return (int) stream.count();
+        } catch (Exception e) {
+            return 0;
+        } finally {
+            if (stream != null) {
+                try {
+                    stream.close();
+                } catch (Exception e) {
+                    //
+                }
+            }
+        }
     }
 
     public static String getUserHomeDir() {
@@ -193,7 +249,7 @@ public class SoftwareCoUtils {
     }
 
     public static boolean isLinux() {
-        return (isWindows() || isMac()) ? false : true;
+        return !isWindows() && !isMac();
     }
 
     public static boolean isWindows() {
@@ -264,7 +320,7 @@ public class SoftwareCoUtils {
                                 JsonElement jsonEl = readAsJsonElement(jsonStr);
                                 if (jsonEl != null) {
                                     try {
-                                        JsonElement el = (JsonElement)jsonEl;
+                                        JsonElement el = jsonEl;
                                         if (el.isJsonPrimitive()) {
                                             if (statusCode < 300) {
                                                 softwareResponse.setDataMessage(el.getAsString());
@@ -272,7 +328,7 @@ public class SoftwareCoUtils {
                                                 softwareResponse.setErrorMessage(el.getAsString());
                                             }
                                         } else {
-                                            jsonObj = ((JsonElement) jsonEl).getAsJsonObject();
+                                            jsonObj = jsonEl.getAsJsonObject();
                                             softwareResponse.setJsonObj(jsonObj);
                                         }
                                     } catch (Exception e) {
@@ -325,7 +381,7 @@ public class SoftwareCoUtils {
 
         StringBuffer sb = new StringBuffer();
         InputStreamReader reader;
-        reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+        reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
 
         BufferedReader br = new BufferedReader(reader);
         boolean done = false;
@@ -349,13 +405,22 @@ public class SoftwareCoUtils {
         return showStatusText;
     }
 
-    public static void toggleStatusBar() {
+    public static void toggleStatusBar(UIInteractionType interactionType) {
+        String cta_text = !showStatusText ? "Show status bar metrics" : "Hide status bar metrics";
         showStatusText = !showStatusText;
 
         WallClockManager.getInstance().dispatchStatusViewUpdate();
 
         // refresh the tree
         CodeTimeToolWindow.refresh();
+
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_toggle_status_bar_metrics_btn" : "ct_toggle_status_bar_metrics_cmd";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = interactionType == UIInteractionType.click ? "blue" : null;
+        elementEntity.cta_text = cta_text;
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "slash-eye" : null;
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     public static Project getOpenProject() {
@@ -446,7 +511,7 @@ public class SoftwareCoUtils {
             try {
                 str = String.format("%.1f", hours) + " hrs";
             } catch (Exception e) {
-                str = String.format("%s hrs", String.valueOf(Math.round(hours)));
+                str = String.format("%s hrs", Math.round(hours));
             }
         } else if (minutes == 1) {
             str = "1 min";
@@ -532,8 +597,16 @@ public class SoftwareCoUtils {
         BrowserUtil.browse("https://github.com/swdotcom/swdc-intellij/issues");
     }
 
-    public static void submitFeedback() {
+    public static void submitFeedback(UIInteractionType interactionType) {
         BrowserUtil.browse("mailto:cody@software.com");
+
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_submit_feedback_btn" : "ct_submit_feedback_cmd";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = null;
+        elementEntity.cta_text = "Submit feedback";
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "text-bubble" : null;
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     public static void buildCodeTimeMetricsDashboard() {
@@ -607,17 +680,19 @@ public class SoftwareCoUtils {
         FileEditorManager.getInstance(p).openTextEditor(descriptor, true);
     }
 
-    public static void launchCodeTimeMetricsDashboard() {
+    public static void launchCodeTimeMetricsDashboard(UIInteractionType interactionType) {
         buildCodeTimeMetricsDashboard();
 
         String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
         launchFile(codeTimeFile);
 
-        EventManager.createCodeTimeEvent(
-                "mouse",
-                "click",
-                "LaunchDashboard"
-        );
+        UIElementEntity elementEntity = new UIElementEntity();
+        elementEntity.element_name = interactionType == UIInteractionType.click ? "ct_summary_btn" : "ct_summary_cmd";
+        elementEntity.element_location = interactionType == UIInteractionType.click ? "ct_menu_tree" : "ct_command_palette";
+        elementEntity.color = interactionType == UIInteractionType.click ? "purple" : null;
+        elementEntity.cta_text = "View summary";
+        elementEntity.icon_name = interactionType == UIInteractionType.click ? "guage" : null;
+        EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
     }
 
     private static String getSingleLineResult(List<String> cmd, int maxLen) {
@@ -726,8 +801,8 @@ public class SoftwareCoUtils {
         return null;
     }
 
-    private static String regex = "^\\S+@\\S+\\.\\S+$";
-    private static Pattern pattern = Pattern.compile(regex);
+    private static final String regex = "^\\S+@\\S+\\.\\S+$";
+    private static final Pattern pattern = Pattern.compile(regex);
 
     private static boolean validateEmail(String email) {
         return pattern.matcher(email).matches();
@@ -784,29 +859,6 @@ public class SoftwareCoUtils {
         loggedIn = getUserLoginState(serverIsOnline);
 
         return loggedIn;
-    }
-
-    public static void sendHeartbeat(String reason) {
-        boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-        String jwt = FileManager.getItem("jwt");
-        if (serverIsOnline && jwt != null) {
-
-            long start = Math.round(System.currentTimeMillis() / 1000);
-
-            JsonObject payload = new JsonObject();
-            payload.addProperty("pluginId", pluginId);
-            payload.addProperty("os", getOs());
-            payload.addProperty("start", start);
-            payload.addProperty("version", VERSION);
-            payload.addProperty("hostname", getHostname());
-            payload.addProperty("trigger_annotation", reason);
-
-            String api = "/data/heartbeat";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payload.toString(), jwt);
-            if (!resp.isOk()) {
-                LOG.log(Level.WARNING, pluginName + ": unable to send heartbeat ping");
-            }
-        }
     }
 
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
@@ -907,10 +959,7 @@ public class SoftwareCoUtils {
     public static boolean isNewDay() {
         String currentDay = FileManager.getItem("currentDay", "");
         String day = SoftwareCoUtils.getTodayInStandardFormat();
-        if (!day.equals(currentDay)) {
-            return true;
-        }
-        return false;
+        return !day.equals(currentDay);
     }
 
     public static String getDashboardRow(String label, String value) {

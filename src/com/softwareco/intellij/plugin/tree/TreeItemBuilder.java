@@ -7,13 +7,11 @@ import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.components.JBList;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
-import com.softwareco.intellij.plugin.managers.EventManager;
-import com.softwareco.intellij.plugin.managers.FileManager;
-import com.softwareco.intellij.plugin.managers.ReportManager;
+import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.*;
 import com.softwareco.intellij.plugin.repo.GitUtil;
-import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.swdc.snowplow.tracker.entities.UIElementEntity;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
 
 import javax.swing.*;
@@ -36,6 +34,7 @@ public class TreeItemBuilder {
     private static String dayStr = "";
 
     private static boolean expandInitNodes = false;
+    private static String selectedNodeName = null;
 
     public static void initializeSessionSummary(boolean initializing) {
         sessionSummary = SessionDataManager.getSessionSummaryData();
@@ -74,6 +73,14 @@ public class TreeItemBuilder {
                         if (lbl != null) {
                             if (lbl.getName().equals("contributor_title")) {
                                 ReportManager.displayProjectContributorSummaryDashboard(lbl.getText());
+
+                                UIElementEntity elementEntity = new UIElementEntity();
+                                elementEntity.element_name = "ct_contributor_repo_identifier_btn";
+                                elementEntity.element_location = "ct_contributors_tree";
+                                elementEntity.color = null;
+                                elementEntity.cta_text = "redacted";
+                                elementEntity.icon_name = "repo";
+                                EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, elementEntity);
                             }
                         }
                     }
@@ -125,11 +132,11 @@ public class TreeItemBuilder {
                     JLabel lbl = lst.getSelectedValue();
                     if (lbl != null) {
                         if (lbl.getName().equals("signup-google")) {
-                            SoftwareCoSessionManager.launchLogin("google");
+                            SoftwareCoSessionManager.launchLogin("google", UIInteractionType.click);
                         } else if (lbl.getName().equals("signup-github")) {
-                            SoftwareCoSessionManager.launchLogin("github");
+                            SoftwareCoSessionManager.launchLogin("github", UIInteractionType.click);
                         } else if (lbl.getName().equals("signup-email")) {
-                            SoftwareCoSessionManager.launchLogin("software");
+                            SoftwareCoSessionManager.launchLogin("software", UIInteractionType.click);
                         }
                     }
                 }
@@ -182,20 +189,20 @@ public class TreeItemBuilder {
                 if (lbl != null) {
                     if (lbl.getName().equals("webdashboard")) {
                         // if they're not logged in, launch the onboarding
-                        boolean isLoggedIn = (!SoftwareCoUtils.isLoggedIn()) ? false : true;
+                        boolean isLoggedIn = SoftwareCoUtils.isLoggedIn();
                         if (!isLoggedIn) {
-                            SoftwareCoSessionManager.launchLogin("software");
+                            SoftwareCoSessionManager.launchLogin("software", UIInteractionType.click);
                         } else {
-                            SoftwareCoSessionManager.launchWebDashboard();
+                            SoftwareCoSessionManager.launchWebDashboard(UIInteractionType.click);
                         }
                     } else if (lbl.getName().equals("editordashboard")) {
-                        SoftwareCoUtils.launchCodeTimeMetricsDashboard();
+                        SoftwareCoUtils.launchCodeTimeMetricsDashboard(UIInteractionType.click);
                     } else if (lbl.getName().equals("submitfeedback")) {
-                        SoftwareCoUtils.submitFeedback();
+                        SoftwareCoUtils.submitFeedback(UIInteractionType.click);
                     } else if (lbl.getName().equals("learnmore")) {
-                        FileManager.openReadmeFile();
+                        FileManager.openReadmeFile(UIInteractionType.click);
                     } else if (lbl.getName().equals("togglestatus")) {
-                        SoftwareCoUtils.toggleStatusBar();
+                        SoftwareCoUtils.toggleStatusBar(UIInteractionType.click);
                     }
                 }
             }
@@ -243,20 +250,17 @@ public class TreeItemBuilder {
         JLabel label = new JLabel();
         String authType = FileManager.getItem("authType");
         String name = FileManager.getItem("name");
-        String tooltip = name != null ? "Connected as " + name : "";
         String iconName = "envelope.svg";
-        String text = "Connected using email";
-        if (authType != null && authType.equals("google")) {
+        if ("google".equals(authType)) {
             iconName = "icons8-google.svg";
-            text = "Connected using Google";
-        } else if (authType != null && authType.equals("github")) {
+        } else if ("github".equals(authType)) {
             iconName = "icons8-github.svg";
-            text = "Connected using GitHub";
         }
+
         Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
         label.setIcon(icon);
-        label.setText(text);
-        label.setName("connected-" + authType);
+        label.setText(name);
+        label.setName("loggedin-" + authType);
         return label;
     }
 
@@ -501,11 +505,13 @@ public class TreeItemBuilder {
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, true);
             }
 
             @Override
             public void treeCollapsed(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, false);
             }
         });
@@ -524,7 +530,7 @@ public class TreeItemBuilder {
             }
         });
 
-        tree.setBackground((Color)null);
+        tree.setBackground(null);
         TreePath p = new TreePath(model.getPathToRoot(openChangesNode));
 
         // set the expansion
@@ -614,11 +620,13 @@ public class TreeItemBuilder {
         tree.addTreeExpansionListener(new TreeExpansionListener() {
             @Override
             public void treeExpanded(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, true);
             }
 
             @Override
             public void treeCollapsed(TreeExpansionEvent e) {
+                selectedNodeName = getSelectedNodeName(e);
                 updateExpandState(e, false);
             }
         });
@@ -644,7 +652,7 @@ public class TreeItemBuilder {
         renderer.setBackgroundNonSelectionColor(new Color(0,0,0,0));
         renderer.setBorderSelectionColor(new Color(0,0,0,0));
 
-        tree.setBackground((Color)null);
+        tree.setBackground(null);
         TreePath p = new TreePath(model.getPathToRoot(node));
 
         // set the expansion
@@ -674,6 +682,39 @@ public class TreeItemBuilder {
         return tree;
     }
 
+    private static final List<String> toggleItems = Arrays.asList("ct_codetime_toggle_node",
+            "ct_active_codetime_toggle_node",
+            "ct_lines_added_toggle_node",
+            "ct_lines_removed_toggle_node",
+            "ct_keystrokes_toggle_node",
+            "ct_files_changed_toggle_node",
+            "ct_top_files_by_kpm_toggle_node",
+            "ct_top_files_by_keystrokes_toggle_node",
+            "ct_top_files_by_codetime_toggle_node",
+            "ct_open_changes_toggle_node",
+            "ct_committed_today_toggle_node");
+
+    private static String getToggleItem(String normalizedLabel) {
+        for (String toggleItem : toggleItems) {
+            // strip off "ct_" and "_toggle_node" and replace the "_" with ""
+            String normalizedToggleItem = toggleItem.replace("ct_", "").replace("_toggle_node", "").replaceAll("_", "");
+            if (normalizedLabel.toLowerCase().indexOf(normalizedToggleItem) != -1) {
+                return toggleItem;
+            }
+        }
+        return null;
+    }
+
+    private static String getSelectedNodeName(TreeExpansionEvent e) {
+        MetricTree mTree = (MetricTree)e.getSource();
+        DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
+        MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
+        if (mtNode != null && mtNode.getUserObject() != null) {
+            return mtNode.getUserObject().toString();
+        }
+        return null;
+    }
+
     private static void updateExpandState(TreeExpansionEvent e, boolean expanded) {
         TreePath path = e.getPath();
 
@@ -681,9 +722,32 @@ public class TreeItemBuilder {
         DefaultTreeModel dfModel = (DefaultTreeModel)mTree.getModel();
         MetricTreeNode mtNode = (MetricTreeNode)dfModel.getRoot();
         String id = mtNode.getId();
+        String nodeName = getSelectedNodeName(e);
 
-        if (expanded) {
-            EventManager.createCodeTimeEvent("mouse", "click", "TreeViewItemExpand_" + id);
+        // this gets called when the tree is initialized, prevent sending these events during that time
+        List<CodeTimeToolWindow.ExpandState> nodeStates = CodeTimeToolWindow.getExpandState(id);
+        // only update if the nodeStates is not null and the state doesn't match the one coming in
+        boolean updateState = false;
+        if (nodeStates != null) {
+            for (CodeTimeToolWindow.ExpandState existingState : nodeStates) {
+                if (existingState.path.toString().equals(path.toString())) {
+                    if (existingState.expand != expanded) {
+                        updateState = true;
+                    }
+                    break;
+                }
+            }
+        }
+        if (updateState) {
+            // label will look like "Linesadded" or ct_lines_added_toggle_node
+            String toggleItemName = getToggleItem(id);
+            if (toggleItemName != null) {
+                UIElementEntity uiElementEntity = new UIElementEntity();
+                uiElementEntity.element_location = "ct_metrics_tree";
+                uiElementEntity.element_name = toggleItemName;
+                uiElementEntity.cta_text = nodeName;
+                EventTrackerManager.getInstance().trackUIInteraction(UIInteractionType.click, uiElementEntity);
+            }
         }
 
         CodeTimeToolWindow.updateExpandState(id, path, expanded);
@@ -699,7 +763,7 @@ public class TreeItemBuilder {
                     SoftwareCoUtils.launchFile(fsPath);
                 } else if (selectedNode.getPath() != null && selectedNode.getData() instanceof String &&
                     String.valueOf(selectedNode.getData()).indexOf("http") != -1) {
-                    // launch the url
+                    // launch the commit url
                     String url = String.valueOf(selectedNode.getData());
                     BrowserUtil.browse(url);
                 }

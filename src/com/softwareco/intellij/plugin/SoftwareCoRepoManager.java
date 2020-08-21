@@ -17,17 +17,13 @@ public class SoftwareCoRepoManager {
 
     private static SoftwareCoRepoManager instance = null;
 
-    private JsonObject currentTrack = new JsonObject();
+    private final JsonObject currentTrack = new JsonObject();
 
     public static SoftwareCoRepoManager getInstance() {
         if (instance == null) {
             instance = new SoftwareCoRepoManager();
         }
         return instance;
-    }
-
-    private String buildRepoKey(String identifier, String branch, String tag) {
-        return identifier + "_" + branch + "_" + tag;
     }
 
     public JsonObject getLatestCommit(String projectDir) {

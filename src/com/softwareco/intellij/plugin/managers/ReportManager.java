@@ -16,14 +16,14 @@ import java.util.List;
 
 public class ReportManager {
 
-    private static int DASHBOARD_LABEL_WIDTH = 28;
-    private static int DASHBOARD_VALUE_WIDTH = 36;
-    private static int DASHBOARD_COL_WIDTH = 21;
-    private static int DASHBOARD_LRG_COL_WIDTH = 38;
-    private static int TABLE_WIDTH = 80;
+    private static final int DASHBOARD_LABEL_WIDTH = 28;
+    private static final int DASHBOARD_VALUE_WIDTH = 36;
+    private static final int DASHBOARD_COL_WIDTH = 21;
+    private static final int DASHBOARD_LRG_COL_WIDTH = 38;
+    private static final int TABLE_WIDTH = 80;
 
-    private static SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
-    private static SimpleDateFormat formatDayYear = new SimpleDateFormat("MMM d, YYYY");
+    private static final SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
+    private static final SimpleDateFormat formatDayYear = new SimpleDateFormat("MMM d, YYYY");
 
     public static String getProjectContributorSummaryFile() {
         String file = SoftwareCoSessionManager.getSoftwareDir(true);

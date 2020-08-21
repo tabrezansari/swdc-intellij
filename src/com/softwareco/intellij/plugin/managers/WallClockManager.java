@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.EditorFactory;
 import com.softwareco.intellij.plugin.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.SessionSummary;
@@ -21,8 +22,7 @@ public class WallClockManager {
     private static final int DAY_CHECK_TIMER_INTERVAL = 60;
 
     private static WallClockManager instance = null;
-    private AsyncManager asyncManager = AsyncManager.getInstance();
-
+    private AsyncManager asyncManager;
     private static boolean dispatching = false;
 
     public static WallClockManager getInstance() {
@@ -37,6 +37,7 @@ public class WallClockManager {
     }
 
     private WallClockManager() {
+        asyncManager = AsyncManager.getInstance();
         // initialize the timer
         this.init();
     }
@@ -63,9 +64,6 @@ public class WallClockManager {
 
             // send the time data
             TimeDataManager.sendOfflineTimeData();
-
-            // send the events data
-            EventManager.sendOfflineEvents();
 
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();
@@ -100,7 +98,7 @@ public class WallClockManager {
                 // make sure it's a boolean and not a number
                 if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
                     // set it to boolean
-                    boolean newVal = lastUpdatedToday.getAsInt() == 0 ? false : true;
+                    boolean newVal = lastUpdatedToday.getAsInt() != 0;
                     jsonObj.addProperty("lastUpdatedToday", newVal);
                 }
             }
@@ -109,7 +107,7 @@ public class WallClockManager {
                 // make sure it's a boolean and not a number
                 if (!inFlow.getAsJsonPrimitive().isBoolean()) {
                     // set it to boolean
-                    boolean newVal = inFlow.getAsInt() == 0 ? false : true;
+                    boolean newVal = inFlow.getAsInt() != 0;
                     jsonObj.addProperty("inFlow", newVal);
                 }
             }

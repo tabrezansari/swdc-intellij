@@ -4,6 +4,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
 import com.softwareco.intellij.plugin.managers.FileManager;
+import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,7 +31,7 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
         eventHandler = new Consumer<MouseEvent>() {
             @Override
             public void consume(MouseEvent mouseEvent) {
-                sessionMgr.statusBarClickHandler(mouseEvent, id);
+                sessionMgr.statusBarClickHandler();
             }
         };
     }

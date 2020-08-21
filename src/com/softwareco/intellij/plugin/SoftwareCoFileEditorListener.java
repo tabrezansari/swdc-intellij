@@ -4,11 +4,10 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.FileEditorManagerEvent;
 import com.intellij.openapi.fileEditor.FileEditorManagerListener;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.NotNull;
 
 public class SoftwareCoFileEditorListener implements FileEditorManagerListener {
 
-    private SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
+    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
 
     @Override
     public void fileOpened(FileEditorManager manager, VirtualFile file) {

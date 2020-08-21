@@ -29,7 +29,7 @@ public class FileAggregateDataManager {
         FileManager.writeData(getFileChangeSummaryFile(), fileInfoMap);
     }
 
-    public static Map<String, FileChangeInfo>  getFileChangeInfo() {
+    public static Map<String, FileChangeInfo> getFileChangeInfo() {
         Map<String, FileChangeInfo> fileInfoMap = new HashMap<>();
         JsonObject jsonObj = FileManager.getFileContentAsJson(getFileChangeSummaryFile());
         if (jsonObj != null) {

@@ -7,15 +7,11 @@ package com.softwareco.intellij.plugin;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
-import com.softwareco.intellij.plugin.managers.FileManager;
-import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.managers.SessionDataManager;
-import com.softwareco.intellij.plugin.managers.TimeDataManager;
-import com.softwareco.intellij.plugin.managers.WallClockManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,8 +44,7 @@ public class KeystrokeCount {
     public String hostname = "";
     public String project_null_error = "";
 
-    private boolean triggered = false;
-
+    public boolean triggered = false;
 
     public KeystrokeCount() {
         String appVersion = SoftwareCo.getVersion();
@@ -132,6 +127,27 @@ public class KeystrokeCount {
         public long duration_seconds = 0;
         public String fsPath = "";
         public String name = "";
+        // new attributes for snowplow
+        public int characters_added = 0; // chars added
+        public int characters_deleted = 0; // chars deleted
+        public int single_deletes = 0; // single char or single line delete
+        public int multi_deletes = 0; // multi char or multi line delete
+        public int single_adds = 0; // single char or single line add
+        public int multi_adds = 0; // multi char or multi line add
+        public int auto_indents = 0;
+        public int replacements = 0;
+        public boolean is_net_change = false;
+
+        @Override
+        public String toString() {
+            return "FileInfo [add=" + add + ", paste=" + paste + ", open=" + open
+                    + "\n, close=" + close + ", delete=" + delete + ", length=" + length + ", lines=" + lines
+                    + "\n, linesAdded=" + linesAdded + ", linesRemoved=" + linesRemoved + ", keystrokes=" + keystrokes
+                    + "\n, syntax=" + syntax + ", characters_added=" + characters_added + ", characters_deleted="
+                    + characters_deleted + "\n, single_deletes=" + single_deletes + ", multi_deletes=" + multi_deletes
+                    + "\n, single_adds=" + single_adds + ", multi_adds=" + multi_adds + ", auto_indents=" + auto_indents
+                    + "\n, replacements=" + replacements + ", is_net_change=" + is_net_change + "]";
+        }
     }
 
     public FileInfo getSourceByFileName(String fileName) {
@@ -142,7 +158,11 @@ public class KeystrokeCount {
             new Timer().schedule(new TimerTask() {
                 @Override
                 public void run() {
-                    processKeystrokes();
+                    // check if its still in a triggered (true) state before processing
+                    // it, as the unfocus event can also process the keystrokes
+                    if (triggered) {
+                        processKeystrokes();
+                    }
                     triggered = false;
                 }
             }, 1000 * 60);
@@ -176,10 +196,6 @@ public class KeystrokeCount {
         return fileInfoData;
     }
 
-    public String getSource() {
-        return SoftwareCo.gson.toJson(source);
-    }
-
     public void endPreviousModifiedFiles(String fileName) {
         SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
         if (this.source != null) {
@@ -196,27 +212,13 @@ public class KeystrokeCount {
         }
     }
 
+    public Map<String, FileInfo> getFileInfos() {
+        return this.source;
+    }
+
     // update each source with it's true amount of keystrokes
     public boolean hasData() {
-        boolean foundKpmData = false;
-        if (this.keystrokes > 0 || this.hasOpenAndCloseMetrics()) {
-            foundKpmData = true;
-        }
-
-        int keystrokesTally = 0;
-
-        // tally the metrics to set the keystrokes for each source key
-        Map<String, FileInfo> fileInfoDataSet = this.source;
-        for ( FileInfo data : fileInfoDataSet.values() ) {
-            data.keystrokes = data.add + data.paste + data.delete + data.linesAdded + data.linesRemoved;
-            keystrokesTally += data.keystrokes;
-        }
-
-        if (keystrokesTally > this.keystrokes) {
-            this.keystrokes = keystrokesTally;
-        }
-
-        return foundKpmData;
+        return this.keystrokes > 0 ? true : false;
     }
 
     public void processKeystrokes() {
@@ -252,8 +254,11 @@ public class KeystrokeCount {
                 // end the file end times.
                 this.preProcessKeystrokeData(eTime.sessionSeconds, eTime.elapsedSeconds);
 
-                // update the file aggregate info.
+                // update the file aggregate info
                 this.updateAggregates(eTime.sessionSeconds);
+
+                // send the event to the event tracker
+                EventTrackerManager.getInstance().trackCodeTimeEvent(this);
 
                 final String payload = SoftwareCo.gson.toJson(this);
 
@@ -265,13 +270,12 @@ public class KeystrokeCount {
 
                 // set the latest payload
                 SoftwareCoUtils.setLatestPayload(this);
-            }
 
-            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
-            // set the latest payload timestamp utc so help with session time calculations
-            FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+                SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+                // set the latest payload timestamp utc so help with session time calculations
+                FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+            }
         } catch (Exception e) {
-            //
         }
 
         this.resetData();
