@@ -123,6 +123,9 @@ public class SoftwareCoEventManager {
         boolean hasAutoIndent = text.matches("^\\s{2,4}$") || TAB_PATTERN.matcher(text).find();
         boolean newLineAutoIndent = text.matches("^\n\\s{2,4}$") || NEW_LINE_TAB_PATTERN.matcher(text).find();
 
+        // update the deletion keystrokes if there are lines removed
+        numDeleteKeystrokes = numDeleteKeystrokes >= linesRemoved ? numDeleteKeystrokes - linesRemoved : numDeleteKeystrokes;
+
         // event updates
         if (newLineAutoIndent) {
             // it's a new line with auto-indent
@@ -150,6 +153,7 @@ public class SoftwareCoEventManager {
             // pasted characters (multi_adds)
             fileInfo.paste += 1;
             fileInfo.multi_adds += 1;
+            fileInfo.is_net_change = true;
             fileInfo.characters_added += numKeystrokes;
         } else if (numKeystrokes == 1) {
             // it's a single keystroke action (single_adds)
@@ -160,9 +164,10 @@ public class SoftwareCoEventManager {
             // it's a single line deletion
             fileInfo.linesRemoved += 1;
             fileInfo.single_deletes += 1;
+            fileInfo.characters_deleted += numDeleteKeystrokes;
         } else if (linesRemoved > 1) {
             // it's a multi line deletion and may contain characters
-            fileInfo.characters_deleted += Math.abs(numDeleteKeystrokes - linesRemoved);
+            fileInfo.characters_deleted += numDeleteKeystrokes;
             fileInfo.multi_deletes += 1;
             fileInfo.linesRemoved += linesRemoved;
         } else if (numDeleteKeystrokes == 1) {
@@ -173,6 +178,7 @@ public class SoftwareCoEventManager {
         } else if (numDeleteKeystrokes > 1) {
             // it's a multi character deletion action
             fileInfo.multi_deletes += 1;
+            fileInfo.is_net_change = true;
             fileInfo.characters_deleted += numDeleteKeystrokes;
         }
 

@@ -136,6 +136,7 @@ public class KeystrokeCount {
         public int multi_adds = 0; // multi char or multi line add
         public int auto_indents = 0;
         public int replacements = 0;
+        public boolean is_net_change = false;
 
         @Override
         public String toString() {
@@ -145,7 +146,7 @@ public class KeystrokeCount {
                     + "\n, syntax=" + syntax + ", characters_added=" + characters_added + ", characters_deleted="
                     + characters_deleted + "\n, single_deletes=" + single_deletes + ", multi_deletes=" + multi_deletes
                     + "\n, single_adds=" + single_adds + ", multi_adds=" + multi_adds + ", auto_indents=" + auto_indents
-                    + "\n, replacements=" + replacements + "]";
+                    + "\n, replacements=" + replacements + ", is_net_change=" + is_net_change + "]";
         }
     }
 
