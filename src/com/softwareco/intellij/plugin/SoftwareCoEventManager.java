@@ -5,21 +5,15 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.event.DocumentEvent;
-import com.intellij.openapi.editor.impl.event.DocumentEventImpl;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
-import com.softwareco.intellij.plugin.managers.WallClockManager;
 import org.apache.commons.lang.StringUtils;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 
 public class SoftwareCoEventManager {
@@ -186,6 +180,7 @@ public class SoftwareCoEventManager {
         fileInfo.keystrokes += 1;
         keystrokeCount.keystrokes += 1;
 
+        System.out.println(fileInfo.toString());
     }
 
     // this is used to close unended files

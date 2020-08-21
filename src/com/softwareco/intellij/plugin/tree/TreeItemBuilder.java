@@ -250,20 +250,17 @@ public class TreeItemBuilder {
         JLabel label = new JLabel();
         String authType = FileManager.getItem("authType");
         String name = FileManager.getItem("name");
-        String tooltip = name != null ? "Connected as " + name : "";
         String iconName = "envelope.svg";
-        String text = "Connected using email";
-        if (authType != null && authType.equals("google")) {
+        if ("google".equals(authType)) {
             iconName = "icons8-google.svg";
-            text = "Connected using Google";
-        } else if (authType != null && authType.equals("github")) {
+        } else if ("github".equals(authType)) {
             iconName = "icons8-github.svg";
-            text = "Connected using GitHub";
         }
+
         Icon icon = IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
         label.setIcon(icon);
-        label.setText(text);
-        label.setName("connected-" + authType);
+        label.setText(name);
+        label.setName("loggedin-" + authType);
         return label;
     }
 
