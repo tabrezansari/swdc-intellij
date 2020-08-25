@@ -187,8 +187,6 @@ public class SoftwareCoEventManager {
         fileInfo.lines = new_line_count;
         fileInfo.keystrokes += 1;
         keystrokeCount.keystrokes += 1;
-
-        System.out.println(fileInfo.toString());
     }
 
     // this is used to close unended files
