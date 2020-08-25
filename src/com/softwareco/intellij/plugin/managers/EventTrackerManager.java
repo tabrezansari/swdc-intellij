@@ -42,7 +42,7 @@ public class EventTrackerManager {
 
     private void init() {
         trackerMgr = new TrackerManager(
-                SoftwareCoUtils.api_endpoint, "CodeTime", SoftwareCo.getPluginName());
+                SoftwareCoUtils.api_endpoint, "CodeTime", "swdc-intellij");
         ready = true;
     }
 
