@@ -163,6 +163,11 @@ public class SoftwareCoUtils {
                     return editor.getProject();
                 }
             }
+        } else {
+            Project[] projects = ProjectManager.getInstance().getOpenProjects();
+            if (projects != null && projects.length > 0) {
+                return projects[0];
+            }
         }
         return null;
     }
