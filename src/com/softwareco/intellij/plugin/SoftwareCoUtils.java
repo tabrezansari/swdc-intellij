@@ -1058,6 +1058,19 @@ public class SoftwareCoUtils {
      */
     public static String cleanJsonString(String data) {
         data = data.replace("\ufeff", "").replace("/\r\n/g", "").replace("/\n/g", "").trim();
+
+        int braceIdx = data.indexOf("{");
+        int bracketIdx = data.indexOf("[");
+
+        // multi editor writes to the data.json file can cause an undefined string before the json object, remove it
+        if (braceIdx > 0 && (braceIdx < bracketIdx || bracketIdx == -1)) {
+            // there's something before the 1st brace
+            data = data.substring(braceIdx);
+        } else if (bracketIdx > 0 && (bracketIdx < braceIdx || braceIdx == -1)) {
+            // there's something before the 1st bracket
+            data = data.substring(bracketIdx);
+        }
+
         return data;
     }
 
