@@ -343,28 +343,22 @@ public class FileManager {
 
             JsonArray batch = new JsonArray();
             int batch_size = 25;
-            // go through the array about 8
+
+            // go through the array
             for (int i = 0; i < jsonArray.size(); i++) {
                 batch.add(jsonArray.get(i));
                 if (i > 0 && i % batch_size == 0) {
-                    String payloadData = SoftwareCo.gson.toJson(batch);
-                    SoftwareResponse resp =
-                            SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                    if (!resp.isOk()) {
-                        // add these back to the offline file
-                        log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                    boolean succeeded = sendBatchData(jsonArray, batch);
+                    if (!succeeded) {
                         return;
                     }
                     batch = new JsonArray();
                 }
             }
+
             if (batch.size() > 0) {
-                String payloadData = SoftwareCo.gson.toJson(batch);
-                SoftwareResponse resp =
-                        SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
-                if (!resp.isOk()) {
-                    // add these back to the offline file
-                    log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+                boolean succeeded = sendBatchData(jsonArray, batch);
+                if (!succeeded) {
                     return;
                 }
             }
@@ -374,6 +368,22 @@ public class FileManager {
         } catch (Exception e) {
             log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
         }
+    }
+
+    private static boolean sendBatchData(JsonArray jsonArray, JsonArray batch) {
+        String payloadData = SoftwareCo.gson.toJson(batch);
+        SoftwareResponse resp =
+                SoftwareCoUtils.makeApiCall("/data/batch", HttpPost.METHOD_NAME, payloadData);
+        if (!resp.isOk() && resp.getCode() != 401) {
+            // add these back to the offline file and it's not an unauthorized req
+            log.info("Code Time: Unable to send batch data: " + resp.getErrorMessage());
+            if (jsonArray.size() > 1000) {
+                // it's getting too large, delete it
+                deleteFile(getSoftwareDataStoreFile());
+            }
+            return false;
+        }
+        return true;
     }
 
     private static String getReadmeContent() {
@@ -564,7 +574,10 @@ public class FileManager {
             if (jsonArray != null && jsonArray.size() > 0) {
                 Type type = new TypeToken<List<KeystrokeCount>>() {
                 }.getType();
-                List<KeystrokeCount> list = SoftwareCo.gson.fromJson(jsonArray, type);
+                List<KeystrokeCount> list = new ArrayList<>();
+                try {
+                    list = SoftwareCo.gson.fromJson(jsonArray, type);
+                } catch (Exception e) {}
 
                 return list;
             }
@@ -588,6 +601,8 @@ public class FileManager {
                 String line = null;
                 while ((line = br.readLine()) != null) {
                     if (line.length() > 0) {
+                        // clean the line in case there's undefined before the json brace
+                        line = SoftwareCoUtils.cleanJsonString(line);
                         sb.append(line).append(",");
                     }
                 }
@@ -598,6 +613,7 @@ public class FileManager {
                     // we have data to send
                     String payloads = sb.toString();
                     payloads = payloads.substring(0, payloads.lastIndexOf(","));
+
                     payloads = "[" + payloads + "]";
 
                     return payloads;
