@@ -173,9 +173,6 @@ public class SoftwareCo implements ApplicationComponent {
         // setup the doc listeners
         setupEventListeners();
 
-        // check the logged in status
-        SoftwareCoUtils.getLoggedInStatus();
-
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
 
