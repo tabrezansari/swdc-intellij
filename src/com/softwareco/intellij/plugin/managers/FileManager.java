@@ -560,14 +560,11 @@ public class FileManager {
 
     public static KeystrokeCount getLastSavedKeystrokeStats() {
         List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
+
         if (list != null && list.size() > 0) {
-            if (list.size() > 1) {
-                // sort since we have more than 1 element
-                list.sort((o1, o2) -> o2.start < o1.start ? -1 : o2.start > o1.start ? 1 : 0);
-            }
-            // return the top element
-            lastSavedKeystrokeStats = list.get(0);
+            lastSavedKeystrokeStats = Collections.max(list, new KeystrokeCount.SortByLatestStart());
         }
+
         return lastSavedKeystrokeStats;
     }
 
