@@ -8,17 +8,11 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.softwareco.intellij.plugin.managers.*;
-import com.softwareco.intellij.plugin.models.ElapsedTime;
-import com.softwareco.intellij.plugin.models.FileChangeInfo;
-import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
-import com.softwareco.intellij.plugin.models.TimeData;
+import com.softwareco.intellij.plugin.models.*;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 public class KeystrokeCount {
 
@@ -53,6 +47,12 @@ public class KeystrokeCount {
         } else {
             this.version = SoftwareCoUtils.VERSION;
         }
+        this.pluginId = SoftwareCoUtils.pluginId;
+        this.os = SoftwareCoUtils.getOs();
+    }
+
+    public KeystrokeCount(String version) {
+        this.version = version;
         this.pluginId = SoftwareCoUtils.pluginId;
         this.os = SoftwareCoUtils.getOs();
     }
@@ -394,6 +394,17 @@ public class KeystrokeCount {
 
     public void setProject(KeystrokeProject project) {
         this.project = project;
+    }
+
+    /**
+     * Comparator to return the latest start time
+     */
+    public static class SortByLatestStart implements Comparator<KeystrokeCount>
+    {
+        public int compare(KeystrokeCount a, KeystrokeCount b)
+        {
+            return a.start < b.start ? -1 : a.start > a.start ? 1 : 0;
+        }
     }
 
     @Override

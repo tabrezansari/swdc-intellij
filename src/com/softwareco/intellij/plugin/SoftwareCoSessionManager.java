@@ -14,6 +14,7 @@ import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 
 import java.awt.event.MouseEvent;
@@ -136,9 +137,9 @@ public class SoftwareCoSessionManager {
     }
 
     protected static void lazilyFetchUserStatus(int retryCount) {
-        boolean loggedIn = SoftwareCoUtils.getLoggedInStatus();
+        boolean establishedUser = SoftwareCoUtils.getUserLoginState();
 
-        if (!loggedIn && retryCount > 0) {
+        if (!establishedUser && retryCount > 0) {
             final int newRetryCount = retryCount - 1;
 
             final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);

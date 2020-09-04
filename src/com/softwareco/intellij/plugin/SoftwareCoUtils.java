@@ -788,19 +788,17 @@ public class SoftwareCoUtils {
         return null;
     }
 
-    private static JsonObject getUser(boolean serverIsOnline) {
+    private static JsonObject getUser() {
         String jwt = FileManager.getItem("jwt");
-        if (serverIsOnline) {
-            String api = "/users/me";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
-            if (resp.isOk()) {
-                // check if we have the data and jwt
-                // resp.data.jwt and resp.data.user
-                // then update the session.json for the jwt
-                JsonObject obj = resp.getJsonObj();
-                if (obj != null && obj.has("data")) {
-                    return obj.get("data").getAsJsonObject();
-                }
+        String api = "/users/me";
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
+        if (resp.isOk()) {
+            // check if we have the data and jwt
+            // resp.data.jwt and resp.data.user
+            // then update the session.json for the jwt
+            JsonObject obj = resp.getJsonObj();
+            if (obj != null && obj.has("data")) {
+                return obj.get("data").getAsJsonObject();
             }
         }
         return null;
@@ -813,57 +811,41 @@ public class SoftwareCoUtils {
         return pattern.matcher(email).matches();
     }
 
-    private static boolean getUserLoginState(boolean serverIsOnline) {
+    public static boolean getUserLoginState() {
         String pluginjwt = FileManager.getItem("jwt");
-        if (serverIsOnline) {
-            JsonObject userObj = getUser(serverIsOnline);
-            if (userObj != null && userObj.has("email")) {
-                // check if the email is valid
-                String email = userObj.get("email").getAsString();
-                if (validateEmail(email)) {
-                    FileManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
-                    FileManager.setItem("name", email);
-                    return true;
-                }
-            }
 
-            String api = "/users/plugin/state";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, pluginjwt);
-            if (resp.isOk()) {
-                // check if we have the data and jwt
-                // resp.data.jwt and resp.data.user
-                // then update the session.json for the jwt
-                JsonObject data = resp.getJsonObj();
-                String state = (data != null && data.has("state")) ? data.get("state").getAsString() : "UNKNOWN";
-                // check if we have any data
-                if (state.equals("OK")) {
-                    String dataJwt = data.get("jwt").getAsString();
-                    FileManager.setItem("jwt", dataJwt);
-                    String dataEmail = data.get("email").getAsString();
-                    if (dataEmail != null) {
-                        FileManager.setItem("name", dataEmail);
-                    }
-                    return true;
-                }
+        JsonObject userObj = getUser();
+        if (userObj != null && userObj.has("email")) {
+            // check if the email is valid
+            String email = userObj.get("email").getAsString();
+            if (validateEmail(email)) {
+                FileManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
+                FileManager.setItem("name", email);
+                return true;
             }
         }
+
+        String api = "/users/plugin/state";
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, pluginjwt);
+        if (resp.isOk()) {
+            // check if we have the data and jwt
+            // resp.data.jwt and resp.data.user
+            // then update the session.json for the jwt
+            JsonObject data = resp.getJsonObj();
+            String state = (data != null && data.has("state")) ? data.get("state").getAsString() : "UNKNOWN";
+            // check if we have any data
+            if (state.equals("OK")) {
+                String dataJwt = data.get("jwt").getAsString();
+                FileManager.setItem("jwt", dataJwt);
+                String dataEmail = data.get("email").getAsString();
+                if (dataEmail != null) {
+                    FileManager.setItem("name", dataEmail);
+                }
+                return true;
+            }
+        }
+
         return false;
-    }
-
-
-    public static synchronized boolean getLoggedInStatus() {
-        boolean loggedIn = isLoggedIn();
-
-        if (loggedIn) {
-            return true;
-        }
-
-        // check if they're logged on
-        boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-
-        loggedIn = getUserLoginState(serverIsOnline);
-
-        return loggedIn;
     }
 
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
