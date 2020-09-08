@@ -35,4 +35,15 @@ public class SortKeystrokeCount {
 
         Assert.assertTrue(maxobj.start == 1);
     }
+
+    @Test
+    public void test_malformed_collection_sort() {
+        List<KeystrokeCount> list = new ArrayList<>();
+        KeystrokeCount countObj = new KeystrokeCount("v1");
+        list.add(countObj);
+
+        KeystrokeCount maxobj = Collections.max(list, new KeystrokeCount.SortByLatestStart());
+
+        Assert.assertTrue(maxobj != null);
+    }
 }

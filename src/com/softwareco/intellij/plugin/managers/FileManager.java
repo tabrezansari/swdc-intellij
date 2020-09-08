@@ -562,7 +562,12 @@ public class FileManager {
         List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
 
         if (list != null && list.size() > 0) {
-            lastSavedKeystrokeStats = Collections.max(list, new KeystrokeCount.SortByLatestStart());
+            try {
+                lastSavedKeystrokeStats = Collections.max(list, new KeystrokeCount.SortByLatestStart());
+            } catch (Exception e) {
+                // possible malformed json, get the zero element
+                lastSavedKeystrokeStats = list.get(0);
+            }
         }
 
         return lastSavedKeystrokeStats;
