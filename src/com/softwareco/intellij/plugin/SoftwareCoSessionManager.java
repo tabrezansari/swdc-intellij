@@ -27,6 +27,7 @@ public class SoftwareCoSessionManager {
     private static SoftwareCoSessionManager instance = null;
     public static final Logger log = Logger.getLogger("SoftwareCoSessionManager");
     private static long lastAppAvailableCheck = 0;
+    public static boolean establishingUser = false;
 
     public static SoftwareCoSessionManager getInstance() {
         if (instance == null) {
@@ -143,8 +144,9 @@ public class SoftwareCoSessionManager {
             final int newRetryCount = retryCount - 1;
 
             final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);
-            AsyncManager.getInstance().executeOnceInSeconds(service, 10);
+            AsyncManager.getInstance().executeOnceInSeconds(service, 8);
         } else {
+            establishingUser = false;
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
@@ -158,6 +160,7 @@ public class SoftwareCoSessionManager {
     }
 
     public static void launchLogin(String loginType, UIInteractionType interactionType) {
+
         String jwt = FileManager.getItem("jwt");
 
         String url = "";
@@ -184,8 +187,12 @@ public class SoftwareCoSessionManager {
 
         BrowserUtil.browse(url);
 
-        final Runnable service = () -> lazilyFetchUserStatus(20);
-        AsyncManager.getInstance().executeOnceInSeconds(service, 10);
+        if (!establishingUser) {
+            establishingUser = true;
+            // max of 5.3 minutes
+            final Runnable service = () -> lazilyFetchUserStatus(40);
+            AsyncManager.getInstance().executeOnceInSeconds(service, 8);
+        }
 
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = element_name;
