@@ -10,7 +10,7 @@ public class TimeData {
     private long session_seconds = 0L;
     private long file_seconds = 0L;
     private String day = "";
-    private KeystrokeProject project = null;
+    private KeystrokeProject project = new KeystrokeProject("Unnamed", "Untitled");
 
     public void clone(TimeData td) {
         this.timestamp = td.timestamp;

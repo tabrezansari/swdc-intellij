@@ -158,9 +158,11 @@ public class SoftwareCoUtils {
         Editor[] editors = EditorFactory.getInstance().getAllEditors();
         if (editors != null && editors.length > 0) {
             for (Editor editor : editors) {
-                String basePath = editor.getProject().getBasePath();
-                if (path.indexOf(basePath) != -1) {
-                    return editor.getProject();
+                if (editor != null && editor.getProject() != null) {
+                    String basePath = editor.getProject().getBasePath();
+                    if (path.indexOf(basePath) != -1) {
+                        return editor.getProject();
+                    }
                 }
             }
         } else {
