@@ -36,14 +36,18 @@ public class EventTrackerManager {
         return instance;
     }
 
-    private EventTrackerManager() {
-        this.init();
-    }
+    private EventTrackerManager() {}
 
-    private void init() {
-        trackerMgr = new TrackerManager(
-                SoftwareCoUtils.api_endpoint, "CodeTime", "swdc-intellij");
-        ready = true;
+    public void init() {
+        try {
+            trackerMgr = new TrackerManager(
+                    SoftwareCoUtils.api_endpoint, "CodeTime", "swdc-intellij");
+            if (trackerMgr != null) {
+                ready = true;
+            }
+        } catch (Exception e) {
+            log.warning("Error initializing the code time tracker: " + e.getMessage());
+        }
     }
 
     public void trackCodeTimeEvent(KeystrokeCount payload) {
