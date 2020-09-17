@@ -18,7 +18,6 @@ import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-import com.swdc.snowplow.tracker.manager.TrackerManager;
 
 import java.util.Timer;
 import java.util.TimerTask;
