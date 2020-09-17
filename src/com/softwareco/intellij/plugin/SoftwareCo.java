@@ -117,9 +117,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         log.info(plugName + ": Loaded v" + getVersion());
 
-        // send the activate event
-        EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
-
         initializeUserInfoWhenProjectsReady(initializedUser);
 
         log.info(plugName + ": Finished initializing SoftwareCo plugin");
@@ -169,6 +166,12 @@ public class SoftwareCo implements ApplicationComponent {
             FileManager.openReadmeFile(UIInteractionType.keyboard);
             FileManager.setItem("intellij_CtReadme", "true");
         }
+
+        // initialize the tracker
+        EventTrackerManager.getInstance().init();
+
+        // send the activate event
+        EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
 
         // setup the doc listeners
         setupEventListeners();
