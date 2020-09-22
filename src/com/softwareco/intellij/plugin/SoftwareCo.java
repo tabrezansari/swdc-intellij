@@ -37,7 +37,7 @@ public class SoftwareCo implements ApplicationComponent {
     private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private final AsyncManager asyncManager = AsyncManager.getInstance();
 
-    private static final int retry_counter = 0;
+    private static int retry_counter = 0;
 
     public SoftwareCo() {
     }
@@ -87,10 +87,11 @@ public class SoftwareCo implements ApplicationComponent {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
+                    retry_counter += 1;
                     SoftwareCoUtils.showOfflinePrompt(true);
                 }
                 final Runnable service = () -> initComponent();
-                AsyncManager.getInstance().executeOnceInSeconds(service, 60 * 10);
+                AsyncManager.getInstance().executeOnceInSeconds(service, 60);
             } else {
                 getPluginName();
                 // create the anon user
@@ -98,10 +99,11 @@ public class SoftwareCo implements ApplicationComponent {
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {
+                        retry_counter += 1;
                         SoftwareCoUtils.showOfflinePrompt(true);
                     }
                     final Runnable service = () -> initComponent();
-                    AsyncManager.getInstance().executeOnceInSeconds(service, 60 * 10);
+                    AsyncManager.getInstance().executeOnceInSeconds(service, 60);
                 } else {
                     initializePlugin(true);
                 }

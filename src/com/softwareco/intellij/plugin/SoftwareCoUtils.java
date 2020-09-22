@@ -851,10 +851,10 @@ public class SoftwareCoUtils {
     }
 
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
-        final String reconnectMsg = (isTenMinuteReconnect) ? "in ten minutes. " : "soon. ";
+        final String reconnectMsg = (isTenMinuteReconnect) ? "in ten minutes.\n" : "soon.\n";
         ApplicationManager.getApplication().invokeLater(new Runnable() {
             public void run() {
-                String infoMsg = "Our service is temporarily unavailable. " +
+                String infoMsg = "Our service is temporarily unavailable.\n" +
                         "We will try to reconnect again " + reconnectMsg +
                         "Your status bar will not update at this time.";
                 // ask to download the PM
