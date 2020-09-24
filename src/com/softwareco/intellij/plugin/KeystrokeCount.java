@@ -94,7 +94,6 @@ public class KeystrokeCount {
         this.elapsed_seconds = 0;
         this.workspace_name = "";
         this.project_null_error = "";
-        SoftwareCoUtils.setLatestPayload(null);
     }
 
     private boolean hasOpenAndCloseMetrics() {
@@ -267,9 +266,6 @@ public class KeystrokeCount {
 
                 // refresh the code time tree view
                 WallClockManager.getInstance().dispatchStatusViewUpdate();
-
-                // set the latest payload
-                SoftwareCoUtils.setLatestPayload(this);
 
                 SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
                 // set the latest payload timestamp utc so help with session time calculations
