@@ -13,7 +13,6 @@ import org.apache.http.client.methods.HttpPost;
 
 import java.io.*;
 import java.lang.reflect.Type;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -23,14 +22,8 @@ import java.util.logging.Logger;
 public class FileManager {
 
     public static final Logger log = Logger.getLogger("FileManager");
-
-    private static Timer _timer = null;
+    
     private static KeystrokeCount lastSavedKeystrokeStats = null;
-
-    // a semaphore with 1 permit is the same as a mutex
-    // multiple windows will have their own static lock object instance
-    private static final Object WRITE_DATA = new Object();
-    private static final Object APPEND_DATA = new Object();
 
     public static void clearLastSavedKeystrokeStats() {
         lastSavedKeystrokeStats = null;
@@ -73,36 +66,24 @@ public class FileManager {
         return file;
     }
 
-    public static String getCurrentPayloadFile() {
-        String file = getSoftwareDir(false);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\latestKeystrokes.json";
-        } else {
-            file += "/latestKeystrokes.json";
-        }
-        return file;
-    }
-
-    public static void writeData(String file, Object o) {
+    public static synchronized void writeData(String file, Object o) {
         if (o == null) {
             return;
         }
         File f = new File(file);
         final String content = SoftwareCo.gson.toJson(o);
 
-        synchronized (WRITE_DATA) {
-            Writer writer = null;
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(f), StandardCharsets.UTF_8));
+            writer.write(content);
+        } catch (IOException e) {
+            log.warning("Code Time: Error writing content: " + e.getMessage());
+        } finally {
             try {
-                writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(f), StandardCharsets.UTF_8));
-                writer.write(content);
-            } catch (IOException e) {
-                log.warning("Code Time: Error writing content: " + e.getMessage());
-            } finally {
-                try {
-                    writer.close();
-                } catch (Exception ex) {/*ignore*/}
-            }
+                writer.close();
+            } catch (Exception ex) {/*ignore*/}
         }
     }
 
@@ -118,16 +99,14 @@ public class FileManager {
             content += "\n";
         }
         final String contentToWrite = content;
-        synchronized (APPEND_DATA) {
-            try {
-                log.info("Code Time: Storing content: " + contentToWrite);
-                Writer output;
-                output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
-                output.append(contentToWrite);
-                output.close();
-            } catch (Exception e) {
-                log.warning("Code Time: Error appending content: " + e.getMessage());
-            }
+        try {
+            log.info("Code Time: Storing content: " + contentToWrite);
+            Writer output;
+            output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
+            output.append(contentToWrite);
+            output.close();
+        } catch (Exception e) {
+            log.warning("Code Time: Error appending content: " + e.getMessage());
         }
     }
 
@@ -235,19 +214,17 @@ public class FileManager {
 
     public static void saveFileContent(String file, String content) {
         File f = new File(file);
-        synchronized (WRITE_DATA) {
-            Writer writer = null;
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(f), StandardCharsets.UTF_8));
+            writer.write(content);
+        } catch (IOException ex) {
+            // Report
+        } finally {
             try {
-                writer = new BufferedWriter(new OutputStreamWriter(
-                        new FileOutputStream(f), StandardCharsets.UTF_8));
-                writer.write(content);
-            } catch (IOException ex) {
-                // Report
-            } finally {
-                try {
-                    writer.close();
-                } catch (Exception ex) {/*ignore*/}
-            }
+                writer.close();
+            } catch (Exception ex) {/*ignore*/}
         }
     }
 
@@ -261,34 +238,15 @@ public class FileManager {
             payload += "\n";
         }
         String dataStoreFile = FileManager.getSoftwareDataStoreFile();
-        synchronized (WRITE_DATA) {
-            File f = new File(dataStoreFile);
-            try {
-                log.info("Code Time: Storing kpm metrics: " + payload);
-                Writer output;
-                output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
-                output.append(payload);
-                output.close();
-            } catch (Exception e) {
-                log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
-            }
-        }
-    }
-
-    public synchronized static void storeLatestPayloadLazily(final String data) {
-        if (_timer != null) {
-            _timer.cancel();
-            _timer = null;
-        }
-
-        _timer = new Timer();
-        if (_timer != null) {
-            _timer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    FileManager.saveFileContent(FileManager.getCurrentPayloadFile(), data);
-                }
-            }, 2000);
+        File f = new File(dataStoreFile);
+        try {
+            log.info("Code Time: Storing kpm metrics: " + payload);
+            Writer output;
+            output = new BufferedWriter(new FileWriter(f, true));  //clears file every time
+            output.append(payload);
+            output.close();
+        } catch (Exception e) {
+            log.warning("Code Time: Error appending to the Software data store file, error: " + e.getMessage());
         }
     }
 
@@ -508,12 +466,12 @@ public class FileManager {
         return defaultVal.longValue();
     }
 
-    public static synchronized JsonObject getSoftwareSessionAsJson() {
+    public static JsonObject getSoftwareSessionAsJson() {
         String sessionFile = getSoftwareSessionFile(true);
         return getJsonObjectFromFile(sessionFile);
     }
 
-    public static synchronized JsonObject getJsonObjectFromFile(String fileName) {
+    public static JsonObject getJsonObjectFromFile(String fileName) {
         JsonObject jsonObject = new JsonObject();
         String content = getFileContent(fileName);
 
@@ -528,7 +486,7 @@ public class FileManager {
         return jsonObject;
     }
 
-    public static synchronized JsonArray getJsonArrayFromFile(String fileName) {
+    public static JsonArray getJsonArrayFromFile(String fileName) {
         JsonArray jsonArray = new JsonArray();
         String content = getFileContent(fileName);
 

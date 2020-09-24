@@ -281,11 +281,6 @@ public class KeystrokeCount {
         this.resetData();
     }
 
-    public void updateLatestPayloadLazily() {
-        String payload = SoftwareCo.gson.toJson(this);
-        FileManager.storeLatestPayloadLazily(payload);
-    }
-
     private void validateAndUpdateCumulativeData(long sessionSeconds) {
 
         TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
