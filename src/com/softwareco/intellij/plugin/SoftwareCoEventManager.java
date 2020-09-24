@@ -27,7 +27,7 @@ public class SoftwareCoEventManager {
     private static final Pattern NEW_LINE_TAB_PATTERN = Pattern.compile("\n\t");
     private static final Pattern TAB_PATTERN = Pattern.compile("\t");
 
-    private static boolean isCurrentlyActive = true;
+    public static boolean isCurrentlyActive = true;
 
     private EventTrackerManager tracker;
     private KeystrokeManager keystrokeMgr;
@@ -275,9 +275,6 @@ public class SoftwareCoEventManager {
                                 }
 
                                 updateFileInfoMetrics(document, documentEvent, fileInfo, keystrokeCount);
-
-                                // update the latest payload
-                                keystrokeCount.updateLatestPayloadLazily();
                             }
                         }
                     }

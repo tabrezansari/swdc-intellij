@@ -128,9 +128,7 @@ public class WallClockManager {
         // pass control from a background thread to the event dispatch thread,
         ApplicationManager.getApplication().invokeLater(() -> {
             boolean isActive = ApplicationManager.getApplication().isActive();
-            KeystrokeCount latestPayload = SoftwareCoUtils.getLatestPayload();
-            boolean hasLatestPayload = latestPayload != null;
-            if (isActive || hasLatestPayload) {
+            if (isActive && SoftwareCoEventManager.isCurrentlyActive) {
                 long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
                 FileManager.setNumericItem("wctime", wctime);
 
