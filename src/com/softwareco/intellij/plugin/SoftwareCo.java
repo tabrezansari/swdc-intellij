@@ -193,7 +193,7 @@ public class SoftwareCo implements ApplicationComponent {
         KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
 
         // create the keystroke count wrapper
-        eventMgr.createKeystrokeCountWrapper("Unnamed", "Untitled");
+        eventMgr.createKeystrokeCountWrapper(SoftwareCoUtils.unnamed_project_name, SoftwareCoUtils.untitled_file_name);
 
         String fileName = "Untitled";
         KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);

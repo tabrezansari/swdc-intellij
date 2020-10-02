@@ -67,6 +67,11 @@ public class SoftwareCoUtils {
     // set the launch url to use
     public final static String launch_url = "https://app.software.com";
 
+    // Unnamed project name
+    public final static String unnamed_project_name = "Unnamed";
+    // Untitled file name or directory
+    public final static String untitled_file_name = "Untitled";
+
     public static HttpClient httpClient;
     public static HttpClient pingClient;
 

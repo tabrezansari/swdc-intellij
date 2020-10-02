@@ -186,6 +186,9 @@ public class EventTrackerManager {
         if (activeProject != null) {
             projectEntity.project_directory = activeProject.getBasePath();
             projectEntity.project_name = activeProject.getName();
+        } else {
+            projectEntity.project_directory = SoftwareCoUtils.untitled_file_name;
+            projectEntity.project_name = SoftwareCoUtils.unnamed_project_name;
         }
         return projectEntity;
     }
