@@ -91,8 +91,8 @@ public class SoftwareCoEventManager {
         KeystrokeCount keystrokeCount = keystrokeMgr.getKeystrokeCount();
         if (keystrokeCount == null) {
             // create one
-            projectName = projectName != null && !projectName.equals("") ? projectName : "Unnamed";
-            projectDir = projectDir != null && !projectDir.equals("") ? projectDir : "Untitled";
+            projectName = projectName != null && !projectName.equals("") ? projectName : SoftwareCoUtils.unnamed_project_name;
+            projectDir = projectDir != null && !projectDir.equals("") ? projectDir : SoftwareCoUtils.untitled_file_name;
             // create the keysrtroke count wrapper
             createKeystrokeCountWrapper(projectName, projectDir);
 

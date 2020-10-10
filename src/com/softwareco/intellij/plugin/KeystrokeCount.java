@@ -83,7 +83,7 @@ public class KeystrokeCount {
         this.keystrokes = 0;
         this.source = new HashMap<>();
         if (this.project != null) {
-            this.project = new KeystrokeProject("Unnamed", "Untitled");
+            this.project = new KeystrokeProject(SoftwareCoUtils.unnamed_project_name, SoftwareCoUtils.untitled_file_name);
         }
         this.start = 0L;
         this.local_start = 0L;
