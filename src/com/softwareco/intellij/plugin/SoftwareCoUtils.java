@@ -4,6 +4,8 @@
  */
 package com.softwareco.intellij.plugin;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.intellij.ide.BrowserUtil;
@@ -28,6 +30,7 @@ import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.http.HttpEntity;
@@ -1055,6 +1058,32 @@ public class SoftwareCoUtils {
         }
 
         return data;
+    }
+
+    public static boolean isAppJwt() {
+        String jwt = FileManager.getItem("jwt");
+        if (StringUtils.isNotBlank(jwt)) {
+            String stippedDownJwt = jwt.indexOf("JWT ") != -1 ? jwt.substring("JWT ".length()) : jwt;
+            try {
+                String[] split_string = stippedDownJwt.split("\\.");
+                String base64EncodedBody = split_string[1];
+
+                org.apache.commons.codec.binary.Base64 base64Url = new Base64(true);
+                String body = new String(base64Url.decode(base64EncodedBody));
+                Map<String, String> jsonMap;
+
+                ObjectMapper mapper = new ObjectMapper();
+                // convert JSON string to Map
+                jsonMap = mapper.readValue(body,
+                        new TypeReference<Map<String, String>>() {
+                        });
+                Object idVal = jsonMap.getOrDefault("id", null);
+                if (idVal != null && Long.valueOf(idVal.toString()).longValue() > 9999999999L) {
+                    return true;
+                }
+            } catch (Exception ex) {}
+        }
+        return false;
     }
 
 }

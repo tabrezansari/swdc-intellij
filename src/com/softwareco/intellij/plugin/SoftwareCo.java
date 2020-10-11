@@ -4,6 +4,7 @@
  */
 package com.softwareco.intellij.plugin;
 
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
@@ -81,9 +82,8 @@ public class SoftwareCo implements ApplicationComponent {
 
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-        boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
         boolean jwtExists = SoftwareCoSessionManager.jwtExists();
-        if (!sessionFileExists || !jwtExists) {
+        if (!jwtExists || SoftwareCoUtils.isAppJwt()) {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
