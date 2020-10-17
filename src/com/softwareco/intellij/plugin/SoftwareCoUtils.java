@@ -623,7 +623,7 @@ public class SoftwareCoUtils {
         String dashboardFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
 
         Writer writer = null;
-        String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=false";
+        String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=true";
         String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
         if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
             dashboardSummary = SERVICE_NOT_AVAIL;
@@ -642,30 +642,6 @@ public class SoftwareCoUtils {
 
         // concat summary info with the dashboard file
         String dashboardContent = "";
-        SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
-        SimpleDateFormat formatDay = new SimpleDateFormat("EEE, MMM d");
-        String lastUpdatedStr = formatDayTime.format(new Date());
-        dashboardContent += "Code Time          (Last updated on " + lastUpdatedStr + ")";
-        dashboardContent += "\n\n";
-        String todayStr = formatDay.format(new Date());
-        dashboardContent += getSectionHeader("Today (" + todayStr + ")");
-
-        CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
-
-        String activeCodeTimeMin = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.activeCodeTimeMinutes);
-        String codeTimeMin = SoftwareCoUtils.humanizeMinutes(codeTimeSummary.codeTimeMinutes);
-        dashboardContent += getDashboardRow("Code time today", codeTimeMin);
-        dashboardContent += getDashboardRow("Active code time today", activeCodeTimeMin);
-
-        SessionSummary summary = SessionDataManager.getSessionSummaryData();
-        if (summary != null) {
-            long averageDailyMinutes = summary.getAverageDailyMinutes();
-            String averageDailyMinutesTimeStr = SoftwareCoUtils.humanizeMinutes(averageDailyMinutes);
-            dashboardContent += getDashboardRow("90-day avg", averageDailyMinutesTimeStr);
-            dashboardContent += "\n";
-        } else {
-            dashboardContent += getDashboardRow("90-day avg", SoftwareCoUtils.humanizeMinutes(0));
-        }
 
         // append the summary content
         String infoFileContent = FileManager.getFileContent(summaryInfoFile);
