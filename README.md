@@ -11,7 +11,7 @@
 
 ![Code Time for IntelliJ login](https://swdc-intellij.s3-us-west-1.amazonaws.com/login-prompt.png)
 
-The Code Time web app has data visualizations and settings you can customize, such as your work hours and rates per project for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.
+The Code Time web app has data visualizations and settings you can customize, such as your work hours and office type for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.
 
 You can connect multiple code editors on multiple devices using the same email account.
 
@@ -41,31 +41,25 @@ At the end of your first day, open Code Time in your side bar and click _View su
 
 ## Web app data visualizations
 
-Click "See advanced metrics" in the Code Time side bar or visit [app.software.com](https://app.software.com/) to see more data visualizations. Here are a few examples of what you will see in your feed after your first week.
+Click "See advanced metrics" in the Code Time side bar or visit [app.software.com](https://app.software.com/) to see more data visualizations. Here are a few examples of what you will see in your dashboard after your first week.
 
-**Code Time heatmap**
+**Active code time**
 
-Code Time measures your coding activity per hour and summarizes your data in a weekly and 90-day average heatmap. Protect your best times on your heatmap from meetings and interrupts to help boost your productivity.
+Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.
 
-![Code Time for IntelliJ heatmap](https://swdc-vscode.s3-us-west-1.amazonaws.com/weekly-heatmap.png)
+![Code Time for IntelliJ daily active code time](https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-daily-active-code-time.png)
 
-**Project-based reports**
+**Top projects**
 
-See how much time you spend per project per week. Code Time also lets you set a rate per project and export your data to a CSV.
+See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.
 
-![Code Time for IntelliJ top projects](https://swdc-vscode.s3-us-west-1.amazonaws.com/top-projects.png)
+![Code Time for IntelliJ top projects](https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-top-projects.png)
 
 **Work-life balance**
 
-How much do you code after hours and weekends? Code Time helps you see your breakdown at work vs. outside work so you can find ways to improve your work-life balance.
+Connect your Google Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.
 
-![Code Time for IntelliJ work life balance](https://swdc-vscode.s3-us-west-1.amazonaws.com/work-life-balance.png)
-
-**Commit velocity**
-
-Code Time integrates with Git, so you can see your speed, frequency, and top files across your commits.
-
-![Code Time for IntelliJ commit velocity](https://swdc-vscode.s3-us-west-1.amazonaws.com/commit-velocity.png)
+![Code Time for IntelliJ work life balance](https://swdc-vscode.s3-us-west-1.amazonaws.com/dashboard-work-life-balance.png)
 
 ## It’s safe, secure, and free
 
@@ -81,6 +75,6 @@ Code Time also collects basic usage metrics to help us make informed decisions a
 
 Enjoying Code Time? Let us know how it’s going by tweeting or following us at [@software_hq](https://twitter.com/software_hq).
 
-We recently released a new beta plugin, Music Time for VS Code, which helps you find your most productive songs for coding. You can learn more [here](https://www.software.com).
+We recently released a new beta plugin, Music Time for VS Code, which helps you find your most productive songs for coding. You can learn more [here](https://www.software.com/music-time).
 
 Have any questions? Please email us at [support@software.com](mailto:support@software.com) and we’ll get back to you as soon as we can.
