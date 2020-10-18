@@ -356,7 +356,7 @@ public class FileManager {
                 "\n" +
                 "1. Create your web account\n" +
                 "\n" +
-                "    The Code Time web app has data visualizations and settings you can customize, such as your work hours and rates per project for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.\n" +
+                "    The Code Time web app has data visualizations and settings you can customize, such as your work hours and office type for advanced time tracking. You can also connect Google Calendar to visualize your Code Time vs. meetings in a single calendar.\n" +
                 "\n" +
                 "    You can connect multiple code editors on multiple devices using the same email account.\n" +
                 "\n" +
@@ -380,24 +380,19 @@ public class FileManager {
                 "WEB APP DATA VISUALIZATIONS\n" +
                 "---------------------------\n" +
                 "\n" +
-                "Click \"See advanced metrics\" in the Code Time side bar or visit app.software.com to see more data visualizations. Here are a few examples of what you will see in your feed after your first week.\n" +
+                "Click \"See advanced metrics\" in the Code Time side bar or visit app.software.com to see more data visualizations. Here are a few examples of what you will see in your dashboard after your first week.\n" +
                 "\n" +
-                "* Code Time heatmap\n" +
+                "* Active code time\n" +
                 "\n" +
-                "    Code Time measures your coding activity per hour and summarizes your data in a weekly and 90-day average heatmap. Protect your best times on your heatmap from meetings and interrupts to help boost your productivity.\n" +
+                "    Visualize your daily active code time. See productivity trends compared to weekly and monthly averages. See how you stack up against the Software community of over 100,000 developers.\n" +
                 "\n" +
-                "* Project-based reports\n" +
+                "* Top projects\n" +
                 "\n" +
-                "    See how much time you spend per project per week. Code Time also lets you set a rate per project and export your data to a CSV.\n" +
+                "    See how much time you spend per project per week. Get a breakdown of your top projects right in your dashboard.\n" +
                 "\n" +
                 "* Work-life balance\n" +
                 "\n" +
-                "    How much do you code after hours and weekends? Code Time helps you see your breakdown at work vs. outside work so you can find ways to improve your work-life balance.\n" +
-                "\n" +
-                "* Commit velocity\n" +
-                "\n" +
-                "    Code Time integrates with Git, so you can see your speed, frequency, and top files across your commits.\n" +
-                "\n" +
+                "    Connect your Google Calendar to visualize meeting time versus code time. See how much coding happens during work hours versus nights and weekends so you can find ways to improve your work-life balance.\n" +
                 "\n" +
                 "SAFE, SECURE, AND FREE\n" +
                 "----------------------\n" +
