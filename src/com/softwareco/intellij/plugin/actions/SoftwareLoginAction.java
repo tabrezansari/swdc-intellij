@@ -8,7 +8,9 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 
 public class SoftwareLoginAction extends AnAction {
 
@@ -19,9 +21,8 @@ public class SoftwareLoginAction extends AnAction {
 
     @Override
     public void update(AnActionEvent event) {
-        boolean sessionFileExists = SoftwareCoSessionManager.softwareSessionFileExists();
-        boolean hasJwt = SoftwareCoSessionManager.jwtExists();
-        boolean isLoggedIn = sessionFileExists && hasJwt && SoftwareCoUtils.isLoggedIn();
+        String email = FileManager.getItem("name");
+        boolean isLoggedIn = StringUtils.isNotBlank(email);
         boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
         // only show the login menu item if the server is online
         // and they're not logged on
