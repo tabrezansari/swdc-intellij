@@ -724,24 +724,22 @@ public class SoftwareCoUtils {
         return username;
     }
 
-    public static String getAppJwt(boolean serverIsOnline) {
-        if (serverIsOnline) {
-            long now = Math.round(System.currentTimeMillis() / 1000);
-            String api = "/data/apptoken?token=" + now;
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null);
-            if (resp.isOk()) {
-                JsonObject obj = resp.getJsonObj();
-                return obj.get("jwt").getAsString();
-            }
+    public static String getAppJwt() {
+        long now = Math.round(System.currentTimeMillis() / 1000);
+        String api = "/data/apptoken?token=" + now;
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null);
+        if (resp.isOk()) {
+            JsonObject obj = resp.getJsonObj();
+            return obj.get("jwt").getAsString();
         }
         return null;
     }
 
-    public static String createAnonymousUser(boolean serverIsOnline) {
+    public static String createAnonymousUser() {
         // make sure we've fetched the app jwt
-        String appJwt = getAppJwt(serverIsOnline);
+        String appJwt = getAppJwt();
 
-        if (serverIsOnline && appJwt != null) {
+        if (appJwt != null) {
             String timezone = TimeZone.getDefault().getID();
 
             JsonObject payload = new JsonObject();

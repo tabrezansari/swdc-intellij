@@ -84,7 +84,7 @@ public class SoftwareCo implements ApplicationComponent {
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         String jwt = FileManager.getItem("jwt");
-        if (StringUtils.isBlank(jwt) || SoftwareCoUtils.isAppJwt()) {
+        if (StringUtils.isBlank(jwt)) {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
@@ -96,7 +96,7 @@ public class SoftwareCo implements ApplicationComponent {
             } else {
                 getPluginName();
                 // create the anon user
-                jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
+                jwt = SoftwareCoUtils.createAnonymousUser();
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {
@@ -188,6 +188,11 @@ public class SoftwareCo implements ApplicationComponent {
 
         // initialize the wallclock manager
         WallClockManager.getInstance().updateSessionSummaryFromServer();
+
+        // check if the jwt is an app-jwt or not to finalize initialization
+        if (SoftwareCoUtils.isAppJwt()) {
+            SoftwareCoUtils.createAnonymousUser();
+        }
     }
 
     protected void sendInstallPayload() {
