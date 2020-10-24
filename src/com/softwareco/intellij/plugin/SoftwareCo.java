@@ -19,6 +19,7 @@ import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -82,8 +83,8 @@ public class SoftwareCo implements ApplicationComponent {
 
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
-        boolean jwtExists = SoftwareCoSessionManager.jwtExists();
-        if (!jwtExists || SoftwareCoUtils.isAppJwt()) {
+        String jwt = FileManager.getItem("jwt");
+        if (StringUtils.isBlank(jwt) || SoftwareCoUtils.isAppJwt()) {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
@@ -95,7 +96,7 @@ public class SoftwareCo implements ApplicationComponent {
             } else {
                 getPluginName();
                 // create the anon user
-                String jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
+                jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {

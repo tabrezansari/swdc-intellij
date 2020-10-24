@@ -44,11 +44,6 @@ public class SoftwareCoSessionManager {
         return f.exists();
     }
 
-    public static boolean jwtExists() {
-        String jwt = FileManager.getItem("jwt");
-        return jwt != null && !jwt.equals("");
-    }
-
     public static String getCodeTimeDashboardFile() {
         String dashboardFile = getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
