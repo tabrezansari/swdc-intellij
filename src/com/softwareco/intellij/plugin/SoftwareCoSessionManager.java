@@ -147,8 +147,6 @@ public class SoftwareCoSessionManager {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
-
-                    FileManager.sendOfflineData();
                 }
             });
         }

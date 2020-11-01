@@ -87,6 +87,10 @@ public class EventTrackerManager {
             event.pluginEntity = this.getPluginEntity();
             event.repoEntity = this.getRepoEntity(resourceInfo);
 
+            if (StringUtils.isBlank(event.authEntity.getJwt())) {
+                System.out.println("code time event sending a blank JWT: " + event.toString());
+            }
+
             // execute async
             log.info("code time event processed");
             new Timer().schedule(new TimerTask() {
@@ -110,6 +114,10 @@ public class EventTrackerManager {
         event.uiElementEntity = elementEntity;
         event.authEntity = this.getAuthEntity();
         event.pluginEntity = this.getPluginEntity();
+
+        if (StringUtils.isBlank(event.authEntity.getJwt())) {
+            System.out.println("ui_interaction sending a blank JWT: " + event.toString());
+        }
 
         // execute async
         log.info("ui interaction event processed");
@@ -141,6 +149,10 @@ public class EventTrackerManager {
         event.fileEntity = this.getFileEntityFromFileName(full_file_name);
         ResourceInfo resourceInfo = GitUtil.getResourceInfo(event.projectEntity.project_directory, false);
         event.repoEntity = this.getRepoEntity(resourceInfo);
+
+        if (StringUtils.isBlank(event.authEntity.getJwt())) {
+            System.out.println("editor_action sending a blank JWT: " + event.toString());
+        }
 
         // execute async
         log.info("editor action event processed");

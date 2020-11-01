@@ -11,16 +11,6 @@ public class SessionSummary {
     private long averageDailyKpm = 0L;
     private long averageLinesAdded = 0L;
     private long averageLinesRemoved = 0L;
-    private int timePercent = 0;
-    private int volumePercent = 0;
-    private int velocityPercent = 0;
-    private long liveshareMinutes = 0L;
-    private long latestPayloadTimestampEndUtc = 0L;
-    private long latestPayloadTimestamp = 0L;
-    private boolean lastUpdatedToday = false;
-    private int currentSessionGoalPercent = 0;
-    private boolean inFlow = false;
-    private int dailyMinutesGoal = 0;
     private long globalAverageSeconds = 0L;
     private long globalAverageDailyMinutes = 0L;
     private long globalAverageDailyKeystrokes = 0L;
@@ -42,15 +32,6 @@ public class SessionSummary {
         this.averageDailyKpm = in.getAverageDailyKpm();
         this.averageLinesAdded = in.getAverageLinesAdded();
         this.averageLinesRemoved = in.getAverageLinesAdded();
-        this.timePercent = in.getTimePercent();
-        this.volumePercent = in.getVolumePercent();
-        this.velocityPercent = in.getVelocityPercent();
-        this.liveshareMinutes = in.getLiveshareMinutes();
-        this.latestPayloadTimestampEndUtc = in.getLatestPayloadTimestampEndUtc();
-        this.latestPayloadTimestamp = in.getLatestPayloadTimestamp();
-        this.lastUpdatedToday = in.isLastUpdatedToday();
-        this.inFlow = in.isInFlow();
-        this.dailyMinutesGoal = in.getDailyMinutesGoal();
         this.globalAverageSeconds = in.getGlobalAverageSeconds();
         this.globalAverageDailyMinutes = in.getGlobalAverageDailyMinutes();
         this.globalAverageDailyKeystrokes = in.getGlobalAverageDailyKeystrokes();
@@ -136,86 +117,6 @@ public class SessionSummary {
 
     public void setAverageLinesRemoved(long averageLinesRemoved) {
         this.averageLinesRemoved = averageLinesRemoved;
-    }
-
-    public int getTimePercent() {
-        return timePercent;
-    }
-
-    public void setTimePercent(int timePercent) {
-        this.timePercent = timePercent;
-    }
-
-    public int getVolumePercent() {
-        return volumePercent;
-    }
-
-    public void setVolumePercent(int volumePercent) {
-        this.volumePercent = volumePercent;
-    }
-
-    public int getVelocityPercent() {
-        return velocityPercent;
-    }
-
-    public void setVelocityPercent(int velocityPercent) {
-        this.velocityPercent = velocityPercent;
-    }
-
-    public long getLiveshareMinutes() {
-        return liveshareMinutes;
-    }
-
-    public void setLiveshareMinutes(long liveshareMinutes) {
-        this.liveshareMinutes = liveshareMinutes;
-    }
-
-    public long getLatestPayloadTimestampEndUtc() {
-        return latestPayloadTimestampEndUtc;
-    }
-
-    public void setLatestPayloadTimestampEndUtc(long latestPayloadTimestampEndUtc) {
-        this.latestPayloadTimestampEndUtc = latestPayloadTimestampEndUtc;
-    }
-
-    public long getLatestPayloadTimestamp() {
-        return latestPayloadTimestamp;
-    }
-
-    public void setLatestPayloadTimestamp(long latestPayloadTimestamp) {
-        this.latestPayloadTimestamp = latestPayloadTimestamp;
-    }
-
-    public boolean isLastUpdatedToday() {
-        return lastUpdatedToday;
-    }
-
-    public void setLastUpdatedToday(boolean lastUpdatedToday) {
-        this.lastUpdatedToday = lastUpdatedToday;
-    }
-
-    public int getCurrentSessionGoalPercent() {
-        return currentSessionGoalPercent;
-    }
-
-    public void setCurrentSessionGoalPercent(int currentSessionGoalPercent) {
-        this.currentSessionGoalPercent = currentSessionGoalPercent;
-    }
-
-    public boolean isInFlow() {
-        return inFlow;
-    }
-
-    public void setInFlow(boolean inFlow) {
-        this.inFlow = inFlow;
-    }
-
-    public int getDailyMinutesGoal() {
-        return dailyMinutesGoal;
-    }
-
-    public void setDailyMinutesGoal(int dailyMinutesGoal) {
-        this.dailyMinutesGoal = dailyMinutesGoal;
     }
 
     public long getGlobalAverageSeconds() {
