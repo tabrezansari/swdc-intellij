@@ -84,7 +84,7 @@ public class SoftwareCo implements ApplicationComponent {
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         String jwt = FileManager.getItem("jwt");
-        if (StringUtils.isBlank(jwt) || SoftwareCoUtils.isAppJwt()) {
+        if (StringUtils.isBlank(jwt)) {
             if (!serverIsOnline) {
                 // server isn't online, check again in 10 min
                 if (retry_counter == 0) {
@@ -96,7 +96,7 @@ public class SoftwareCo implements ApplicationComponent {
             } else {
                 getPluginName();
                 // create the anon user
-                jwt = SoftwareCoUtils.createAnonymousUser(serverIsOnline);
+                jwt = SoftwareCoUtils.createAnonymousUser();
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {
@@ -149,26 +149,8 @@ public class SoftwareCo implements ApplicationComponent {
         }
     }
 
-    private void sendOfflineDataRunner() {
-        new Thread(() -> {
-            try {
-                FileManager.sendOfflineData();
-            } catch (Exception e) {
-                System.err.println(e);
-            }
-        }).start();
-    }
-
     // The app is ready and has a selected project
     private void initializeUserInfo(boolean initializedUser) {
-
-        String readmeDisplayed = FileManager.getItem("intellij_CtReadme");
-        if (readmeDisplayed == null || Boolean.valueOf(readmeDisplayed) == false) {
-            // send an initial plugin payload
-            this.sendInstallPayload();
-            FileManager.openReadmeFile(UIInteractionType.keyboard);
-            FileManager.setItem("intellij_CtReadme", "true");
-        }
 
         // initialize the tracker
         EventTrackerManager.getInstance().init();
@@ -176,32 +158,26 @@ public class SoftwareCo implements ApplicationComponent {
         // send the activate event
         EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
 
+        String readmeDisplayed = FileManager.getItem("intellij_CtReadme");
+        if (readmeDisplayed == null || Boolean.valueOf(readmeDisplayed) == false) {
+            // send an initial plugin payload
+            FileManager.openReadmeFile(UIInteractionType.keyboard);
+            FileManager.setItem("intellij_CtReadme", "true");
+        }
+
         // setup the doc listeners
         setupEventListeners();
 
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
 
-        // every 5 minutes
-        final Runnable sendOfflineDataRunner = () -> this.sendOfflineDataRunner();
-        asyncManager.scheduleService(sendOfflineDataRunner, "offlineDataRunner", 30, 60 * 5);
-
         // initialize the wallclock manager
         WallClockManager.getInstance().updateSessionSummaryFromServer();
-    }
 
-    protected void sendInstallPayload() {
-        KeystrokeManager keystrokeManager = KeystrokeManager.getInstance();
-
-        // create the keystroke count wrapper
-        eventMgr.createKeystrokeCountWrapper(SoftwareCoUtils.unnamed_project_name, SoftwareCoUtils.untitled_file_name);
-
-        String fileName = "Untitled";
-        KeystrokeCount.FileInfo fileInfo = keystrokeManager.getKeystrokeCount().getSourceByFileName(fileName);
-        fileInfo.add = fileInfo.add + 1;
-        fileInfo.netkeys = fileInfo.add - fileInfo.delete;
-        keystrokeManager.getKeystrokeCount().keystrokes = 1;
-        keystrokeManager.getKeystrokeCount().processKeystrokes();
+        // check if the jwt is an app-jwt or not to finalize initialization
+        if (SoftwareCoUtils.isAppJwt()) {
+            SoftwareCoUtils.createAnonymousUser();
+        }
     }
 
     // add the document change event listener

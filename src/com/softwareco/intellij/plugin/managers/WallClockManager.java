@@ -55,14 +55,9 @@ public class WallClockManager {
 
     public void newDayChecker() {
         if (SoftwareCoUtils.isNewDay()) {
-            // send the payloads
-            FileManager.sendOfflineData();
 
             // clear the last payload we have in memory
             FileManager.clearLastSavedKeystrokeStats();
-
-            // send the time data
-            TimeDataManager.sendOfflineTimeData();
 
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();
@@ -91,25 +86,6 @@ public class WallClockManager {
         SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
         if (resp.isOk()) {
             JsonObject jsonObj = resp.getJsonObj();
-
-            JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
-            if (lastUpdatedToday != null) {
-                // make sure it's a boolean and not a number
-                if (!lastUpdatedToday.getAsJsonPrimitive().isBoolean()) {
-                    // set it to boolean
-                    boolean newVal = lastUpdatedToday.getAsInt() != 0;
-                    jsonObj.addProperty("lastUpdatedToday", newVal);
-                }
-            }
-            JsonElement inFlow = jsonObj.get("inFlow");
-            if (inFlow != null) {
-                // make sure it's a boolean and not a number
-                if (!inFlow.getAsJsonPrimitive().isBoolean()) {
-                    // set it to boolean
-                    boolean newVal = inFlow.getAsInt() != 0;
-                    jsonObj.addProperty("inFlow", newVal);
-                }
-            }
 
             Type type = new TypeToken<SessionSummary>() {}.getType();
             SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
