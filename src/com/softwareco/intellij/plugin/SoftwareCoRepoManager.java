@@ -222,36 +222,4 @@ public class SoftwareCoRepoManager {
             log.warning(SoftwareCoUtils.pluginName + ": Unable to process repo commits, error: " + e.getMessage());
         }
     }
-
-    public void processRepoMembersInfo(final String projectDir) {
-        ResourceInfo resource = GitUtil.getResourceInfo(projectDir);
-        if (resource != null && resource.getIdentifier() != null) {
-
-            if (resource.getMembers().size() > 0) {
-                // send the members
-                try {
-                    JsonObject repoData = new JsonObject();
-                    repoData.add("members", resource.getJsonMembers());
-                    repoData.addProperty("identifier", resource.getIdentifier());
-                    repoData.addProperty("tag", resource.getTag());
-                    repoData.addProperty("branch", resource.getBranch());
-                    String repoDataStr = repoData.toString();
-                    JsonObject responseData = SoftwareCoUtils.makeApiCall(
-                                    "/repo/members", HttpPost.METHOD_NAME, repoDataStr).getJsonObj();
-
-                    // {"status":"success","message":"Updated repo members"}
-                    // {"status":"failed","data":"Unable to process repo information"}
-                    if (responseData != null && responseData.has("message")) {
-                        log.info("Code Time: " + responseData.get("message").getAsString());
-                    } else if (responseData != null && responseData.has("data")) {
-                        log.info(SoftwareCoUtils.pluginName + ": " + responseData.get("data").getAsString());
-                    } else {
-                        log.info(SoftwareCoUtils.pluginName + ": Unable to process repo member metrics");
-                    }
-                } catch (Exception e) {
-                    log.warning(SoftwareCoUtils.pluginName + ": Unable to process repo member metrics, error: " + e.getMessage());
-                }
-            }
-        }
-    }
 }
