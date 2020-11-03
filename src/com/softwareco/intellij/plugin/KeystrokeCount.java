@@ -41,7 +41,7 @@ public class KeystrokeCount {
     public boolean triggered = false;
 
     public KeystrokeCount() {
-        String appVersion = SoftwareCo.getVersion();
+        String appVersion = SoftwareCoUtils.getVersion();
         if (appVersion != null) {
             this.version = appVersion;
         } else {

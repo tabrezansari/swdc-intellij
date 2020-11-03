@@ -66,8 +66,8 @@ public class SoftwareHttpManager implements Callable<HttpResponse> {
 
             SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
             req.addHeader("X-SWDC-Plugin-Id", String.valueOf(SoftwareCoUtils.pluginId));
-            req.addHeader("X-SWDC-Plugin-Name", SoftwareCo.getPluginName());
-            req.addHeader("X-SWDC-Plugin-Version", SoftwareCo.getVersion());
+            req.addHeader("X-SWDC-Plugin-Name", SoftwareCoUtils.getPluginName());
+            req.addHeader("X-SWDC-Plugin-Version", SoftwareCoUtils.getVersion());
             req.addHeader("X-SWDC-Plugin-OS", SoftwareCoUtils.getOs());
             req.addHeader("X-SWDC-Plugin-TZ", timesData.timezone);
             req.addHeader("X-SWDC-Plugin-Offset", String.valueOf(timesData.offset));

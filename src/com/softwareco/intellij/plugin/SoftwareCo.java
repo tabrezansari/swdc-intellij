@@ -7,8 +7,6 @@ package com.softwareco.intellij.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
 import com.intellij.openapi.editor.EditorFactory;
@@ -44,43 +42,6 @@ public class SoftwareCo implements ApplicationComponent {
     public SoftwareCo() {
     }
 
-    private static IdeaPluginDescriptor getIdeaPluginDescriptor() {
-        IdeaPluginDescriptor[] desriptors = PluginManager.getPlugins();
-        if (desriptors != null && desriptors.length > 0) {
-            for (int i = 0; i < desriptors.length; i++) {
-                IdeaPluginDescriptor descriptor = desriptors[i];
-                if (descriptor.getPluginId().getIdString().equals("com.softwareco.intellij.plugin")) {
-                    return descriptor;
-                }
-            }
-        }
-        return null;
-    }
-
-    public static String getVersion() {
-        if (SoftwareCoUtils.VERSION == null) {
-            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
-            if (pluginDescriptor != null) {
-                SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
-            } else {
-                return "2.0.1";
-            }
-        }
-        return SoftwareCoUtils.VERSION;
-    }
-
-    public static String getPluginName() {
-        if (SoftwareCoUtils.pluginName == null) {
-            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
-            if (pluginDescriptor != null) {
-                SoftwareCoUtils.pluginName = pluginDescriptor.getName();
-            } else {
-                return "Code Time";
-            }
-        }
-        return SoftwareCoUtils.pluginName;
-    }
-
     public void initComponent() {
         boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         String jwt = FileManager.getItem("jwt");
@@ -94,7 +55,6 @@ public class SoftwareCo implements ApplicationComponent {
                 final Runnable service = () -> initComponent();
                 AsyncManager.getInstance().executeOnceInSeconds(service, 60);
             } else {
-                getPluginName();
                 // create the anon user
                 jwt = SoftwareCoUtils.createAnonymousUser();
                 if (jwt == null) {
@@ -116,9 +76,9 @@ public class SoftwareCo implements ApplicationComponent {
     }
 
     protected void initializePlugin(boolean initializedUser) {
-        String plugName = getPluginName();
+        String plugName = SoftwareCoUtils.getPluginName();
 
-        log.info(plugName + ": Loaded v" + getVersion());
+        log.info(plugName + ": Loaded v" + SoftwareCoUtils.getVersion());
 
         initializeUserInfoWhenProjectsReady(initializedUser);
 
