@@ -9,6 +9,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.intellij.ide.BrowserUtil;
+import com.intellij.ide.plugins.IdeaPluginDescriptor;
+import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -113,6 +115,42 @@ public class SoftwareCoUtils {
 
         pingClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
         httpClient = HttpClientBuilder.create().build();
+    }
+
+    public static String getVersion() {
+        if (VERSION == null) {
+            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
+            if (pluginDescriptor != null) {
+                SoftwareCoUtils.VERSION = pluginDescriptor.getVersion();
+            } else {
+                return "2.0.1";
+            }
+        }
+        return SoftwareCoUtils.VERSION;
+    }
+
+    public static String getPluginName() {
+        if (pluginName == null) {
+            IdeaPluginDescriptor pluginDescriptor = getIdeaPluginDescriptor();
+            if (pluginDescriptor != null) {
+                SoftwareCoUtils.pluginName = pluginDescriptor.getName();
+            } else {
+                return "Code Time";
+            }
+        }
+        return SoftwareCoUtils.pluginName;
+    }
+
+    private static IdeaPluginDescriptor getIdeaPluginDescriptor() {
+        IdeaPluginDescriptor[] descriptors = PluginManager.getPlugins();
+        if (descriptors != null && descriptors.length > 0) {
+            for (IdeaPluginDescriptor descriptor : descriptors) {
+                if (descriptor.getPluginId().getIdString().equals("com.softwareco.intellij.plugin")) {
+                    return descriptor;
+                }
+            }
+        }
+        return null;
     }
 
     public static String getWorkspaceName() {
@@ -346,7 +384,7 @@ public class SoftwareCoUtils {
                                 }
                             }
                         } catch (IOException e) {
-                            String errorMessage = pluginName + ": Unable to get the response from the http request, error: " + e.getMessage();
+                            String errorMessage = getPluginName() + ": Unable to get the response from the http request, error: " + e.getMessage();
                             softwareResponse.setErrorMessage(errorMessage);
                             LOG.log(Level.WARNING, errorMessage);
                         }
@@ -362,7 +400,7 @@ public class SoftwareCoUtils {
                     }
                 }
             } catch (InterruptedException | ExecutionException e) {
-                String errorMessage = pluginName + ": Unable to get the response from the http request, error: " + e.getMessage();
+                String errorMessage = getPluginName() + ": Unable to get the response from the http request, error: " + e.getMessage();
                 softwareResponse.setErrorMessage(errorMessage);
                 LOG.log(Level.WARNING, errorMessage);
             }
@@ -455,7 +493,7 @@ public class SoftwareCoUtils {
                         String kpmmsgId = SoftwareCoStatusBarKpmTextWidget.KPM_TEXT_ID + "_kpmmsg";
                         String kpmiconId = SoftwareCoStatusBarKpmIconWidget.KPM_ICON_ID + "_kpmicon";
 
-                        String kpmMsgVal = kpmMsg != null ? kpmMsg : pluginName;
+                        String kpmMsgVal = kpmMsg != null ? kpmMsg : getPluginName();
 
                         String kpmIconVal = kpmIcon;
                         if (!showStatusText) {
@@ -834,7 +872,7 @@ public class SoftwareCoUtils {
                         "We will try to reconnect again " + reconnectMsg +
                         "Your status bar will not update at this time.";
                 // ask to download the PM
-                Messages.showInfoMessage(infoMsg, pluginName);
+                Messages.showInfoMessage(infoMsg, getPluginName());
             }
         });
     }

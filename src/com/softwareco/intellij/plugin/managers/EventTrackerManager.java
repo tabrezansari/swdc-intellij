@@ -228,8 +228,8 @@ public class EventTrackerManager {
 
     private PluginEntity getPluginEntity() {
         PluginEntity pluginEntity = new PluginEntity();
-        pluginEntity.plugin_name = SoftwareCo.getPluginName();
-        pluginEntity.plugin_version = SoftwareCo.getVersion();
+        pluginEntity.plugin_name = SoftwareCoUtils.getPluginName();
+        pluginEntity.plugin_version = SoftwareCoUtils.getVersion();
         pluginEntity.plugin_id = SoftwareCoUtils.pluginId;
         return pluginEntity;
     }
