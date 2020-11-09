@@ -98,8 +98,10 @@ public class WallClockManager {
         } catch (Exception e) {
             LOG.log(Level.WARNING, "Status bar update error: " + e.getMessage());
         }
-        // TREE REFRESH
-        CodeTimeToolWindow.refresh();
+        ApplicationManager.getApplication().invokeLater(() -> {
+            // TREE REFRESH
+            CodeTimeToolWindow.refresh();
+        });
     }
 
     private void clearWcTime() {

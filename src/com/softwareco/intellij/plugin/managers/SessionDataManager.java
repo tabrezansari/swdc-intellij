@@ -36,7 +36,7 @@ public class SessionDataManager {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         String currentDay = FileManager.getItem("updatedTreeDate", "");
         SessionSummary existingSummary = SessionDataManager.getSessionSummaryData();
-        if (!currentDay.equals(day)) {
+        if (!currentDay.equals(day) || existingSummary.getGlobalAverageDailyMinutes() == 0) {
             updateSessionSummaryFromServer();
             FileManager.setItem("updatedTreeDate", day);
         }

@@ -12,9 +12,6 @@ import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import javax.swing.*;
 import javax.swing.tree.TreePath;
 import java.awt.*;
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyVetoException;
-import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +29,6 @@ public class CodeTimeToolWindow {
     private static final Map<String, List<ExpandState>> expandStateMap = new HashMap<>();
 
     private static CodeTimeToolWindow win;
-    private static boolean refreshing = false;
 
     public CodeTimeToolWindow(ToolWindow toolWindow) {
         codetimeWindowContent.setFocusable(true);
@@ -61,11 +57,6 @@ public class CodeTimeToolWindow {
     }
 
     public static void refresh() {
-        if (refreshing) {
-            return;
-        }
-        refreshing = true;
-
         if (win != null) {
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
@@ -73,7 +64,6 @@ public class CodeTimeToolWindow {
                 }
             });
         }
-        refreshing = false;
     }
 
     public static void updateExpandState(String id, TreePath path, boolean expanded) {
