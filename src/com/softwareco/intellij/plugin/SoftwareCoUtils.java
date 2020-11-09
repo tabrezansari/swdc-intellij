@@ -26,9 +26,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
 import com.softwareco.intellij.plugin.managers.*;
-import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.FileDetails;
-import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
@@ -340,6 +338,7 @@ public class SoftwareCoUtils {
                 httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
             }
         }
+
         Future<HttpResponse> response = EXECUTOR_SERVICE.submit(httpTask);
 
         //

@@ -7,9 +7,11 @@ import com.google.gson.reflect.TypeToken;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.SoftwareResponse;
 import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
+import org.apache.http.client.methods.HttpGet;
 
 import java.lang.reflect.Type;
 
@@ -28,6 +30,40 @@ public class SessionDataManager {
     public static void clearSessionSummaryData() {
         SessionSummary summary = new SessionSummary();
         FileManager.writeData(getSessionDataSummaryFile(), summary);
+    }
+
+    public static void treeDataUpdateCheck() {
+        String day = SoftwareCoUtils.getTodayInStandardFormat();
+        String currentDay = FileManager.getItem("updatedTreeDate", "");
+        SessionSummary existingSummary = SessionDataManager.getSessionSummaryData();
+        if (!currentDay.equals(day)) {
+            updateSessionSummaryFromServer();
+            FileManager.setItem("updatedTreeDate", day);
+        }
+    }
+
+    private static void updateSessionSummaryFromServer() {
+        SessionSummary summary = SessionDataManager.getSessionSummaryData();
+
+        String jwt = FileManager.getItem("jwt");
+        String api = "/sessions/summary?refresh=true";
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
+        if (resp.isOk()) {
+            JsonObject jsonObj = resp.getJsonObj();
+
+            Type type = new TypeToken<SessionSummary>() {}.getType();
+            SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
+
+            // clone all
+            summary.clone(fetchedSummary);
+
+            TimeDataManager.updateSessionFromSummaryApi(fetchedSummary.getCurrentDayMinutes());
+
+            // save the file
+            FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
+        }
+
+        WallClockManager.getInstance().dispatchStatusViewUpdate();
     }
 
     public static SessionSummary getSessionSummaryData() {

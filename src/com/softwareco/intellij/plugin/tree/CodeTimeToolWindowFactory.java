@@ -7,7 +7,9 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import org.jetbrains.annotations.NotNull;
+
 
 public class CodeTimeToolWindowFactory implements ToolWindowFactory {
 
@@ -22,7 +24,23 @@ public class CodeTimeToolWindowFactory implements ToolWindowFactory {
     public static void openToolWindow() {
         Project project = SoftwareCoUtils.getFirstActiveProject();
         if (project != null) {
-            ToolWindowManager.getInstance(project).getToolWindow("Code Time").show(null);
+            ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow("Code Time");
+            if (tw != null) {
+                tw.show(null);
+
+                SessionDataManager.treeDataUpdateCheck();
+            }
         }
+    }
+
+    public static boolean isToolWindowVisible() {
+        Project project = SoftwareCoUtils.getFirstActiveProject();
+        if (project != null) {
+            ToolWindow tw = ToolWindowManager.getInstance(project).getToolWindow("Code Time");
+            if (tw != null) {
+                return tw.isVisible();
+            }
+        }
+        return false;
     }
 }

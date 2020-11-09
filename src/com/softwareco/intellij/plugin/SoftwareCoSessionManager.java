@@ -11,15 +11,13 @@ import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 
-import java.awt.event.MouseEvent;
 import java.io.*;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 public class SoftwareCoSessionManager {
@@ -147,6 +145,10 @@ public class SoftwareCoSessionManager {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
+
+                    if (CodeTimeToolWindowFactory.isToolWindowVisible()) {
+                        SessionDataManager.treeDataUpdateCheck();
+                    }
                 }
             });
         }

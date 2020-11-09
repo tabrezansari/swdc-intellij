@@ -5,12 +5,16 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBList;
 import com.intellij.uiDesigner.core.GridConstraints;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 
 import javax.swing.*;
 import javax.swing.tree.TreePath;
 import java.awt.*;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyVetoException;
+import java.beans.VetoableChangeListener;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +45,9 @@ public class CodeTimeToolWindow {
         codetimeWindowContent.setBackground(null);
 
         win = this;
+
+        // check if we need to refresh the tree data based on a new day
+        SessionDataManager.treeDataUpdateCheck();
     }
 
     public static class ExpandState {

@@ -131,9 +131,6 @@ public class SoftwareCo implements ApplicationComponent {
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
 
-        // initialize the wallclock manager
-        WallClockManager.getInstance().updateSessionSummaryFromServer();
-
         // check if the jwt is an app-jwt or not to finalize initialization
         if (SoftwareCoUtils.isAppJwt()) {
             SoftwareCoUtils.createAnonymousUser();

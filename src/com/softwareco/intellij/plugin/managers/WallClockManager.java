@@ -1,21 +1,16 @@
 package com.softwareco.intellij.plugin.managers;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
 import com.softwareco.intellij.plugin.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
-import com.softwareco.intellij.plugin.models.SessionSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
-import org.apache.http.client.methods.HttpGet;
 
-import java.lang.reflect.Type;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class WallClockManager {
 
-    public static final Logger log = Logger.getLogger("WallClockManager");
+    public static final Logger LOG = Logger.getLogger("WallClockManager");
 
     private static final int SECONDS_INCREMENT = 30;
     private static final int DAY_CHECK_TIMER_INTERVAL = 60;
@@ -26,7 +21,7 @@ public class WallClockManager {
 
     public static WallClockManager getInstance() {
         if (instance == null) {
-            synchronized (log) {
+            synchronized (LOG) {
                 if (instance == null) {
                     instance = new WallClockManager();
                 }
@@ -72,31 +67,6 @@ public class WallClockManager {
             // update the last payload timestamp
             FileManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
 
-            final Runnable service = () -> updateSessionSummaryFromServer();
-            AsyncManager.getInstance().executeOnceInSeconds(service, 60);
-
-        }
-    }
-
-    public void updateSessionSummaryFromServer() {
-        SessionSummary summary = SessionDataManager.getSessionSummaryData();
-
-        String jwt = FileManager.getItem("jwt");
-        String api = "/sessions/summary?refresh=true";
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
-        if (resp.isOk()) {
-            JsonObject jsonObj = resp.getJsonObj();
-
-            Type type = new TypeToken<SessionSummary>() {}.getType();
-            SessionSummary fetchedSummary = SoftwareCo.gson.fromJson(jsonObj, type);
-
-            // clone all
-            summary.clone(fetchedSummary);
-
-            TimeDataManager.updateSessionFromSummaryApi(fetchedSummary.getCurrentDayMinutes());
-
-            // save the file
-            FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
         }
     }
 
@@ -116,9 +86,7 @@ public class WallClockManager {
     }
 
     public synchronized void dispatchStatusViewUpdate() {
-        if (!dispatching) {
-            dispatching = true;
-
+        try {
             CodeTimeSummary ctSummary = TimeDataManager.getCodeTimeSummary();
 
             String icon = SoftwareCoUtils.showingStatusText() ? "paw-grey.png" : "clock.png";
@@ -127,11 +95,11 @@ public class WallClockManager {
             // STATUS BAR REFRESH
             SoftwareCoUtils.updateStatusBar(
                     icon, currentDayTimeStr, "Code time today. Click to see more from Code Time.");
-
-            // TREE REFRESH
-            CodeTimeToolWindow.refresh();
+        } catch (Exception e) {
+            LOG.log(Level.WARNING, "Status bar update error: " + e.getMessage());
         }
-        dispatching = false;
+        // TREE REFRESH
+        CodeTimeToolWindow.refresh();
     }
 
     private void clearWcTime() {

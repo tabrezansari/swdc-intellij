@@ -18,11 +18,11 @@ public class SessionSummary {
     private long globalAverageLinesRemoved = 0L;
 
     public void clone(SessionSummary in) {
-        this.currentDayMinutes = in.getCurrentDayMinutes();
-        this.currentDayKeystrokes = in.getCurrentDayKeystrokes();
-        this.currentDayKpm = in.getCurrentDayKpm();
-        this.currentDayLinesAdded = in.getCurrentDayLinesAdded();
-        this.currentDayLinesRemoved = in.getCurrentDayLinesRemoved();
+        this.currentDayMinutes = Math.max(in.getCurrentDayMinutes(), this.currentDayMinutes);
+        this.currentDayKeystrokes = Math.max(in.getCurrentDayKeystrokes(), this.currentDayKeystrokes);
+        this.currentDayKpm = Math.max(in.getCurrentDayKpm(), this.currentDayKpm);
+        this.currentDayLinesAdded = Math.max(in.getCurrentDayLinesAdded(), this.currentDayLinesAdded);
+        this.currentDayLinesRemoved = Math.max(in.getCurrentDayLinesRemoved(), this.currentDayLinesRemoved);
         this.cloneNonCurrentMetrics(in);
     }
 
