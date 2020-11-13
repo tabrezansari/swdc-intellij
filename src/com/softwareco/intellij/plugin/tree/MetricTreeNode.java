@@ -1,9 +1,7 @@
 package com.softwareco.intellij.plugin.tree;
 
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import javax.swing.tree.MutableTreeNode;
-import javax.swing.tree.TreeNode;
+import javax.swing.tree.*;
+import java.util.Enumeration;
 
 public class MetricTreeNode extends DefaultMutableTreeNode {
 
@@ -12,11 +10,58 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
     private String id;
     private String iconName;
     private Object data;
+    private boolean expanded = false;
+    private boolean separator = false;
+    private String label;
 
-    public MetricTreeNode(String nodeName, String id) {
-        super(nodeName);
-        this.model = null;
-        this.id = id;
+    public MetricTreeNode(boolean isSeparator) {
+        this.separator = isSeparator;
+        this.init("", null, "separator");
+    }
+
+    public MetricTreeNode(String label, String id) {
+        this.init(label, null, id);
+    }
+
+    public MetricTreeNode(String label, String iconName, String id) {
+        this.init(label, iconName, id);
+    }
+
+    private void init(String label, String iconName, String nodeId) {
+        this.allowsChildren = true;
+        this.label = label;
+        this.id = nodeId == null ? "" : nodeId;
+        this.iconName = iconName;
+        this.initModel();
+    }
+
+    public void updateLabel(String label) {
+        this.label = label;
+    }
+
+    public void updateIconName(String iconName) {
+        this.iconName = iconName;
+    }
+
+    public boolean isSeparator() {
+        return separator;
+    }
+
+    public boolean isExpanded() {
+        return expanded;
+    }
+
+    public void setExpanded(boolean expanded) {
+        this.expanded = expanded;
+    }
+
+    public boolean isLeaf() {
+        return getChildCount() == 0;
+    }
+
+    private void initModel() {
+        DefaultTreeModel parentNodeModel = new DefaultTreeModel(this);
+        this.setModel(parentNodeModel);
     }
 
     public void setModel(DefaultTreeModel model) {
@@ -30,9 +75,8 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
 
     protected void nodeWasAdded(TreeNode node, int index) {
         if (model == null) {
-            ((MetricTreeNode)node.getParent()).nodeWasAdded(node, index);
-        }
-        else {
+            ((MetricTreeNode) node.getParent()).nodeWasAdded(node, index);
+        } else {
             int[] childIndices = new int[1];
             childIndices[0] = index;
             model.nodesWereInserted(node, childIndices);
@@ -43,21 +87,32 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getIconName() {
-        return iconName;
-    }
-
     public void setIconName(String iconName) {
         this.iconName = iconName;
     }
 
-    public Object getData() { return data; }
+    public String getIconName() {
+        if (isSeparator()) {
+            return "blue-line.png";
+        }
+        return iconName;
+    }
+
+    public Object getData() {
+        return data;
+    }
 
     public void setData(Object obj) {
         this.data = obj;
+    }
+
+    public TreePath getNodeTreePath() {
+        TreePath p = new TreePath(model.getPathToRoot(this));
+        return p;
+    }
+
+    @Override
+    public String toString() {
+        return label;
     }
 }

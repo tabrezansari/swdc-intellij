@@ -28,7 +28,7 @@ public class CodeTimeToolWindowFactory implements ToolWindowFactory {
             if (tw != null) {
                 tw.show(null);
 
-                SessionDataManager.treeDataUpdateCheck();
+                SessionDataManager.treeDataUpdateCheck(false);
             }
         }
     }

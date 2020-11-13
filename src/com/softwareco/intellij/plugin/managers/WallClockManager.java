@@ -89,7 +89,7 @@ public class WallClockManager {
         try {
             CodeTimeSummary ctSummary = TimeDataManager.getCodeTimeSummary();
 
-            String icon = SoftwareCoUtils.showingStatusText() ? "paw-grey.png" : "clock.png";
+            String icon = SoftwareCoUtils.showingStatusText() ? "paw-grey.png" : "status-clock.svg";
             String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(ctSummary.activeCodeTimeMinutes);
 
             // STATUS BAR REFRESH

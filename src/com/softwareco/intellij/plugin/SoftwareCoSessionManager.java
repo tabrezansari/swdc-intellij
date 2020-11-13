@@ -147,7 +147,7 @@ public class SoftwareCoSessionManager {
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
 
                     if (CodeTimeToolWindowFactory.isToolWindowVisible()) {
-                        SessionDataManager.treeDataUpdateCheck();
+                        SessionDataManager.treeDataUpdateCheck(true);
                     }
                 }
             });

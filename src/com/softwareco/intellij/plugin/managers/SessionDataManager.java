@@ -32,11 +32,11 @@ public class SessionDataManager {
         FileManager.writeData(getSessionDataSummaryFile(), summary);
     }
 
-    public static void treeDataUpdateCheck() {
+    public static void treeDataUpdateCheck(boolean isNewUser) {
         String day = SoftwareCoUtils.getTodayInStandardFormat();
         String currentDay = FileManager.getItem("updatedTreeDate", "");
         SessionSummary existingSummary = SessionDataManager.getSessionSummaryData();
-        if (!currentDay.equals(day) || existingSummary.getGlobalAverageDailyMinutes() == 0) {
+        if (!currentDay.equals(day) || existingSummary.getGlobalAverageDailyMinutes() == 0 || isNewUser) {
             updateSessionSummaryFromServer();
             FileManager.setItem("updatedTreeDate", day);
         }

@@ -233,7 +233,9 @@ public class SoftwareCoUtils {
                 } else {
                     fileDetails.project_file_name = fullFileName;
                 }
-                fileDetails.line_count = getLineCount(fullFileName);
+                if (fileDetails.line_count == 0) {
+                    fileDetails.line_count = getLineCount(fullFileName);
+                }
 
                 VirtualFile vFile = LocalFileSystem.getInstance().findFileByIoFile(f);
                 if (vFile != null) {
@@ -497,7 +499,7 @@ public class SoftwareCoUtils {
                         String kpmIconVal = kpmIcon;
                         if (!showStatusText) {
                             kpmMsgVal = "";
-                            kpmIconVal = "clock-blue.png";
+                            kpmIconVal = "status-clock.svg";
                         }
 
                         // icon first

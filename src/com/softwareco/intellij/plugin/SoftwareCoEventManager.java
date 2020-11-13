@@ -22,7 +22,7 @@ public class SoftwareCoEventManager {
 
     private static SoftwareCoEventManager instance = null;
 
-    private static final int FOCUS_STATE_INTERVAL_SECONDS = 5;
+    private static final int FOCUS_STATE_INTERVAL_SECONDS = 10;
     private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\n");
     private static final Pattern NEW_LINE_TAB_PATTERN = Pattern.compile("\n\t");
     private static final Pattern TAB_PATTERN = Pattern.compile("\t");
@@ -75,16 +75,8 @@ public class SoftwareCoEventManager {
         });
     }
 
-    private int getNewlineCount(String text) {
-        if (text == null) {
-            return 0;
-        }
-        Matcher matcher = NEW_LINE_PATTERN.matcher(text);
-        int count = 0;
-        while(matcher.find()) {
-            count++;
-        }
-        return count;
+    public static int getNewlineCount(String text){
+        return text.split("[\n|\r]").length;
     }
 
     private KeystrokeCount getCurrentKeystrokeCount(String projectName, String projectDir) {
@@ -211,10 +203,7 @@ public class SoftwareCoEventManager {
         }
         keystrokeCount.endPreviousModifiedFiles(fileName);
         fileInfo.open = fileInfo.open + 1;
-        int documentLineCount = SoftwareCoUtils.getLineCount(fileName);
-        fileInfo.lines = documentLineCount;
         LOG.info("Code Time: file opened: " + fileName);
-        tracker.trackEditorAction("file", "open", fileName);
     }
 
     public void handleFileClosedEvents(String fileName, Project project) {

@@ -152,6 +152,8 @@ public class SoftwareCo implements ApplicationComponent {
             // file open,close,selection listener
             p.getMessageBus().connect().subscribe(
                     FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
+
+            WallClockManager.getInstance();
         });
     }
 
