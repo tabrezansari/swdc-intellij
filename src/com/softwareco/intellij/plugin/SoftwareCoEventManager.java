@@ -76,6 +76,9 @@ public class SoftwareCoEventManager {
     }
 
     public static int getNewlineCount(String text){
+        if (StringUtils.isBlank(text)) {
+            return 0;
+        }
         return text.split("[\n|\r]").length;
     }
 

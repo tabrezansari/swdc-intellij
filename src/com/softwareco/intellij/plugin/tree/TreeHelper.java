@@ -279,7 +279,6 @@ public class TreeHelper {
                 break;
             case TOGGLE_METRICS_ID:
                 SoftwareCoUtils.toggleStatusBar(UIInteractionType.click);
-                // CodeTimeToolWindow.updateMetrics(null, null);
                 break;
             case ADVANCED_METRICS_ID:
                 SoftwareCoSessionManager.launchWebDashboard(UIInteractionType.click);
