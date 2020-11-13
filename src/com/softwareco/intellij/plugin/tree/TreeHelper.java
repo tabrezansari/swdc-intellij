@@ -50,8 +50,7 @@ public class TreeHelper {
 
     public static List<MetricTreeNode> buildSignupNodes() {
         List<MetricTreeNode> list = new ArrayList<MetricTreeNode>();
-        String name = FileManager.getItem("name");
-        if (name == null || name.equals("")) {
+        if (!SoftwareCoUtils.isLoggedIn()) {
             list.add(buildSignupNode("google"));
             list.add(buildSignupNode("github"));
             list.add(buildSignupNode("email"));
