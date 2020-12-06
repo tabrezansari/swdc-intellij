@@ -16,17 +16,16 @@ public class SoftwareLoginAction extends AnAction {
 
     @Override
     public void actionPerformed(AnActionEvent anActionEvent) {
-        SoftwareCoSessionManager.launchLogin("software", UIInteractionType.keyboard);
+        SoftwareCoSessionManager.launchLogin("software", UIInteractionType.keyboard, false);
     }
 
     @Override
     public void update(AnActionEvent event) {
         String email = FileManager.getItem("name");
         boolean isLoggedIn = StringUtils.isNotBlank(email);
-        boolean serverOnline = SoftwareCoSessionManager.isServerOnline();
         // only show the login menu item if the server is online
         // and they're not logged on
-        event.getPresentation().setVisible(!isLoggedIn && serverOnline);
+        event.getPresentation().setVisible(!isLoggedIn);
         event.getPresentation().setEnabled(true);
     }
 }

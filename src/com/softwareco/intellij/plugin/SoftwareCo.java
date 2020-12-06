@@ -34,7 +34,6 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static MessageBusConnection connection;
 
-    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private final AsyncManager asyncManager = AsyncManager.getInstance();
 
     private static int retry_counter = 0;
@@ -56,7 +55,7 @@ public class SoftwareCo implements ApplicationComponent {
                 AsyncManager.getInstance().executeOnceInSeconds(service, 60);
             } else {
                 // create the anon user
-                jwt = SoftwareCoUtils.createAnonymousUser();
+                jwt = SoftwareCoUtils.createAnonymousUser(false);
                 if (jwt == null) {
                     // it failed, try again later
                     if (retry_counter == 0) {
@@ -130,11 +129,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         // get the last payload into memory
         FileManager.getLastSavedKeystrokeStats();
-
-        // check if the jwt is an app-jwt or not to finalize initialization
-        if (SoftwareCoUtils.isAppJwt()) {
-            SoftwareCoUtils.createAnonymousUser();
-        }
     }
 
     // add the document change event listener
@@ -178,6 +172,4 @@ public class SoftwareCo implements ApplicationComponent {
             keystrokeManager.getKeystrokeCount().processKeystrokes();
         }
     }
-
-
 }

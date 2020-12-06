@@ -73,6 +73,10 @@ public class CodeTimeToolWindow {
             if (codeTimeParentRow != -1) {
                 metricTree.expandRow(codeTimeParentRow);
             }
+            int loggedInParentRow = findParentNodeRowById(TreeHelper.LOGGED_IN_ID);
+            if (loggedInParentRow != -1) {
+                metricTree.expandRow(loggedInParentRow);
+            }
             expandInitialized = true;
         }
 
@@ -244,6 +248,37 @@ public class CodeTimeToolWindow {
     private static void updateNodeIconName(MetricTreeNode node, String iconName) {
         if (node != null) {
             node.updateIconName(iconName);
+        }
+    }
+
+    public static void expandCollapse(String id) {
+        int row = 0;
+        try {
+            DefaultTreeModel model = (DefaultTreeModel) metricTree.getModel();
+
+            DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) model.getRoot();
+
+            if (treeNode != null) {
+                Enumeration<TreeNode> nodes = treeNode.children();
+                if (nodes != null) {
+                    while (nodes.hasMoreElements()) {
+                        MetricTreeNode node = (MetricTreeNode) nodes.nextElement();
+                        if (node != null && node.getId().equals(id)) {
+                            if (!node.isExpanded()) {
+                                metricTree.expandRow(row);
+                                node.setExpanded(true);
+                            } else {
+                                metricTree.collapseRow(row);
+                                node.setExpanded(false);
+                            }
+                            break;
+                        }
+                        row++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.log(Level.INFO, "Find node by ID error: {0}", e.toString());
         }
     }
 
