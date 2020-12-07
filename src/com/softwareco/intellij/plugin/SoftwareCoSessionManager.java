@@ -14,6 +14,7 @@ import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
@@ -148,6 +149,9 @@ public class SoftwareCoSessionManager {
                 establishingUser = false;
             }
         } else {
+            // clear the auth callback state
+            FileManager.setBooleanItem("switching_account", false);
+            FileManager.setAuthCallbackState(null);
             establishingUser = false;
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
@@ -158,6 +162,9 @@ public class SoftwareCoSessionManager {
                     if (CodeTimeToolWindowFactory.isToolWindowVisible()) {
                         SessionDataManager.treeDataUpdateCheck(true);
                     }
+
+                    // refresh the tree menu area
+                    CodeTimeToolWindow.refresh();
                 }
             });
         }
@@ -182,7 +189,6 @@ public class SoftwareCoSessionManager {
         }
 
         JsonObject obj = new JsonObject();
-        obj.addProperty("plugin_token", jwt);
         obj.addProperty("plugin", "codetime");
         obj.addProperty("plugin_uuid", FileManager.getPluginUuid());
         obj.addProperty("pluginVersion", SoftwareCoUtils.getVersion());
@@ -207,7 +213,6 @@ public class SoftwareCoSessionManager {
             element_name = "ct_sign_up_github_btn";
             cta_text = "Sign up with GitHub";
             icon_name = "github";
-            obj.addProperty("token", jwt);
             url = SoftwareCoUtils.api_endpoint + "/auth/github";
         }
 

@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
@@ -99,6 +100,17 @@ public class CodeTimeToolWindow {
             // add the LOGGED_IN_ID node
             loggedInNode = TreeHelper.buildLoggedInNode();
             ((DefaultMutableTreeNode)metricTree.getModel().getRoot()).insert(loggedInNode, 0);
+        } else {
+            String authType = FileManager.getItem("authType");
+            String iconName = "envelope.svg";
+            if ("google".equals(authType)) {
+                iconName = "icons8-google.svg";
+            } else if ("github".equals(authType)) {
+                iconName = "icons8-github.svg";
+            }
+            String email = FileManager.getItem("name");
+            // update the logged in node
+            updateNodeLabel(findNodeById(TreeHelper.LOGGED_IN_ID), email, iconName);
         }
         CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
         SessionSummary sessionSummary = SessionDataManager.getSessionSummaryData();
@@ -240,7 +252,14 @@ public class CodeTimeToolWindow {
     }
 
     private static void updateNodeLabel(MetricTreeNode node, String label) {
+        updateNodeLabel(node, label, null);
+    }
+
+    private static void updateNodeLabel(MetricTreeNode node, String label, String iconName) {
         if (node != null) {
+            if (iconName != null) {
+                node.updateIconName(iconName);
+            }
             node.updateLabel(label);
         }
     }

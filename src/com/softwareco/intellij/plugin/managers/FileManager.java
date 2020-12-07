@@ -458,15 +458,13 @@ public class FileManager {
     }
 
     public static void setAuthCallbackState(String value) {
-        if (StringUtils.isBlank(getPluginUuid())) {
-            String deviceFile = getDeviceFile();
-            JsonObject deviceJson = getJsonObjectFromFile(deviceFile);
-            deviceJson.addProperty("auth_callback_state", value);
+        String deviceFile = getDeviceFile();
+        JsonObject deviceJson = getJsonObjectFromFile(deviceFile);
+        deviceJson.addProperty("auth_callback_state", value);
 
-            String content = deviceJson.toString();
+        String content = deviceJson.toString();
 
-            saveFileContent(deviceFile, content);
-        }
+        saveFileContent(deviceFile, content);
     }
 
 }
