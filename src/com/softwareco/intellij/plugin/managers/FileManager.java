@@ -430,21 +430,20 @@ public class FileManager {
     }
 
     public static String getPluginUuid() {
+        String plugin_uuid = null;
         JsonObject deviceJson = getJsonObjectFromFile(getDeviceFile());
         if (deviceJson != null && deviceJson.has("plugin_uuid") && !deviceJson.get("plugin_uuid").isJsonNull()) {
-            return deviceJson.get("plugin_uuid").getAsString();
+            plugin_uuid = deviceJson.get("plugin_uuid").getAsString();
         }
-        return null;
+        return plugin_uuid;
     }
 
     public static void setPluginUuid(String value) {
-        if (StringUtils.isBlank(getPluginUuid())) {
-            String deviceFile = getDeviceFile();
-            JsonObject deviceJson = getJsonObjectFromFile(deviceFile);
+        String deviceFile = getDeviceFile();
+        JsonObject deviceJson = getJsonObjectFromFile(deviceFile);
+        if (!deviceJson.has("plugin_uuid") || deviceJson.get("plugin_uuid").isJsonNull()) {
             deviceJson.addProperty("plugin_uuid", value);
-
             String content = deviceJson.toString();
-
             saveFileContent(deviceFile, content);
         }
     }

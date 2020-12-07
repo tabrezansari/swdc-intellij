@@ -26,31 +26,36 @@ public class MetricTree extends JTree {
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                try {
-                    final MetricTree tree = (MetricTree) e.getSource();
-                    if (tree != null) {
+                if (e != null && e instanceof MouseEvent && e.getSource() != null && e.getSource() instanceof MetricTree) {
+                    try {
+                        final MetricTree tree = (MetricTree) e.getSource();
+                        if (tree != null) {
 
-                        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+                            DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
 
-                        if (node == null) {
-                            return;
-                        }
-
-                        if (node instanceof MetricTreeNode) {
-                            TreeHelper.handleClickEvent((MetricTreeNode) node);
-                        }
-
-                        SwingUtilities.invokeLater(() -> {
-                            try {
-                                Thread.sleep(750);
-                                tree.clearSelection();
-                            } catch (InterruptedException e1) {
-                                System.err.println(e1);
+                            if (node == null) {
+                                return;
                             }
-                        });
+
+                            if (node instanceof MetricTreeNode) {
+                                TreeHelper.handleClickEvent((MetricTreeNode) node);
+                            }
+
+                            SwingUtilities.invokeLater(() -> {
+                                try {
+                                    Thread.sleep(750);
+                                    if (tree != null) {
+                                        tree.clearSelection();
+                                    }
+                                } catch (Exception ex) {
+                                    System.err.println(ex);
+                                }
+                            });
+                        }
+                    } catch (Exception ex) {
+                        LOG.log(Level.WARNING, "Tree mouse click error: {0}", ex.getMessage());
+                        ex.printStackTrace();
                     }
-                } catch (Exception ex) {
-                    LOG.log(Level.WARNING, "Tree mouse click error: {0}", ex.toString());
                 }
             }
         });

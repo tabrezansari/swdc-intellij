@@ -172,8 +172,6 @@ public class SoftwareCoSessionManager {
 
     public static void launchLogin(String loginType, UIInteractionType interactionType, boolean switching_account) {
 
-        String jwt = FileManager.getItem("jwt");
-
         String auth_callback_state = FileManager.getAuthCallbackState();
         if (StringUtils.isBlank(auth_callback_state)) {
             auth_callback_state = UUID.randomUUID().toString();
@@ -188,9 +186,15 @@ public class SoftwareCoSessionManager {
             }
         }
 
+        String plugin_uuid = FileManager.getPluginUuid();
+        if (StringUtils.isBlank(plugin_uuid)) {
+            plugin_uuid = UUID.randomUUID().toString();
+            FileManager.setPluginUuid(plugin_uuid);
+        }
+
         JsonObject obj = new JsonObject();
         obj.addProperty("plugin", "codetime");
-        obj.addProperty("plugin_uuid", FileManager.getPluginUuid());
+        obj.addProperty("plugin_uuid", plugin_uuid);
         obj.addProperty("pluginVersion", SoftwareCoUtils.getVersion());
         obj.addProperty("plugin_id", SoftwareCoUtils.pluginId);
         obj.addProperty("auth_callback_state", auth_callback_state);
