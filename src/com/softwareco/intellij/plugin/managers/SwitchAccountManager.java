@@ -1,11 +1,8 @@
 package com.softwareco.intellij.plugin.managers;
 
 import com.intellij.openapi.ui.Messages;
-import com.intellij.openapi.util.IconLoader;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-
-import javax.swing.*;
 
 public class SwitchAccountManager {
 

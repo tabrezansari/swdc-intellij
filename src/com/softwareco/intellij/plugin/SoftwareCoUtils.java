@@ -806,21 +806,15 @@ public class SoftwareCoUtils {
     }
 
     public static boolean getUserLoginState() {
-        String jwt = FileManager.getItem("jwt");
+        String name = FileManager.getItem("name");
 
         boolean switching_account = FileManager.getBooleanItem("switching_account");
 
-        JsonObject userObj = getUser();
-        if (userObj != null && userObj.has("email") && !switching_account) {
-            // check if the email is valid
-            String email = userObj.get("email").getAsString();
-            if (validateEmail(email)) {
-                FileManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
-                FileManager.setItem("name", email);
-                return true;
-            }
+        if (StringUtils.isNotBlank(name) && !switching_account) {
+            return true;
         }
 
+        String jwt = FileManager.getItem("jwt");
         String auth_callback_state = FileManager.getAuthCallbackState();
         String token = (StringUtils.isNotBlank(auth_callback_state)) ? auth_callback_state : jwt;
         String api = "/users/plugin/state";

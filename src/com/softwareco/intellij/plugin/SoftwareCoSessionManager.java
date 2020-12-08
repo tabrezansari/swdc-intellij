@@ -32,7 +32,6 @@ public class SoftwareCoSessionManager {
     private static SoftwareCoSessionManager instance = null;
     public static final Logger log = Logger.getLogger("SoftwareCoSessionManager");
     private static long lastAppAvailableCheck = 0;
-    public static boolean establishingUser = false;
 
     public static SoftwareCoSessionManager getInstance() {
         if (instance == null) {
@@ -146,13 +145,12 @@ public class SoftwareCoSessionManager {
                 // clear the auth callback state
                 FileManager.setBooleanItem("switching_account", false);
                 FileManager.setAuthCallbackState(null);
-                establishingUser = false;
             }
         } else {
             // clear the auth callback state
             FileManager.setBooleanItem("switching_account", false);
             FileManager.setAuthCallbackState(null);
-            establishingUser = false;
+
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
@@ -172,11 +170,9 @@ public class SoftwareCoSessionManager {
 
     public static void launchLogin(String loginType, UIInteractionType interactionType, boolean switching_account) {
 
-        String auth_callback_state = FileManager.getAuthCallbackState();
-        if (StringUtils.isBlank(auth_callback_state)) {
-            auth_callback_state = UUID.randomUUID().toString();
-            FileManager.setAuthCallbackState(auth_callback_state);
-        }
+        String auth_callback_state = UUID.randomUUID().toString();
+        FileManager.setAuthCallbackState(auth_callback_state);
+
         if (switching_account) {
             // make sure the user is not currently switching their account before changing the auth_callback_state
             boolean current_switching_account_flag = FileManager.getBooleanItem("switching_account");
@@ -241,12 +237,9 @@ public class SoftwareCoSessionManager {
 
         BrowserUtil.browse(url);
 
-        if (!establishingUser) {
-            establishingUser = true;
-            // max of 5.3 minutes
-            final Runnable service = () -> lazilyFetchUserStatus(40);
-            AsyncManager.getInstance().executeOnceInSeconds(service, 8);
-        }
+        // max of 5.3 minutes
+        final Runnable service = () -> lazilyFetchUserStatus(40);
+        AsyncManager.getInstance().executeOnceInSeconds(service, 8);
 
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = element_name;
