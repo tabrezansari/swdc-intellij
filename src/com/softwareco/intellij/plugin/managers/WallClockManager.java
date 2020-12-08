@@ -51,9 +51,6 @@ public class WallClockManager {
     public void newDayChecker() {
         if (SoftwareCoUtils.isNewDay()) {
 
-            // clear the last payload we have in memory
-            FileManager.clearLastSavedKeystrokeStats();
-
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();
             SessionDataManager.clearSessionSummaryData();

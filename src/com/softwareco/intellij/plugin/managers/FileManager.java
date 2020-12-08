@@ -22,12 +22,6 @@ import java.util.logging.Logger;
 public class FileManager {
 
     public static final Logger log = Logger.getLogger("FileManager");
-    
-    private static KeystrokeCount lastSavedKeystrokeStats = null;
-
-    public static void clearLastSavedKeystrokeStats() {
-        lastSavedKeystrokeStats = null;
-    }
 
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
@@ -351,82 +345,6 @@ public class FileManager {
             }
         }
         return content;
-    }
-
-    public static KeystrokeCount getLastSavedKeystrokeStats() {
-        List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
-
-        if (list != null && list.size() > 0) {
-            try {
-                lastSavedKeystrokeStats = Collections.max(list, new KeystrokeCount.SortByLatestStart());
-            } catch (Exception e) {
-                // possible malformed json, get the zero element
-                lastSavedKeystrokeStats = list.get(0);
-            }
-        }
-
-        return lastSavedKeystrokeStats;
-    }
-
-    private static List<KeystrokeCount> convertPayloadsToList(String payloads) {
-        if (StringUtils.isNotBlank(payloads)) {
-            JsonArray jsonArray = SoftwareCoUtils.readAsJsonArray(payloads);
-
-            if (jsonArray != null && jsonArray.size() > 0) {
-                Type type = new TypeToken<List<KeystrokeCount>>() {
-                }.getType();
-                List<KeystrokeCount> list = new ArrayList<>();
-                try {
-                    list = SoftwareCo.gson.fromJson(jsonArray, type);
-                } catch (Exception e) {}
-
-                return list;
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    private static String getKeystrokePayloads() {
-        final String dataStoreFile = getSoftwareDataStoreFile();
-        File f = new File(dataStoreFile);
-
-        if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
-
-                //Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        // clean the line in case there's undefined before the json brace
-                        line = SoftwareCoUtils.cleanJsonString(line);
-                        sb.append(line).append(",");
-                    }
-                }
-
-                br.close();
-
-                if (sb.length() > 0) {
-                    // we have data to send
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-
-                    payloads = "[" + payloads + "]";
-
-                    return payloads;
-
-                } else {
-                    log.info("Code Time: No offline data to send");
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
-            }
-        }
-        return null;
     }
 
     public static String getPluginUuid() {
