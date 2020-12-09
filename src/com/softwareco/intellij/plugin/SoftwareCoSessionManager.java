@@ -14,6 +14,8 @@ import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.managers.TimeDataManager;
+import com.softwareco.intellij.plugin.models.TimeData;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
@@ -151,18 +153,17 @@ public class SoftwareCoSessionManager {
             FileManager.setBooleanItem("switching_account", false);
             FileManager.setAuthCallbackState(null);
 
+            SessionDataManager.clearSessionSummaryData();
+            TimeDataManager.clearTimeDataSummary();
+
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
 
-                    if (CodeTimeToolWindowFactory.isToolWindowVisible()) {
-                        SessionDataManager.treeDataUpdateCheck(true);
-                    }
-
-                    // refresh the tree menu area
-                    CodeTimeToolWindow.refresh();
+                    // this will fetch the session summary data and refresh the tree
+                    SessionDataManager.treeDataUpdateCheck(true);
                 }
             });
         }

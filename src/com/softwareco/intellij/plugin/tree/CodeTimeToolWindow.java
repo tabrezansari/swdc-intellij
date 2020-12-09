@@ -27,6 +27,7 @@ public class CodeTimeToolWindow {
     private JScrollPane scrollPane;
     private static MetricTree metricTree;
     private JPanel dataPanel;
+    private static boolean refreshingTree = false;
 
     private static CodeTimeToolWindow win;
 
@@ -50,12 +51,23 @@ public class CodeTimeToolWindow {
     }
 
     public static void refresh() {
-        if (win != null) {
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    win.rebuildTreeView();
-                }
-            });
+        if (win != null && !refreshingTree) {
+            refreshingTree = true;
+            try {
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                    public void run() {
+                        try {
+                            win.rebuildTreeView();
+                        } catch (Exception e) {
+                            //
+                        } finally {
+                            refreshingTree = false;
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                refreshingTree = false;
+            }
         }
     }
 

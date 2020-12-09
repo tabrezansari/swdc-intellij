@@ -17,7 +17,6 @@ public class WallClockManager {
 
     private static WallClockManager instance = null;
     private AsyncManager asyncManager;
-    private static boolean dispatching = false;
 
     public static WallClockManager getInstance() {
         if (instance == null) {
