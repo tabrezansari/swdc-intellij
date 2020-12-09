@@ -22,12 +22,6 @@ import java.util.logging.Logger;
 public class FileManager {
 
     public static final Logger log = Logger.getLogger("FileManager");
-    
-    private static KeystrokeCount lastSavedKeystrokeStats = null;
-
-    public static void clearLastSavedKeystrokeStats() {
-        lastSavedKeystrokeStats = null;
-    }
 
     public static String getSoftwareDir(boolean autoCreate) {
         String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
@@ -62,6 +56,16 @@ public class FileManager {
             file += "\\session.json";
         } else {
             file += "/session.json";
+        }
+        return file;
+    }
+
+    private static String getDeviceFile() {
+        String file = getSoftwareDir(true);
+        if (SoftwareCoUtils.isWindows()) {
+            file += "\\device.json";
+        } else {
+            file += "/device.json";
         }
         return file;
     }
@@ -265,7 +269,24 @@ public class FileManager {
         String sessionFile = getSoftwareSessionFile(true);
 
         saveFileContent(sessionFile, content);
+    }
 
+    public static void setBooleanItem(String key, boolean val) {
+        JsonObject sessionJson = getSoftwareSessionAsJson();
+        sessionJson.addProperty(key, val);
+
+        String content = sessionJson.toString();
+        String sessionFile = getSoftwareSessionFile(true);
+
+        saveFileContent(sessionFile, content);
+    }
+
+    public static boolean getBooleanItem(String key) {
+        JsonObject sessionJson = getSoftwareSessionAsJson();
+        if (sessionJson != null && sessionJson.has(key) && !sessionJson.get(key).isJsonNull()) {
+            return sessionJson.get(key).getAsBoolean();
+        }
+        return false;
     }
 
     public static long getNumericItem(String key, Long defaultVal) {
@@ -326,80 +347,37 @@ public class FileManager {
         return content;
     }
 
-    public static KeystrokeCount getLastSavedKeystrokeStats() {
-        List<KeystrokeCount> list = convertPayloadsToList(getKeystrokePayloads());
-
-        if (list != null && list.size() > 0) {
-            try {
-                lastSavedKeystrokeStats = Collections.max(list, new KeystrokeCount.SortByLatestStart());
-            } catch (Exception e) {
-                // possible malformed json, get the zero element
-                lastSavedKeystrokeStats = list.get(0);
-            }
+    public static String getPluginUuid() {
+        String plugin_uuid = null;
+        JsonObject deviceJson = getJsonObjectFromFile(getDeviceFile());
+        if (deviceJson.has("plugin_uuid") && !deviceJson.get("plugin_uuid").isJsonNull()) {
+            plugin_uuid = deviceJson.get("plugin_uuid").getAsString();
+        } else {
+            // set it for the 1st and only time
+            plugin_uuid = UUID.randomUUID().toString();
+            deviceJson.addProperty("plugin_uuid", plugin_uuid);
+            String content = deviceJson.toString();
+            saveFileContent(getDeviceFile(), content);
         }
-
-        return lastSavedKeystrokeStats;
+        return plugin_uuid;
     }
 
-    private static List<KeystrokeCount> convertPayloadsToList(String payloads) {
-        if (StringUtils.isNotBlank(payloads)) {
-            JsonArray jsonArray = SoftwareCoUtils.readAsJsonArray(payloads);
-
-            if (jsonArray != null && jsonArray.size() > 0) {
-                Type type = new TypeToken<List<KeystrokeCount>>() {
-                }.getType();
-                List<KeystrokeCount> list = new ArrayList<>();
-                try {
-                    list = SoftwareCo.gson.fromJson(jsonArray, type);
-                } catch (Exception e) {}
-
-                return list;
-            }
-        }
-        return new ArrayList<>();
-    }
-
-    private static String getKeystrokePayloads() {
-        final String dataStoreFile = getSoftwareDataStoreFile();
-        File f = new File(dataStoreFile);
-
-        if (f.exists()) {
-            // found a data file, check if there's content
-            StringBuffer sb = new StringBuffer();
-            try {
-                FileInputStream fis = new FileInputStream(f);
-
-                //Construct BufferedReader from InputStreamReader
-                BufferedReader br = new BufferedReader(new InputStreamReader(fis));
-
-                String line = null;
-                while ((line = br.readLine()) != null) {
-                    if (line.length() > 0) {
-                        // clean the line in case there's undefined before the json brace
-                        line = SoftwareCoUtils.cleanJsonString(line);
-                        sb.append(line).append(",");
-                    }
-                }
-
-                br.close();
-
-                if (sb.length() > 0) {
-                    // we have data to send
-                    String payloads = sb.toString();
-                    payloads = payloads.substring(0, payloads.lastIndexOf(","));
-
-                    payloads = "[" + payloads + "]";
-
-                    return payloads;
-
-                } else {
-                    log.info("Code Time: No offline data to send");
-                }
-            } catch (Exception e) {
-                log.warning("Code Time: Error trying to read and send offline data, error: " + e.getMessage());
-            }
+    public static String getAuthCallbackState() {
+        JsonObject deviceJson = getJsonObjectFromFile(getDeviceFile());
+        if (deviceJson != null && deviceJson.has("auth_callback_state") && !deviceJson.get("auth_callback_state").isJsonNull()) {
+            return deviceJson.get("auth_callback_state").getAsString();
         }
         return null;
+    }
+
+    public static void setAuthCallbackState(String value) {
+        String deviceFile = getDeviceFile();
+        JsonObject deviceJson = getJsonObjectFromFile(deviceFile);
+        deviceJson.addProperty("auth_callback_state", value);
+
+        String content = deviceJson.toString();
+
+        saveFileContent(deviceFile, content);
     }
 
 }

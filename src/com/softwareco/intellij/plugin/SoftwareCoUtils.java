@@ -76,7 +76,6 @@ public class SoftwareCoUtils {
     public final static String untitled_file_name = "Untitled";
 
     public static HttpClient httpClient;
-    public static HttpClient pingClient;
 
     private static final Gson gson = new Gson();
 
@@ -88,7 +87,6 @@ public class SoftwareCoUtils {
     public final static ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
     private final static int EOF = -1;
-    private static boolean appAvailable = true;
     private static boolean showStatusText = true;
 
     private static final int lastDayOfMonth = 0;
@@ -106,13 +104,12 @@ public class SoftwareCoUtils {
     static {
         // initialize the HttpClient
         RequestConfig config = RequestConfig.custom()
-                .setConnectTimeout(5000)
-                .setConnectionRequestTimeout(5000)
-                .setSocketTimeout(5000)
+                .setConnectTimeout(8000)
+                .setConnectionRequestTimeout(8000)
+                .setSocketTimeout(8000)
                 .build();
 
-        pingClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
-        httpClient = HttpClientBuilder.create().build();
+        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
     }
 
     public static String getVersion() {
@@ -307,14 +304,6 @@ public class SoftwareCoUtils {
         return SystemInfo.isMac;
     }
 
-    public static void updateServerStatus(boolean isOnlineStatus) {
-        appAvailable = isOnlineStatus;
-    }
-
-    public static boolean isAppAvailable() {
-        return appAvailable;
-    }
-
     public static SoftwareResponse makeApiCall(String api, String httpMethodName, String payload) {
         return makeApiCall(api, httpMethodName, payload, null);
     }
@@ -323,23 +312,7 @@ public class SoftwareCoUtils {
 
         SoftwareResponse softwareResponse = new SoftwareResponse();
 
-        SoftwareHttpManager httpTask = null;
-        if (api.contains("/ping") || api.contains("/sessions") || api.contains("/dashboard") || api.contains("/users/plugin/accounts")) {
-            // if the server is having issues, we'll timeout within 5 seconds for these calls
-            httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
-        } else {
-            if (httpMethodName.equals(HttpPost.METHOD_NAME)) {
-                // continue, POSTS encapsulated "invokeLater" with a timeout of 5 seconds
-                httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, pingClient);
-            } else {
-                if (!appAvailable) {
-                    // bail out
-                    softwareResponse.setIsOk(false);
-                    return softwareResponse;
-                }
-                httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
-            }
-        }
+        SoftwareHttpManager httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
 
         Future<HttpResponse> response = EXECUTOR_SERVICE.submit(httpTask);
 
@@ -763,32 +736,30 @@ public class SoftwareCoUtils {
         return username;
     }
 
-    public static String getAppJwt() {
-        long now = Math.round(System.currentTimeMillis() / 1000);
-        String api = "/data/apptoken?token=" + now;
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null);
-        if (resp.isOk()) {
-            JsonObject obj = resp.getJsonObj();
-            return obj.get("jwt").getAsString();
-        }
-        return null;
-    }
-
-    public static String createAnonymousUser() {
+    public static String createAnonymousUser(boolean ignoreJwt) {
         // make sure we've fetched the app jwt
-        String appJwt = getAppJwt();
+        String jwt = FileManager.getItem("jwt");
 
-        if (appJwt != null) {
+        if (StringUtils.isBlank(jwt) || ignoreJwt) {
             String timezone = TimeZone.getDefault().getID();
+
+            String plugin_uuid = FileManager.getPluginUuid();
+            String auth_callback_state = FileManager.getAuthCallbackState();
+
+            if (StringUtils.isBlank(auth_callback_state)) {
+                auth_callback_state = UUID.randomUUID().toString();
+                FileManager.setAuthCallbackState(auth_callback_state);
+            }
 
             JsonObject payload = new JsonObject();
             payload.addProperty("username", getOsUsername());
             payload.addProperty("timezone", timezone);
             payload.addProperty("hostname", getHostname());
-            payload.addProperty("creation_annotation", "NO_SESSION_FILE");
+            payload.addProperty("auth_callback_state", auth_callback_state);
+            payload.addProperty("plugin_uuid", plugin_uuid);
 
-            String api = "/data/onboard";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payload.toString(), appJwt);
+            String api = "/plugins/onboard";
+            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payload.toString());
             if (resp.isOk()) {
                 // check if we have the data and jwt
                 // resp.data.jwt and resp.data.user
@@ -798,6 +769,8 @@ public class SoftwareCoUtils {
                 if (data != null && data.has("jwt")) {
                     String dataJwt = data.get("jwt").getAsString();
                     FileManager.setItem("jwt", dataJwt);
+                    FileManager.setBooleanItem("switching_account", false);
+                    FileManager.setAuthCallbackState(null);
                     return dataJwt;
                 }
             }
@@ -829,37 +802,53 @@ public class SoftwareCoUtils {
     }
 
     public static boolean getUserLoginState() {
-        String pluginjwt = FileManager.getItem("jwt");
+        String name = FileManager.getItem("name");
+        boolean switching_account = FileManager.getBooleanItem("switching_account");
 
-        JsonObject userObj = getUser();
-        if (userObj != null && userObj.has("email")) {
-            // check if the email is valid
-            String email = userObj.get("email").getAsString();
-            if (validateEmail(email)) {
-                FileManager.setItem("jwt", userObj.get("plugin_jwt").getAsString());
-                FileManager.setItem("name", email);
-                return true;
-            }
+        if (StringUtils.isNotBlank(name) && !switching_account) {
+            return true;
         }
 
+        String authType = FileManager.getItem("authType");
+        if (StringUtils.isBlank(authType)) {
+            authType = "software";
+        }
+        String jwt = FileManager.getItem("jwt");
+        String auth_callback_state = FileManager.getAuthCallbackState();
+        String token = (StringUtils.isNotBlank(auth_callback_state)) ? auth_callback_state : jwt;
         String api = "/users/plugin/state";
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, pluginjwt);
-        if (resp.isOk()) {
-            // check if we have the data and jwt
-            // resp.data.jwt and resp.data.user
-            // then update the session.json for the jwt
-            JsonObject data = resp.getJsonObj();
-            String state = (data != null && data.has("state")) ? data.get("state").getAsString() : "UNKNOWN";
-            // check if we have any data
-            if (state.equals("OK")) {
-                String dataJwt = data.get("jwt").getAsString();
-                FileManager.setItem("jwt", dataJwt);
-                String dataEmail = data.get("email").getAsString();
-                if (dataEmail != null) {
-                    FileManager.setItem("name", dataEmail);
-                }
-                return true;
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, token);
+
+        boolean foundUser = (resp.isOk() && resp.getJsonObj() != null && resp.getJsonObj().has("user"));
+        String state = (foundUser) ? resp.getJsonObj().get("state").getAsString() : "UNKNOWN";
+        boolean isEmailLogin = (authType.equals("software") || authType.equals("email"));
+        if (!state.equals("OK") && isEmailLogin) {
+            // check using the jwt
+            resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
+            foundUser = (resp.isOk() && resp.getJsonObj() != null && resp.getJsonObj().has("user"));
+        }
+
+        if (foundUser) {
+            JsonObject user = resp.getJsonObj().get("user").getAsJsonObject();
+
+            int registered = user.get("registered").getAsInt();
+            FileManager.setItem("jwt", user.get("plugin_jwt").getAsString());
+            if (registered == 1) {
+                FileManager.setItem("name", user.get("email").getAsString());
+            } else {
+                FileManager.setItem("name", null);
             }
+
+            String currentAuthType = FileManager.getItem("authType");
+            if (StringUtils.isBlank(currentAuthType)) {
+                FileManager.setItem("authType", "software");
+            }
+
+            FileManager.setBooleanItem("switching_account", false);
+            FileManager.setAuthCallbackState(null);
+
+            // if we need the user it's "resp.data.user"
+            return (registered == 1);
         }
 
         return false;

@@ -4,6 +4,7 @@ import com.intellij.ide.BrowserUtil;
 import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.FileManager;
+import com.softwareco.intellij.plugin.managers.SwitchAccountManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +34,7 @@ public class TreeHelper {
     public static final String ACTIVE_CODETIME_TODAY_ID = "active_codetime_today";
     public static final String ACTIVE_CODETIME_AVG_TODAY_ID = "active_codetime_avg_today";
     public static final String ACTIVE_CODETIME_GLOBAL_AVG_TODAY_ID = "active_codetime_global_avg_today";
+    public static final String SWITCH_ACCOUNT_ID = "switch_account";
 
     public static final String LINES_ADDED_TODAY_ID = "lines_added_today";
     public static final String LINES_ADDED_AVG_TODAY_ID = "lines_added_avg_today";
@@ -88,6 +90,8 @@ public class TreeHelper {
         }
 
         MetricTreeNode node = new MetricTreeNode(name, iconName, LOGGED_IN_ID);
+        node.add(new MetricTreeNode("Switch account", "paw.svg", SWITCH_ACCOUNT_ID));
+
         return node;
     }
 
@@ -264,15 +268,19 @@ public class TreeHelper {
     public static void handleClickEvent(MetricTreeNode node) {
         switch (node.getId()) {
             case GOOGLE_SIGNUP_ID:
-                SoftwareCoSessionManager.launchLogin("google", UIInteractionType.click);
+                SoftwareCoSessionManager.launchLogin("google", UIInteractionType.click, false);
                 break;
             case GITHIUB_SIGNUP_ID:
-                SoftwareCoSessionManager.launchLogin("github", UIInteractionType.click);
+                SoftwareCoSessionManager.launchLogin("github", UIInteractionType.click, false);
                 break;
             case EMAIL_SIGNUP_ID:
-                SoftwareCoSessionManager.launchLogin("email", UIInteractionType.click);
+                SoftwareCoSessionManager.launchLogin("email", UIInteractionType.click, false);
                 break;
             case LOGGED_IN_ID:
+                CodeTimeToolWindow.expandCollapse(LOGGED_IN_ID);
+                break;
+            case SWITCH_ACCOUNT_ID:
+                SwitchAccountManager.initiateSwitchAccountFlow();
                 break;
             case VIEW_SUMMARY_ID:
                 SoftwareCoUtils.launchCodeTimeMetricsDashboard(UIInteractionType.click);

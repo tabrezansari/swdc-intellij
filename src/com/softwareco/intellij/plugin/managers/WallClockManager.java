@@ -17,7 +17,6 @@ public class WallClockManager {
 
     private static WallClockManager instance = null;
     private AsyncManager asyncManager;
-    private static boolean dispatching = false;
 
     public static WallClockManager getInstance() {
         if (instance == null) {
@@ -50,9 +49,6 @@ public class WallClockManager {
 
     public void newDayChecker() {
         if (SoftwareCoUtils.isNewDay()) {
-
-            // clear the last payload we have in memory
-            FileManager.clearLastSavedKeystrokeStats();
 
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();

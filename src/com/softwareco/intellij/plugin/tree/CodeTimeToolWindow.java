@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.FileAggregateDataManager;
+import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
@@ -26,6 +27,7 @@ public class CodeTimeToolWindow {
     private JScrollPane scrollPane;
     private static MetricTree metricTree;
     private JPanel dataPanel;
+    private static boolean refreshingTree = false;
 
     private static CodeTimeToolWindow win;
 
@@ -49,12 +51,23 @@ public class CodeTimeToolWindow {
     }
 
     public static void refresh() {
-        if (win != null) {
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    win.rebuildTreeView();
-                }
-            });
+        if (win != null && !refreshingTree) {
+            refreshingTree = true;
+            try {
+                ApplicationManager.getApplication().invokeLater(new Runnable() {
+                    public void run() {
+                        try {
+                            win.rebuildTreeView();
+                        } catch (Exception e) {
+                            //
+                        } finally {
+                            refreshingTree = false;
+                        }
+                    }
+                });
+            } catch (Exception e) {
+                refreshingTree = false;
+            }
         }
     }
 
@@ -72,6 +85,10 @@ public class CodeTimeToolWindow {
             int codeTimeParentRow = findParentNodeRowById(TreeHelper.CODETIME_PARENT_ID);
             if (codeTimeParentRow != -1) {
                 metricTree.expandRow(codeTimeParentRow);
+            }
+            int loggedInParentRow = findParentNodeRowById(TreeHelper.LOGGED_IN_ID);
+            if (loggedInParentRow != -1) {
+                metricTree.expandRow(loggedInParentRow);
             }
             expandInitialized = true;
         }
@@ -95,6 +112,17 @@ public class CodeTimeToolWindow {
             // add the LOGGED_IN_ID node
             loggedInNode = TreeHelper.buildLoggedInNode();
             ((DefaultMutableTreeNode)metricTree.getModel().getRoot()).insert(loggedInNode, 0);
+        } else {
+            String authType = FileManager.getItem("authType");
+            String iconName = "envelope.svg";
+            if ("google".equals(authType)) {
+                iconName = "icons8-google.svg";
+            } else if ("github".equals(authType)) {
+                iconName = "icons8-github.svg";
+            }
+            String email = FileManager.getItem("name");
+            // update the logged in node
+            updateNodeLabel(findNodeById(TreeHelper.LOGGED_IN_ID), email, iconName);
         }
         CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
         SessionSummary sessionSummary = SessionDataManager.getSessionSummaryData();
@@ -236,7 +264,14 @@ public class CodeTimeToolWindow {
     }
 
     private static void updateNodeLabel(MetricTreeNode node, String label) {
+        updateNodeLabel(node, label, null);
+    }
+
+    private static void updateNodeLabel(MetricTreeNode node, String label, String iconName) {
         if (node != null) {
+            if (iconName != null) {
+                node.updateIconName(iconName);
+            }
             node.updateLabel(label);
         }
     }
@@ -244,6 +279,37 @@ public class CodeTimeToolWindow {
     private static void updateNodeIconName(MetricTreeNode node, String iconName) {
         if (node != null) {
             node.updateIconName(iconName);
+        }
+    }
+
+    public static void expandCollapse(String id) {
+        int row = 0;
+        try {
+            DefaultTreeModel model = (DefaultTreeModel) metricTree.getModel();
+
+            DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) model.getRoot();
+
+            if (treeNode != null) {
+                Enumeration<TreeNode> nodes = treeNode.children();
+                if (nodes != null) {
+                    while (nodes.hasMoreElements()) {
+                        MetricTreeNode node = (MetricTreeNode) nodes.nextElement();
+                        if (node != null && node.getId().equals(id)) {
+                            if (!node.isExpanded()) {
+                                metricTree.expandRow(row);
+                                node.setExpanded(true);
+                            } else {
+                                metricTree.collapseRow(row);
+                                node.setExpanded(false);
+                            }
+                            break;
+                        }
+                        row++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.log(Level.INFO, "Find node by ID error: {0}", e.toString());
         }
     }
 

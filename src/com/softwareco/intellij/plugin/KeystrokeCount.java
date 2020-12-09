@@ -276,11 +276,7 @@ public class KeystrokeCount {
 
         TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
-        // get the current payloads so we can compare our last cumulative seconds
-        KeystrokeCount lastPayload = FileManager.getLastSavedKeystrokeStats();
         if (SoftwareCoUtils.isNewDay()) {
-            // don't use the last kpm since the day is different
-            lastPayload = null;
 
             // clear out data from the previous day
             WallClockManager.getInstance().newDayChecker();
@@ -300,11 +296,6 @@ public class KeystrokeCount {
         if (td != null) {
             this.cumulative_editor_seconds = td.getEditor_seconds();
             this.cumulative_session_seconds = td.getSession_seconds();
-        } else if (lastPayload != null) {
-            // no time data found, project null error
-            this.project_null_error = "TimeData not found using " + this.project.getDirectory() + " for editor and session seconds";
-            this.cumulative_editor_seconds = lastPayload.cumulative_editor_seconds + 60;
-            this.cumulative_session_seconds = lastPayload.cumulative_session_seconds + 60;
         }
 
         if (this.cumulative_editor_seconds < this.cumulative_session_seconds) {

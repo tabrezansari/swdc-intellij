@@ -34,45 +34,26 @@ public class SoftwareCo implements ApplicationComponent {
 
     public static MessageBusConnection connection;
 
-    private final SoftwareCoEventManager eventMgr = SoftwareCoEventManager.getInstance();
     private final AsyncManager asyncManager = AsyncManager.getInstance();
 
-    private static int retry_counter = 0;
-
     public SoftwareCo() {
+        // constructor
     }
 
     public void initComponent() {
-        boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
         String jwt = FileManager.getItem("jwt");
         if (StringUtils.isBlank(jwt)) {
-            if (!serverIsOnline) {
-                // server isn't online, check again in 10 min
-                if (retry_counter == 0) {
-                    retry_counter += 1;
+            jwt = SoftwareCoUtils.createAnonymousUser(false);
+            if (StringUtils.isBlank(jwt)) {
+                boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
+                if (!serverIsOnline) {
                     SoftwareCoUtils.showOfflinePrompt(true);
                 }
-                final Runnable service = () -> initComponent();
-                AsyncManager.getInstance().executeOnceInSeconds(service, 60);
             } else {
-                // create the anon user
-                jwt = SoftwareCoUtils.createAnonymousUser();
-                if (jwt == null) {
-                    // it failed, try again later
-                    if (retry_counter == 0) {
-                        retry_counter += 1;
-                        SoftwareCoUtils.showOfflinePrompt(true);
-                    }
-                    final Runnable service = () -> initComponent();
-                    AsyncManager.getInstance().executeOnceInSeconds(service, 60);
-                } else {
-                    initializePlugin(true);
-                }
+                initializePlugin(true);
             }
-        } else {
-            // session json already exists, continue with plugin init
-            initializePlugin(false);
         }
+        initializePlugin(false);
     }
 
     protected void initializePlugin(boolean initializedUser) {
@@ -127,14 +108,6 @@ public class SoftwareCo implements ApplicationComponent {
 
         // setup the doc listeners
         setupEventListeners();
-
-        // get the last payload into memory
-        FileManager.getLastSavedKeystrokeStats();
-
-        // check if the jwt is an app-jwt or not to finalize initialization
-        if (SoftwareCoUtils.isAppJwt()) {
-            SoftwareCoUtils.createAnonymousUser();
-        }
     }
 
     // add the document change event listener
@@ -178,6 +151,4 @@ public class SoftwareCo implements ApplicationComponent {
             keystrokeManager.getKeystrokeCount().processKeystrokes();
         }
     }
-
-
 }

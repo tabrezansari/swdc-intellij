@@ -4,6 +4,8 @@
  */
 package com.softwareco.intellij.plugin;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -12,12 +14,19 @@ import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.managers.TimeDataManager;
+import com.softwareco.intellij.plugin.models.TimeData;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.HttpGet;
 
 import java.io.*;
+import java.net.URLEncoder;
+import java.util.Iterator;
+import java.util.UUID;
 import java.util.logging.Logger;
 
 public class SoftwareCoSessionManager {
@@ -25,7 +34,6 @@ public class SoftwareCoSessionManager {
     private static SoftwareCoSessionManager instance = null;
     public static final Logger log = Logger.getLogger("SoftwareCoSessionManager");
     private static long lastAppAvailableCheck = 0;
-    public static boolean establishingUser = false;
 
     public static SoftwareCoSessionManager getInstance() {
         if (instance == null) {
@@ -100,15 +108,11 @@ public class SoftwareCoSessionManager {
     }
 
     public synchronized static boolean isServerOnline() {
-        long nowInSec = Math.round(System.currentTimeMillis() / 1000);
-        // 5 min threshold
-        boolean pastThreshold = nowInSec - lastAppAvailableCheck > (60 * 5);
-        if (pastThreshold) {
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
-            SoftwareCoUtils.updateServerStatus(resp.isOk());
-            lastAppAvailableCheck = nowInSec;
+        SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
+        if (resp != null && resp.isOk()) {
+            return true;
         }
-        return SoftwareCoUtils.isAppAvailable();
+        return false;
     }
 
     private Project getCurrentProject() {
@@ -133,30 +137,54 @@ public class SoftwareCoSessionManager {
     protected static void lazilyFetchUserStatus(int retryCount) {
         boolean establishedUser = SoftwareCoUtils.getUserLoginState();
 
-        if (!establishedUser && retryCount > 0) {
-            final int newRetryCount = retryCount - 1;
+        if (!establishedUser) {
+            if (retryCount > 0) {
+                final int newRetryCount = retryCount - 1;
 
-            final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);
-            AsyncManager.getInstance().executeOnceInSeconds(service, 8);
+                final Runnable service = () -> lazilyFetchUserStatus(newRetryCount);
+                AsyncManager.getInstance().executeOnceInSeconds(service, 8);
+            } else {
+                // clear the auth callback state
+                FileManager.setBooleanItem("switching_account", false);
+                FileManager.setAuthCallbackState(null);
+            }
         } else {
-            establishingUser = false;
+            // clear the auth callback state
+            FileManager.setBooleanItem("switching_account", false);
+            FileManager.setAuthCallbackState(null);
+
+            SessionDataManager.clearSessionSummaryData();
+            TimeDataManager.clearTimeDataSummary();
+
             // prompt they've completed the setup
             ApplicationManager.getApplication().invokeLater(new Runnable() {
                 public void run() {
                     // ask to download the PM
                     Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
 
-                    if (CodeTimeToolWindowFactory.isToolWindowVisible()) {
-                        SessionDataManager.treeDataUpdateCheck(true);
-                    }
+                    // this will fetch the session summary data and refresh the tree
+                    SessionDataManager.treeDataUpdateCheck(true);
                 }
             });
         }
     }
 
-    public static void launchLogin(String loginType, UIInteractionType interactionType) {
+    public static void launchLogin(String loginType, UIInteractionType interactionType, boolean switching_account) {
 
-        String jwt = FileManager.getItem("jwt");
+        String auth_callback_state = UUID.randomUUID().toString();
+        FileManager.setAuthCallbackState(auth_callback_state);
+
+        FileManager.setBooleanItem("switching_account", switching_account);
+
+        String plugin_uuid = FileManager.getPluginUuid();
+
+        JsonObject obj = new JsonObject();
+        obj.addProperty("plugin", "codetime");
+        obj.addProperty("plugin_uuid", plugin_uuid);
+        obj.addProperty("pluginVersion", SoftwareCoUtils.getVersion());
+        obj.addProperty("plugin_id", SoftwareCoUtils.pluginId);
+        obj.addProperty("auth_callback_state", auth_callback_state);
+        obj.addProperty("redirect", SoftwareCoUtils.launch_url);
 
         String url = "";
         String element_name = "ct_sign_up_google_btn";
@@ -168,26 +196,42 @@ public class SoftwareCoSessionManager {
             cta_text = "Sign up with email";
             icon_name = "envelope";
             icon_color = "gray";
-            url = SoftwareCoUtils.launch_url + "/email-signup?token=" + jwt + "&plugin=codetime&auth=software";
+            url = SoftwareCoUtils.launch_url + "/email-signup";
         } else if (loginType.equals("google")) {
-            url = SoftwareCoUtils.api_endpoint + "/auth/google?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
+            url = SoftwareCoUtils.api_endpoint + "/auth/google";
         } else if (loginType.equals("github")) {
             element_name = "ct_sign_up_github_btn";
             cta_text = "Sign up with GitHub";
             icon_name = "github";
-            url = SoftwareCoUtils.api_endpoint + "/auth/github?token=" + jwt + "&plugin=codetime&redirect=" + SoftwareCoUtils.launch_url;
+            url = SoftwareCoUtils.api_endpoint + "/auth/github";
         }
+
+        StringBuffer sb = new StringBuffer();
+        Iterator<String> keys = obj.keySet().iterator();
+        while(keys.hasNext()) {
+            if (sb.length() > 0) {
+                sb.append("&");
+            }
+            String key = keys.next();
+            String val = obj.get(key).getAsString();
+            try {
+                val = URLEncoder.encode(val, "UTF-8");
+            } catch (Exception e) {
+                log.info("Unable to url encode value, error: " + e.getMessage());
+            }
+            sb.append(key).append("=").append(val);
+        }
+        url += "?" + sb.toString();
 
         FileManager.setItem("authType", loginType);
 
+        System.out.println("URL: " + url);
+
         BrowserUtil.browse(url);
 
-        if (!establishingUser) {
-            establishingUser = true;
-            // max of 5.3 minutes
-            final Runnable service = () -> lazilyFetchUserStatus(40);
-            AsyncManager.getInstance().executeOnceInSeconds(service, 8);
-        }
+        // max of 5.3 minutes
+        final Runnable service = () -> lazilyFetchUserStatus(40);
+        AsyncManager.getInstance().executeOnceInSeconds(service, 8);
 
         UIElementEntity elementEntity = new UIElementEntity();
         elementEntity.element_name = element_name;
