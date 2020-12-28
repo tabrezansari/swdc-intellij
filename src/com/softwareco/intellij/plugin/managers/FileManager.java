@@ -2,14 +2,11 @@ package com.softwareco.intellij.plugin.managers;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.softwareco.intellij.plugin.*;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.methods.HttpPost;
 
 import java.io.*;
 import java.lang.reflect.Type;
@@ -114,6 +111,22 @@ public class FileManager {
             writer = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(f), StandardCharsets.UTF_8));
             writer.write(content);
+        } catch (IOException ex) {
+            // Report
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ex) {/*ignore*/}
+        }
+    }
+
+    private synchronized static void writeSessionJsonContent(JsonObject obj) {
+        File f = new File(getSoftwareSessionFile(true));
+        Writer writer = null;
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(f), StandardCharsets.UTF_8));
+            writer.write(obj.toString());
         } catch (IOException ex) {
             // Report
         } finally {
@@ -254,31 +267,19 @@ public class FileManager {
     public static void setNumericItem(String key, long val) {
         JsonObject sessionJson = getSoftwareSessionAsJson();
         sessionJson.addProperty(key, val);
-
-        String content = sessionJson.toString();
-
-        String sessionFile = getSoftwareSessionFile(true);
-        saveFileContent(sessionFile, content);
+        writeSessionJsonContent(sessionJson);
     }
 
     public static void setItem(String key, String val) {
         JsonObject sessionJson = getSoftwareSessionAsJson();
         sessionJson.addProperty(key, val);
-
-        String content = sessionJson.toString();
-        String sessionFile = getSoftwareSessionFile(true);
-
-        saveFileContent(sessionFile, content);
+        writeSessionJsonContent(sessionJson);
     }
 
     public static void setBooleanItem(String key, boolean val) {
         JsonObject sessionJson = getSoftwareSessionAsJson();
         sessionJson.addProperty(key, val);
-
-        String content = sessionJson.toString();
-        String sessionFile = getSoftwareSessionFile(true);
-
-        saveFileContent(sessionFile, content);
+        writeSessionJsonContent(sessionJson);
     }
 
     public static boolean getBooleanItem(String key) {
@@ -298,8 +299,7 @@ public class FileManager {
     }
 
     public static JsonObject getSoftwareSessionAsJson() {
-        String sessionFile = getSoftwareSessionFile(true);
-        return getJsonObjectFromFile(sessionFile);
+        return getJsonObjectFromFile(getSoftwareSessionFile(true));
     }
 
     public static JsonObject getJsonObjectFromFile(String fileName) {

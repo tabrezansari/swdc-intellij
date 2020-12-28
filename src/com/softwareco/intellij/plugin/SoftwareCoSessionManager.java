@@ -42,14 +42,6 @@ public class SoftwareCoSessionManager {
         return instance;
     }
 
-    public static boolean softwareSessionFileExists() {
-        // don't auto create the file
-        String file = getSoftwareSessionFile(false);
-        // check if it exists
-        File f = new File(file);
-        return f.exists();
-    }
-
     public static String getCodeTimeDashboardFile() {
         String dashboardFile = getSoftwareDir(true);
         if (SoftwareCoUtils.isWindows()) {
@@ -93,16 +85,6 @@ public class SoftwareCoSessionManager {
             file += "\\SummaryInfo.txt";
         } else {
             file += "/SummaryInfo.txt";
-        }
-        return file;
-    }
-
-    public static String getSoftwareSessionFile(boolean autoCreate) {
-        String file = getSoftwareDir(autoCreate);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\session.json";
-        } else {
-            file += "/session.json";
         }
         return file;
     }

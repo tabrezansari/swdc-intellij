@@ -553,6 +553,10 @@ public class SoftwareCoUtils {
         return nf.format(number);
     }
 
+    public static String runCommand(String[] args) {
+        return runCommand(args, null);
+    }
+
     /**
      * Execute the args
      * @param args
@@ -564,7 +568,7 @@ public class SoftwareCoUtils {
 
         try {
             builder.command(args);
-            if (dir != null) {
+            if (StringUtils.isNotBlank(dir)) {
                 // change to the directory to run the command
                 builder.directory(new File(dir));
             }
@@ -832,7 +836,7 @@ public class SoftwareCoUtils {
             JsonObject user = resp.getJsonObj().get("user").getAsJsonObject();
 
             int registered = user.get("registered").getAsInt();
-            FileManager.setItem("jwt", user.get("plugin_jwt").getAsString());
+            updateJwt(user.get("plugin_jwt").getAsString());
             if (registered == 1) {
                 FileManager.setItem("name", user.get("email").getAsString());
             } else {
@@ -852,6 +856,39 @@ public class SoftwareCoUtils {
         }
 
         return false;
+    }
+
+    private static void updateJwt(String newJwt) {
+        if (StringUtils.isBlank(newJwt)) {
+            return;
+        }
+
+        String currentJwtId = getDecodedUserIdFromJwt(FileManager.getItem("jwt"));
+        String newJwtId = getDecodedUserIdFromJwt(newJwt);
+        if (!currentJwtId.equals(newJwtId)) {
+            FileManager.setItem("jwt", newJwt);
+        }
+    }
+
+    public static String getDecodedUserIdFromJwt(String jwt) {
+        String stippedDownJwt = jwt.indexOf("JWT ") != -1 ? jwt.substring("JWT ".length()) : jwt;
+        try {
+            String[] split_string = stippedDownJwt.split("\\.");
+            String base64EncodedBody = split_string[1];
+
+            org.apache.commons.codec.binary.Base64 base64Url = new Base64(true);
+            String body = new String(base64Url.decode(base64EncodedBody));
+            Map<String, String> jsonMap;
+
+            ObjectMapper mapper = new ObjectMapper();
+            // convert JSON string to Map
+            jsonMap = mapper.readValue(body,
+                    new TypeReference<Map<String, String>>() {
+                    });
+            Object idVal = jsonMap.getOrDefault("id", "");
+            return idVal.toString();
+        } catch (Exception ex) {}
+        return "";
     }
 
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
@@ -1060,32 +1097,6 @@ public class SoftwareCoUtils {
         }
 
         return data;
-    }
-
-    public static boolean isAppJwt() {
-        String jwt = FileManager.getItem("jwt");
-        if (StringUtils.isNotBlank(jwt)) {
-            String stippedDownJwt = jwt.indexOf("JWT ") != -1 ? jwt.substring("JWT ".length()) : jwt;
-            try {
-                String[] split_string = stippedDownJwt.split("\\.");
-                String base64EncodedBody = split_string[1];
-
-                org.apache.commons.codec.binary.Base64 base64Url = new Base64(true);
-                String body = new String(base64Url.decode(base64EncodedBody));
-                Map<String, String> jsonMap;
-
-                ObjectMapper mapper = new ObjectMapper();
-                // convert JSON string to Map
-                jsonMap = mapper.readValue(body,
-                        new TypeReference<Map<String, String>>() {
-                        });
-                Object idVal = jsonMap.getOrDefault("id", null);
-                if (idVal != null && Long.valueOf(idVal.toString()).longValue() > 9999999999L) {
-                    return true;
-                }
-            } catch (Exception ex) {}
-        }
-        return false;
     }
 
 }
