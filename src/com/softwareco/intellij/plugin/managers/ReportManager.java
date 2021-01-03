@@ -25,19 +25,9 @@ public class ReportManager {
     private static final SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
     private static final SimpleDateFormat formatDayYear = new SimpleDateFormat("MMM d, YYYY");
 
-    public static String getProjectContributorSummaryFile() {
-        String file = FileUtilManager.getSoftwareDir(true);
-        if (UtilManager.isWindows()) {
-            file += "\\ProjectContributorCodeSummary.txt";
-        } else {
-            file += "/ProjectContributorCodeSummary.txt";
-        }
-        return file;
-    }
-
     public static void displayProjectContributorSummaryDashboard(String identifier) {
         StringBuffer sb = new StringBuffer();
-        String file = getProjectContributorSummaryFile();
+        String file = FileUtilManager.getProjectContributorSummaryFile();
 
         Project p = SoftwareCoUtils.getFirstActiveProject();
         if (p != null) {
