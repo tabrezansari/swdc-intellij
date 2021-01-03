@@ -4,7 +4,6 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonObject;
 import com.softwareco.intellij.plugin.models.ResourceInfo;
 import com.softwareco.intellij.plugin.repo.GitUtil;
 

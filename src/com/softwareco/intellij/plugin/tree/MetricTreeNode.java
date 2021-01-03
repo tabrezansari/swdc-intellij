@@ -1,7 +1,6 @@
 package com.softwareco.intellij.plugin.tree;
 
 import javax.swing.tree.*;
-import java.util.Enumeration;
 
 public class MetricTreeNode extends DefaultMutableTreeNode {
 

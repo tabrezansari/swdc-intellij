@@ -204,11 +204,12 @@
   <actions>
     <group class="com.softwareco.intellij.plugin.actions.CustomDefaultActionGroup" description="Code Time menu actions" id="CustomDefaultActionGroup" text="Code Time">
       <add-to-group anchor="before" group-id="MainMenu" relative-to-action="HelpMenu"/>
-      <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="View summary"/>
-      <action class="com.softwareco.intellij.plugin.actions.SoftwareTopFortyAction" description="Top 40 most popular songs developers around the world listen to as they code" id="SoftwareTopFortyAction" text="Software top 40"/>
-      <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="See advanced metrics"/>
+      <action class="com.softwareco.intellij.plugin.actions.CodeTimeMetricsAction" description="View your latest coding metrics" id="CodeTimeMetrics" text="Dashboard"/>
+      <action class="com.softwareco.intellij.plugin.actions.SoftwareDashboardAction" description="View your KPM metrics" id="SoftwareDashboardAction" text="More data at Software.com"/>
       <action class="com.softwareco.intellij.plugin.actions.SoftwareLoginAction" description="To see your coding data in Code Time, please log in to your account." id="SoftwareLoginAction" text="Log in to see your coding data"/>
       <action class="com.softwareco.intellij.plugin.actions.ToggleStatusBarAction" description="Toggle the Code Time status bar metrics." id="ToggleStatusBarAction" text="Show/hide status bar metrics"/>
+      <action class="com.softwareco.intellij.plugin.actions.SlackDisconnectAction" description="Disconnect a Slack workspace" id="SlackDisconnectAction" text="Disconnect Slack workspace"/>
+      <action class="com.softwareco.intellij.plugin.actions.SlackConnectAction" description="Connect a Slack workspace" id="SlackConnectAction" text="Connect Slack workspace"/>
     </group>
   </actions>
 

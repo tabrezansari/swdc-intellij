@@ -15,14 +15,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.util.messages.MessageBusConnection;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
+import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
+import swdc.java.ops.event.UserStateChangeModel;
+import swdc.java.ops.event.UserStateChangeObserver;
+import swdc.java.ops.manager.AccountManager;
+import swdc.java.ops.manager.AsyncManager;
+import swdc.java.ops.manager.ConfigManager;
+import swdc.java.ops.manager.FileUtilManager;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.logging.Logger;
-
 
 /**
  * Intellij Plugin Application
@@ -35,15 +41,19 @@ public class SoftwareCo implements ApplicationComponent {
     public static MessageBusConnection connection;
 
     private final AsyncManager asyncManager = AsyncManager.getInstance();
+    private UserStateChangeObserver userStateChangeObserver;
 
     public SoftwareCo() {
         // constructor
     }
 
     public void initComponent() {
-        String jwt = FileManager.getItem("jwt");
+        // initialize the swdc ops config
+        ConfigManager.init(SoftwareCoUtils.api_endpoint, SoftwareCoUtils.launch_url, SoftwareCoUtils.pluginId, SoftwareCoUtils.getPluginName(), SoftwareCoUtils.getVersion());
+
+        String jwt = FileUtilManager.getItem("jwt");
         if (StringUtils.isBlank(jwt)) {
-            jwt = SoftwareCoUtils.createAnonymousUser(false);
+            jwt = AccountManager.createAnonymousUser(false);
             if (StringUtils.isBlank(jwt)) {
                 boolean serverIsOnline = SoftwareCoSessionManager.isServerOnline();
                 if (!serverIsOnline) {
@@ -99,12 +109,15 @@ public class SoftwareCo implements ApplicationComponent {
         // send the activate event
         EventTrackerManager.getInstance().trackEditorAction("editor", "activate");
 
-        String readmeDisplayed = FileManager.getItem("intellij_CtReadme");
+        String readmeDisplayed = FileUtilManager.getItem("intellij_CtReadme");
         if (readmeDisplayed == null || Boolean.valueOf(readmeDisplayed) == false) {
             // send an initial plugin payload
             FileManager.openReadmeFile(UIInteractionType.keyboard);
-            FileManager.setItem("intellij_CtReadme", "true");
+            FileUtilManager.setItem("intellij_CtReadme", "true");
         }
+
+        // setup the ops listener
+        setupOpsListeners();
 
         // setup the doc listeners
         setupEventListeners();
@@ -117,6 +130,14 @@ public class SoftwareCo implements ApplicationComponent {
             EditorFactory.getInstance().getEventMulticaster().addDocumentListener(
                     new SoftwareCoDocumentListener(), this::disposeComponent);
         });
+    }
+
+    private void setupOpsListeners() {
+        if (userStateChangeObserver == null) {
+            userStateChangeObserver = new UserStateChangeObserver(new UserStateChangeModel(), () -> {
+                SessionDataManager.refreshSessionDataAndTree();
+            });
+        }
     }
 
     // add the file selection change event listener

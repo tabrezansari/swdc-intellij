@@ -1,9 +1,9 @@
 package com.softwareco.intellij.plugin.repo;
 
-
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.*;
 import org.apache.commons.lang.StringUtils;
+import swdc.java.ops.manager.UtilManager;
 
 import java.util.*;
 
@@ -92,16 +92,16 @@ public class GitUtil {
         if (projectDir != null &&  SoftwareCoUtils.isGitProject(projectDir)) {
             try {
                 String[] branchCmd = { "git", "symbolic-ref", "--short", "HEAD" };
-                String branch = SoftwareCoUtils.runCommand(branchCmd, projectDir);
+                String branch = UtilManager.runCommand(branchCmd, projectDir);
 
                 String[] identifierCmd = { "git", "config", "--get", "remote.origin.url" };
-                String identifier = SoftwareCoUtils.runCommand(identifierCmd, projectDir);
+                String identifier = UtilManager.runCommand(identifierCmd, projectDir);
 
                 String[] emailCmd = { "git", "config", "user.email" };
-                String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
+                String email = UtilManager.runCommand(emailCmd, projectDir);
 
                 String[] tagCmd = { "git", "describe", "--all" };
-                String tag = SoftwareCoUtils.runCommand(tagCmd, projectDir);
+                String tag = UtilManager.runCommand(tagCmd, projectDir);
 
                 if (StringUtils.isNotBlank(branch) && StringUtils.isNotBlank(identifier)) {
                     resourceInfo.setBranch(branch);
@@ -181,7 +181,7 @@ public class GitUtil {
             return "";
         }
         String[] emailCmd = { "git", "config", "user.email" };
-        String email = SoftwareCoUtils.runCommand(emailCmd, projectDir);
+        String email = UtilManager.runCommand(emailCmd, projectDir);
         return email;
     }
 
@@ -219,7 +219,7 @@ public class GitUtil {
         if (projectDir == null || !SoftwareCoUtils.isGitProject(projectDir)) {
             return new CommitChangeStats(true);
         }
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        UtilManager.TimesData timesData = UtilManager.getTimesData();
         long startOfRange = 0l;
         if (rangeType == "today") {
             startOfRange = timesData.local_start_day;

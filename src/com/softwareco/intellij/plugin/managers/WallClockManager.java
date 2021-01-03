@@ -4,6 +4,9 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.softwareco.intellij.plugin.*;
 import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
+import swdc.java.ops.manager.AsyncManager;
+import swdc.java.ops.manager.FileUtilManager;
+import swdc.java.ops.manager.UtilManager;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,7 +51,7 @@ public class WallClockManager {
     }
 
     public void newDayChecker() {
-        if (SoftwareCoUtils.isNewDay()) {
+        if (UtilManager.isNewDay()) {
 
             // clear the wc time and the session summary and the file change info summary
             clearWcTime();
@@ -57,11 +60,11 @@ public class WallClockManager {
             FileAggregateDataManager.clearFileChangeInfoSummaryData();
 
             // update the current day
-            String day = SoftwareCoUtils.getTodayInStandardFormat();
-            FileManager.setItem("currentDay", day);
+            String day = UtilManager.getTodayInStandardFormat();
+            FileUtilManager.setItem("currentDay", day);
 
             // update the last payload timestamp
-            FileManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
+            FileUtilManager.setNumericItem("latestPayloadTimestampEndUtc", 0);
 
         }
     }
@@ -72,7 +75,7 @@ public class WallClockManager {
             boolean isActive = ApplicationManager.getApplication().isActive();
             if (isActive && SoftwareCoEventManager.isCurrentlyActive) {
                 long wctime = getWcTimeInSeconds() + SECONDS_INCREMENT;
-                FileManager.setNumericItem("wctime", wctime);
+                FileUtilManager.setNumericItem("wctime", wctime);
 
                 // update the json time data file
                 TimeDataManager.incrementEditorSeconds(SECONDS_INCREMENT);
@@ -81,12 +84,16 @@ public class WallClockManager {
         });
     }
 
+    public void refreshSessionDataAndTree() {
+
+    }
+
     public synchronized void dispatchStatusViewUpdate() {
         try {
             CodeTimeSummary ctSummary = TimeDataManager.getCodeTimeSummary();
 
             String icon = SoftwareCoUtils.showingStatusText() ? "paw-grey.png" : "status-clock.svg";
-            String currentDayTimeStr = SoftwareCoUtils.humanizeMinutes(ctSummary.activeCodeTimeMinutes);
+            String currentDayTimeStr = UtilManager.humanizeMinutes(ctSummary.activeCodeTimeMinutes);
 
             // STATUS BAR REFRESH
             SoftwareCoUtils.updateStatusBar(
@@ -105,11 +112,11 @@ public class WallClockManager {
     }
 
     public long getWcTimeInSeconds() {
-        return FileManager.getNumericItem("wctime", 0L);
+        return FileUtilManager.getNumericItem("wctime", 0L);
     }
 
     public void setWcTime(long seconds) {
-        FileManager.setNumericItem("wctime", seconds);
+        FileUtilManager.setNumericItem("wctime", seconds);
         updateWallClockTime();
     }
 

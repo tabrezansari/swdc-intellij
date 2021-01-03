@@ -2,7 +2,6 @@ package com.softwareco.intellij.plugin.managers;
 
 import com.intellij.openapi.project.Project;
 import com.softwareco.intellij.plugin.KeystrokeCount;
-import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.models.ResourceInfo;
@@ -14,6 +13,7 @@ import com.swdc.snowplow.tracker.events.UIInteractionEvent;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import com.swdc.snowplow.tracker.manager.TrackerManager;
 import org.apache.commons.lang.StringUtils;
+import swdc.java.ops.manager.FileUtilManager;
 
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
@@ -166,7 +166,7 @@ public class EventTrackerManager {
 
     private AuthEntity getAuthEntity() {
         AuthEntity authEntity = new AuthEntity();
-        String jwt = FileManager.getItem("jwt");
+        String jwt = FileUtilManager.getItem("jwt");
         if (StringUtils.isNotBlank(jwt)) {
             if (jwt.indexOf("JWT") == 0) {
                 authEntity.setJwt(jwt.split("JWT ")[1].trim());

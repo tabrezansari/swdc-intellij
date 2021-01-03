@@ -9,6 +9,8 @@ import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.project.Project;
 import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.*;
+import swdc.java.ops.manager.FileUtilManager;
+import swdc.java.ops.manager.UtilManager;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,13 +50,13 @@ public class KeystrokeCount {
             this.version = SoftwareCoUtils.VERSION;
         }
         this.pluginId = SoftwareCoUtils.pluginId;
-        this.os = SoftwareCoUtils.getOs();
+        this.os = UtilManager.getOs();
     }
 
     public KeystrokeCount(String version) {
         this.version = version;
         this.pluginId = SoftwareCoUtils.pluginId;
-        this.os = SoftwareCoUtils.getOs();
+        this.os = UtilManager.getOs();
     }
 
     public KeystrokeCount clone() {
@@ -176,7 +178,7 @@ public class KeystrokeCount {
             source = new HashMap<>();
         }
 
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        UtilManager.TimesData timesData = UtilManager.getTimesData();
 
         // Keystrokes metadata needs to be initialized
         if (this.start == 0) {
@@ -196,7 +198,7 @@ public class KeystrokeCount {
     }
 
     public void endPreviousModifiedFiles(String fileName) {
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        UtilManager.TimesData timesData = UtilManager.getTimesData();
         if (this.source != null) {
             for (String key : this.source.keySet()) {
                 FileInfo fileInfo = this.source.get(key);
@@ -262,9 +264,9 @@ public class KeystrokeCount {
                 // refresh the code time tree view
                 WallClockManager.getInstance().dispatchStatusViewUpdate();
 
-                SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+                UtilManager.TimesData timesData = UtilManager.getTimesData();
                 // set the latest payload timestamp utc so help with session time calculations
-                FileManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
+                FileUtilManager.setNumericItem("latestPayloadTimestampEndUtc", timesData.now);
             }
         } catch (Exception e) {
         }
@@ -276,7 +278,7 @@ public class KeystrokeCount {
 
         TimeData td = TimeDataManager.incrementSessionAndFileSeconds(this.project, sessionSeconds);
 
-        if (SoftwareCoUtils.isNewDay()) {
+        if (UtilManager.isNewDay()) {
 
             // clear out data from the previous day
             WallClockManager.getInstance().newDayChecker();
@@ -289,7 +291,7 @@ public class KeystrokeCount {
 
         // add the cumulative data
         this.workspace_name = SoftwareCoUtils.getWorkspaceName();
-        this.hostname = SoftwareCoUtils.getHostname();
+        this.hostname = UtilManager.getHostname();
         this.cumulative_session_seconds = 60;
         this.cumulative_editor_seconds = 60;
 
@@ -311,7 +313,7 @@ public class KeystrokeCount {
         // set the elapsed seconds (last end time to this end time)
         this.elapsed_seconds = elapsedSeconds;
 
-        SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+        UtilManager.TimesData timesData = UtilManager.getTimesData();
         Map<String, FileInfo> fileInfoDataSet = this.source;
         for ( FileInfo fileInfoData : fileInfoDataSet.values() ) {
             // end the ones that don't have an end time

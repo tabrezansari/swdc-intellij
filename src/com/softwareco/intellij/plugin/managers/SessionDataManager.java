@@ -4,50 +4,60 @@ package com.softwareco.intellij.plugin.managers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.SoftwareCo;
-import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
-import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.SoftwareResponse;
 import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
 import com.softwareco.intellij.plugin.models.SessionSummary;
-import org.apache.http.client.methods.HttpGet;
+import swdc.java.ops.http.ClientResponse;
+import swdc.java.ops.http.OpsHttpClient;
+import swdc.java.ops.manager.FileUtilManager;
+import swdc.java.ops.manager.UtilManager;
 
 import java.lang.reflect.Type;
 
 public class SessionDataManager {
 
-    public static String getSessionDataSummaryFile() {
-        String file = SoftwareCoSessionManager.getSoftwareDir(true);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\sessionSummary.json";
-        } else {
-            file += "/sessionSummary.json";
-        }
-        return file;
-    }
 
     public static void clearSessionSummaryData() {
         SessionSummary summary = new SessionSummary();
-        FileManager.writeData(getSessionDataSummaryFile(), summary);
+        FileUtilManager.writeData(FileUtilManager.getSessionDataSummaryFile(), summary);
+    }
+
+    public static void refreshSessionDataAndTree() {
+        SessionDataManager.clearSessionSummaryData();
+        TimeDataManager.clearTimeDataSummary();
+
+        // prompt they've completed the setup
+        ApplicationManager.getApplication().invokeLater(new Runnable() {
+            public void run() {
+                // this will fetch the session summary data and refresh the tree
+                SessionDataManager.treeDataUpdateCheck(true);
+
+                // ask to download the PM
+                Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
+
+            }
+        });
     }
 
     public static void treeDataUpdateCheck(boolean isNewUser) {
-        String day = SoftwareCoUtils.getTodayInStandardFormat();
-        String currentDay = FileManager.getItem("updatedTreeDate", "");
+        String day = UtilManager.getTodayInStandardFormat();
+        String currentDay = FileUtilManager.getItem("updatedTreeDate", "");
         SessionSummary existingSummary = SessionDataManager.getSessionSummaryData();
         if (!currentDay.equals(day) || existingSummary.getGlobalAverageDailyMinutes() == 0 || isNewUser) {
             updateSessionSummaryFromServer();
-            FileManager.setItem("updatedTreeDate", day);
+            FileUtilManager.setItem("updatedTreeDate", day);
         }
     }
 
     private static void updateSessionSummaryFromServer() {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
-        String jwt = FileManager.getItem("jwt");
+        String jwt = FileUtilManager.getItem("jwt");
         String api = "/sessions/summary?refresh=true";
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
+        ClientResponse resp = OpsHttpClient.softwareGet(api, jwt);
         if (resp.isOk()) {
             JsonObject jsonObj = resp.getJsonObj();
 
@@ -60,17 +70,17 @@ public class SessionDataManager {
             TimeDataManager.updateSessionFromSummaryApi(fetchedSummary.getCurrentDayMinutes());
 
             // save the file
-            FileManager.writeData(SessionDataManager.getSessionDataSummaryFile(), summary);
+            FileUtilManager.writeData(FileUtilManager.getSessionDataSummaryFile(), summary);
         }
 
         WallClockManager.getInstance().dispatchStatusViewUpdate();
     }
 
     public static SessionSummary getSessionSummaryData() {
-        JsonObject jsonObj = FileManager.getFileContentAsJson(getSessionDataSummaryFile());
+        JsonObject jsonObj = FileUtilManager.getFileContentAsJson(FileUtilManager.getSessionDataSummaryFile());
         if (jsonObj == null) {
             clearSessionSummaryData();
-            jsonObj = FileManager.getFileContentAsJson(getSessionDataSummaryFile());
+            jsonObj = FileUtilManager.getFileContentAsJson(FileUtilManager.getSessionDataSummaryFile());
         }
         JsonElement lastUpdatedToday = jsonObj.get("lastUpdatedToday");
         if (lastUpdatedToday != null) {
@@ -106,7 +116,7 @@ public class SessionDataManager {
         summary.setCurrentDayLinesRemoved(summary.getCurrentDayLinesRemoved() + aggregate.linesRemoved);
 
         // save the file
-        FileManager.writeData(getSessionDataSummaryFile(), summary);
+        FileUtilManager.writeData(FileUtilManager.getSessionDataSummaryFile(), summary);
     }
 
     public static ElapsedTime getTimeBetweenLastPayload() {
@@ -116,9 +126,9 @@ public class SessionDataManager {
         long sessionSeconds = 60;
         long elapsedSeconds = 60;
 
-        long lastPayloadEnd = FileManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
+        long lastPayloadEnd = FileUtilManager.getNumericItem("latestPayloadTimestampEndUtc", 0L);
         if (lastPayloadEnd > 0) {
-            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            UtilManager.TimesData timesData = UtilManager.getTimesData();
             elapsedSeconds = Math.max(60, timesData.now - lastPayloadEnd);
             long sessionThresholdSeconds = 60 * 15;
             if (elapsedSeconds > 0 && elapsedSeconds <= sessionThresholdSeconds) {

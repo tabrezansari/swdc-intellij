@@ -4,29 +4,22 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.ide.BrowserUtil;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
-import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
-import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
-import com.softwareco.intellij.plugin.managers.TimeDataManager;
-import com.softwareco.intellij.plugin.models.TimeData;
-import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-import org.apache.commons.lang.StringUtils;
-import org.apache.http.client.methods.HttpGet;
+import swdc.java.ops.http.ClientResponse;
+import swdc.java.ops.http.OpsHttpClient;
+import swdc.java.ops.manager.*;
+import swdc.java.ops.model.UserState;
 
-import java.io.*;
 import java.net.URLEncoder;
 import java.util.Iterator;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 public class SoftwareCoSessionManager {
@@ -42,19 +35,10 @@ public class SoftwareCoSessionManager {
         return instance;
     }
 
-    public static String getCodeTimeDashboardFile() {
-        String dashboardFile = getSoftwareDir(true);
-        if (SoftwareCoUtils.isWindows()) {
-            dashboardFile += "\\CodeTime.txt";
-        } else {
-            dashboardFile += "/CodeTime.txt";
-        }
-        return dashboardFile;
-    }
 
     public static String getReadmeFile() {
-        String file = getSoftwareDir(true);
-        if (SoftwareCoUtils.isWindows()) {
+        String file = FileUtilManager.getSoftwareDir(true);
+        if (UtilManager.isWindows()) {
             file += "\\jetbrainsCt_README.txt";
         } else {
             file += "/jetbrainsCt_README.txt";
@@ -62,35 +46,8 @@ public class SoftwareCoSessionManager {
         return file;
     }
 
-    public static String getSoftwareDir(boolean autoCreate) {
-        String softwareDataDir = SoftwareCoUtils.getUserHomeDir();
-        if (SoftwareCoUtils.isWindows()) {
-            softwareDataDir += "\\.software";
-        } else {
-            softwareDataDir += "/.software";
-        }
-
-        File f = new File(softwareDataDir);
-        if (!f.exists()) {
-            // make the directory
-            f.mkdirs();
-        }
-
-        return softwareDataDir;
-    }
-
-    public static String getSummaryInfoFile(boolean autoCreate) {
-        String file = getSoftwareDir(autoCreate);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\SummaryInfo.txt";
-        } else {
-            file += "/SummaryInfo.txt";
-        }
-        return file;
-    }
-
     public synchronized static boolean isServerOnline() {
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall("/ping", HttpGet.METHOD_NAME, null);
+        ClientResponse resp = OpsHttpClient.softwareGet("/ping", null);
         if (resp != null && resp.isOk()) {
             return true;
         }
@@ -117,9 +74,9 @@ public class SoftwareCoSessionManager {
     }
 
     protected static void lazilyFetchUserStatus(int retryCount) {
-        boolean establishedUser = SoftwareCoUtils.getUserLoginState();
+        UserState userState = AccountManager.getUserLoginState(false /*isIntegrationReq*/);
 
-        if (!establishedUser) {
+        if (!userState.loggedIn) {
             if (retryCount > 0) {
                 final int newRetryCount = retryCount - 1;
 
@@ -127,38 +84,28 @@ public class SoftwareCoSessionManager {
                 AsyncManager.getInstance().executeOnceInSeconds(service, 8);
             } else {
                 // clear the auth callback state
-                FileManager.setBooleanItem("switching_account", false);
-                FileManager.setAuthCallbackState(null);
+                FileUtilManager.setBooleanItem("switching_account", false);
+                FileUtilManager.setAuthCallbackState(null);
             }
         } else {
+            // pull in any integrations
+            SlackManager.getSlackAuth(userState.user);
+
             // clear the auth callback state
-            FileManager.setBooleanItem("switching_account", false);
-            FileManager.setAuthCallbackState(null);
+            FileUtilManager.setBooleanItem("switching_account", false);
+            FileUtilManager.setAuthCallbackState(null);
 
-            SessionDataManager.clearSessionSummaryData();
-            TimeDataManager.clearTimeDataSummary();
-
-            // prompt they've completed the setup
-            ApplicationManager.getApplication().invokeLater(new Runnable() {
-                public void run() {
-                    // ask to download the PM
-                    Messages.showInfoMessage("Successfully logged onto Code Time", "Code Time Setup Complete");
-
-                    // this will fetch the session summary data and refresh the tree
-                    SessionDataManager.treeDataUpdateCheck(true);
-                }
-            });
+            SessionDataManager.refreshSessionDataAndTree();
         }
     }
 
     public static void launchLogin(String loginType, UIInteractionType interactionType, boolean switching_account) {
 
-        String auth_callback_state = UUID.randomUUID().toString();
-        FileManager.setAuthCallbackState(auth_callback_state);
+        String auth_callback_state = FileUtilManager.getAuthCallbackState();
 
-        FileManager.setBooleanItem("switching_account", switching_account);
+        FileUtilManager.setBooleanItem("switching_account", switching_account);
 
-        String plugin_uuid = FileManager.getPluginUuid();
+        String plugin_uuid = FileUtilManager.getPluginUuid();
 
         JsonObject obj = new JsonObject();
         obj.addProperty("plugin", "codetime");
@@ -205,9 +152,7 @@ public class SoftwareCoSessionManager {
         }
         url += "?" + sb.toString();
 
-        FileManager.setItem("authType", loginType);
-
-        System.out.println("URL: " + url);
+        FileUtilManager.setItem("authType", loginType);
 
         BrowserUtil.browse(url);
 
