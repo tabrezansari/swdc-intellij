@@ -6,11 +6,12 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
-import com.softwareco.intellij.plugin.models.CodeTimeSummary;
-import com.softwareco.intellij.plugin.models.SessionSummary;
 import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.SlackManager;
+import swdc.java.ops.model.CodeTimeSummary;
+import swdc.java.ops.model.MetricLabel;
+import swdc.java.ops.model.SessionSummary;
 
 import javax.swing.*;
 import javax.swing.tree.*;
@@ -172,7 +173,7 @@ public class CodeTimeToolWindow {
         CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
         SessionSummary sessionSummary = SessionDataManager.getSessionSummaryData();
 
-        MetricLabels mLabels = new MetricLabels();
+        MetricLabel mLabels = new MetricLabel();
         mLabels.updateLabels(codeTimeSummary, sessionSummary);
 
         root.add(TreeHelper.buildCodeTimeTree(mLabels));
@@ -190,7 +191,7 @@ public class CodeTimeToolWindow {
     public static void updateMetrics(CodeTimeSummary codeTimeSummary, SessionSummary sessionSummary) {
         if (metricTree != null) {
 
-            MetricLabels mLabels = new MetricLabels();
+            MetricLabel mLabels = new MetricLabel();
             mLabels.updateLabels(codeTimeSummary, sessionSummary);
 
             if (codeTimeSummary != null && sessionSummary != null) {

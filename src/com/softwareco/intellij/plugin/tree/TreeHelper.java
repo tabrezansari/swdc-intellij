@@ -11,6 +11,7 @@ import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.SlackManager;
 import swdc.java.ops.manager.UtilManager;
 import swdc.java.ops.model.Integration;
+import swdc.java.ops.model.MetricLabel;
 import swdc.java.ops.model.SlackDndInfo;
 import swdc.java.ops.model.SlackUserPresence;
 
@@ -217,23 +218,23 @@ public class TreeHelper {
         return new MetricTreeNode("Add workspace", "add.svg", ADD_WORKSPACE_ID);
     }
 
-    public static MetricTreeNode buildActiveCodeTimeTree(MetricLabels mLabels) {
+    public static MetricTreeNode buildActiveCodeTimeTree(MetricLabel mLabels) {
         return new MetricTreeNode(mLabels.activeCodeTime, mLabels.activeCodeTimeAvgIcon, ACTIVE_CODETIME_TODAY_ID);
     }
 
-    public static MetricTreeNode buildCodeTimeTree(MetricLabels mLabels) {
+    public static MetricTreeNode buildCodeTimeTree(MetricLabel mLabels) {
         return new MetricTreeNode(mLabels.codeTime, "rocket.svg", CODETIME_TODAY_ID);
     }
 
-    public static MetricTreeNode buildLinesAddedTree(MetricLabels mLabels) {
+    public static MetricTreeNode buildLinesAddedTree(MetricLabel mLabels) {
         return new MetricTreeNode(mLabels.linesAdded, mLabels.linesAddedAvgIcon, LINES_ADDED_TODAY_ID);
     }
 
-    public static MetricTreeNode buildLinesRemovedTree(MetricLabels mLabels) {
+    public static MetricTreeNode buildLinesRemovedTree(MetricLabel mLabels) {
         return new MetricTreeNode(mLabels.linesRemoved, mLabels.linesRemovedAvgIcon, LINES_DELETED_TODAY_ID);
     }
 
-    public static MetricTreeNode buildKeystrokesTree(MetricLabels mLabels) {
+    public static MetricTreeNode buildKeystrokesTree(MetricLabel mLabels) {
         return new MetricTreeNode(mLabels.keystrokes, mLabels.keystrokesAvgIcon, KEYSTROKES_TODAY_ID);
     }
 
@@ -312,59 +313,6 @@ public class TreeHelper {
                 launchFileClick(node);
                 break;
         }
-    }
-
-    private static List<Map.Entry<String, FileChangeInfo>> sortByKpm(Map<String, FileChangeInfo> fileChangeInfoMap) {
-        List<Map.Entry<String, FileChangeInfo>> entryList = new ArrayList<Map.Entry<String, FileChangeInfo>>(fileChangeInfoMap.entrySet());
-        // natural ASC order
-        Collections.sort(
-                entryList, new Comparator<Map.Entry<String, FileChangeInfo>>() {
-                    @Override
-                    public int compare(Map.Entry<String, FileChangeInfo> entryA,
-                                       Map.Entry<String, FileChangeInfo> entryB) {
-
-                        Long a = entryA.getValue().kpm;
-                        Long b = entryB.getValue().kpm;
-                        return a.compareTo(b);
-                    }
-                }
-        );
-        return entryList;
-    }
-
-    private static List<Map.Entry<String, FileChangeInfo>> sortByKeystrokes(Map<String, FileChangeInfo> fileChangeInfoMap) {
-        List<Map.Entry<String, FileChangeInfo>> entryList = new ArrayList<Map.Entry<String, FileChangeInfo>>(fileChangeInfoMap.entrySet());
-        // natural ASC order
-        Collections.sort(
-                entryList, new Comparator<Map.Entry<String, FileChangeInfo>>() {
-                    @Override
-                    public int compare(Map.Entry<String, FileChangeInfo> entryA,
-                                       Map.Entry<String, FileChangeInfo> entryB) {
-
-                        Long a = entryA.getValue().keystrokes;
-                        Long b = entryB.getValue().keystrokes;
-                        return a.compareTo(b);
-                    }
-                }
-        );
-        return entryList;
-    }
-
-    private static List<Map.Entry<String, FileChangeInfo>> sortByFileSeconds(Map<String, FileChangeInfo> fileChangeInfoMap) {
-        List<Map.Entry<String, FileChangeInfo>> entryList = new ArrayList<Map.Entry<String, FileChangeInfo>>(fileChangeInfoMap.entrySet());
-        // natural ASC order
-        Collections.sort(
-                entryList, new Comparator<Map.Entry<String, FileChangeInfo>>() {
-                    @Override
-                    public int compare(Map.Entry<String, FileChangeInfo> entryA,
-                                       Map.Entry<String, FileChangeInfo> entryB) {
-                        Long a = entryA.getValue().duration_seconds;
-                        Long b = entryB.getValue().duration_seconds;
-                        return a.compareTo(b);
-                    }
-                }
-        );
-        return entryList;
     }
 
     public static JSeparator getSeparator() {

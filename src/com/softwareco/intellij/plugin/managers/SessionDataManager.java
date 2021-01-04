@@ -9,11 +9,11 @@ import com.intellij.openapi.ui.Messages;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.models.ElapsedTime;
 import com.softwareco.intellij.plugin.models.KeystrokeAggregate;
-import com.softwareco.intellij.plugin.models.SessionSummary;
 import swdc.java.ops.http.ClientResponse;
 import swdc.java.ops.http.OpsHttpClient;
 import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.UtilManager;
+import swdc.java.ops.model.SessionSummary;
 
 import java.lang.reflect.Type;
 

@@ -6,10 +6,10 @@ import com.intellij.openapi.project.Project;
 import com.softwareco.intellij.plugin.KeystrokeProject;
 import com.softwareco.intellij.plugin.SoftwareCo;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
-import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.models.TimeData;
 import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.UtilManager;
+import swdc.java.ops.model.CodeTimeSummary;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

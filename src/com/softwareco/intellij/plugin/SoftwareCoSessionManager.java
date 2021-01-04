@@ -10,14 +10,17 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
+import com.softwareco.intellij.plugin.managers.SwitchAccountManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
+import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.http.ClientResponse;
 import swdc.java.ops.http.OpsHttpClient;
 import swdc.java.ops.manager.*;
 import swdc.java.ops.model.UserState;
 
+import javax.swing.*;
 import java.net.URLEncoder;
 import java.util.Iterator;
 import java.util.logging.Logger;
@@ -170,6 +173,22 @@ public class SoftwareCoSessionManager {
     }
 
     public static void launchWebDashboard(UIInteractionType interactionType) {
+        if (StringUtils.isBlank(FileUtilManager.getItem("name"))) {
+            SwingUtilities.invokeLater(() -> {
+                String msg = "Sign up or log in to see more data visualizations.";
+
+                Object[] options = {"Sign up"};
+                int choice = JOptionPane.showOptionDialog(
+                        null, msg, "Sign up", JOptionPane.OK_OPTION,
+                        JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+                if (choice == 0) {
+                    SwitchAccountManager.initiateSignupFlow();
+                }
+            });
+            return;
+        }
+
         String url = SoftwareCoUtils.launch_url + "/login";
         BrowserUtil.browse(url);
 

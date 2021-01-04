@@ -2,11 +2,11 @@ package com.softwareco.intellij.plugin.managers;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.softwareco.intellij.plugin.*;
-import com.softwareco.intellij.plugin.models.CodeTimeSummary;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import swdc.java.ops.manager.AsyncManager;
 import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.UtilManager;
+import swdc.java.ops.model.CodeTimeSummary;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
