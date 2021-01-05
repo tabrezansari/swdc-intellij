@@ -168,11 +168,11 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode getSwitchOffDarkModeNode() {
-        return new MetricTreeNode("Turn off dark mode", "light-mode.svg", SWITCH_OFF_DARK_MODE_ID);
+        return new MetricTreeNode("Turn off dark mode", "adjust.svg", SWITCH_OFF_DARK_MODE_ID);
     }
 
     public static MetricTreeNode getSwitchOnDarkModeNode() {
-        return new MetricTreeNode("Turn on dark mode", "dark-mode.svg", SWITCH_ON_DARK_MODE_ID);
+        return new MetricTreeNode("Turn on dark mode", "adjust.svg", SWITCH_ON_DARK_MODE_ID);
     }
 
     public static MetricTreeNode getPauseNotificationsNode() {
