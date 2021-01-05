@@ -366,11 +366,11 @@ public class CodeTimeToolWindow {
             } else {
                 // update the logged in node in case the user switched accounts
                 String authType = FileUtilManager.getItem("authType");
-                String iconName = "envelope.svg";
+                String iconName = "email.svg";
                 if ("google".equals(authType)) {
-                    iconName = "icons8-google.svg";
+                    iconName = "google.svg";
                 } else if ("github".equals(authType)) {
-                    iconName = "icons8-github.svg";
+                    iconName = "github.svg";
                 }
 
                 String email = FileUtilManager.getItem("name");

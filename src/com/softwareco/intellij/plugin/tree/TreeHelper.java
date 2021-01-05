@@ -79,15 +79,15 @@ public class TreeHelper {
     }
 
     private static MetricTreeNode buildSignupNode(String type) {
-        String iconName = "envelope.svg";
+        String iconName = "email.svg";
         String text = "Sign up with email";
         String id = EMAIL_SIGNUP_ID;
         if (type.equals("google")) {
-            iconName = "icons8-google.svg";
+            iconName = "google.svg";
             text = "Sign up with Google";
             id = GOOGLE_SIGNUP_ID;
         } else if (type.equals("github")) {
-            iconName = "icons8-github.svg";
+            iconName = "github.svg";
             text = "Sign up with GitHub";
             id = GITHUB_SIGNUP_ID;
         }
@@ -98,11 +98,11 @@ public class TreeHelper {
     public static MetricTreeNode buildLoggedInNode() {
         String authType = FileUtilManager.getItem("authType");
         String name = FileUtilManager.getItem("name");
-        String iconName = "envelope.svg";
+        String iconName = "email.svg";
         if ("google".equals(authType)) {
-            iconName = "icons8-google.svg";
+            iconName = "google.svg";
         } else if ("github".equals(authType)) {
-            iconName = "icons8-github.svg";
+            iconName = "github.svg";
         }
 
         MetricTreeNode node = new MetricTreeNode(name, iconName, LOGGED_IN_ID);
@@ -138,25 +138,20 @@ public class TreeHelper {
     public static List<MetricTreeNode> buildTreeFlowNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
 
-        if (SlackManager.hasSlackWorkspaces()) {
-            SlackDndInfo slackDndInfo = SlackManager.getSlackDnDInfo();
+        SlackDndInfo slackDndInfo = SlackManager.getSlackDnDInfo();
 
-            // snooze node
-            if (slackDndInfo.snooze_enabled) {
-                list.add(getUnPausenotificationsNode(slackDndInfo));
-            } else {
-                list.add(getPauseNotificationsNode());
-            }
-            // presence toggle
-            SlackUserPresence slackUserPresence = SlackManager.getSlackUserPresence();
-            if (slackUserPresence != null && slackUserPresence.presence.equals("active")) {
-                list.add(getSetAwayPresenceNode());
-            } else {
-                list.add(getSetActivePresenceNode());
-            }
+        // snooze node
+        if (slackDndInfo.snooze_enabled) {
+            list.add(getUnPausenotificationsNode(slackDndInfo));
         } else {
-            // show the connect slack node
-            list.add(getConnectSlackNode());
+            list.add(getPauseNotificationsNode());
+        }
+        // presence toggle
+        SlackUserPresence slackUserPresence = SlackManager.getSlackUserPresence();
+        if (slackUserPresence != null && slackUserPresence.presence.equals("active")) {
+            list.add(getSetAwayPresenceNode());
+        } else {
+            list.add(getSetActivePresenceNode());
         }
 
         if (UtilManager.isMac()) {
@@ -166,7 +161,7 @@ public class TreeHelper {
                 list.add(getSwitchOnDarkModeNode());
             }
 
-            list.add(new MetricTreeNode("Toggle dock position", "settings.svg", TOGGLE_DOCK_POSITION_ID));
+            list.add(new MetricTreeNode("Toggle dock position", "position.svg", TOGGLE_DOCK_POSITION_ID));
         }
 
         return list;
@@ -180,32 +175,28 @@ public class TreeHelper {
         return new MetricTreeNode("Turn on dark mode", "dark-mode.svg", SWITCH_ON_DARK_MODE_ID);
     }
 
-    public static MetricTreeNode getConnectSlackNode() {
-        return new MetricTreeNode("Connect to set your status and pause notifications", "slack-new.svg", CONNECT_SLACK_ID);
-    }
-
     public static MetricTreeNode getPauseNotificationsNode() {
-        return new MetricTreeNode("Pause notifications", "slack-new.svg", SWITCH_OFF_DND_ID);
+        return new MetricTreeNode("Pause notifications", "notifications-on.svg", SWITCH_OFF_DND_ID);
     }
 
     public static MetricTreeNode getUnPausenotificationsNode(SlackDndInfo slackDndInfo) {
         String endTimeOfDay = UtilManager.getTimeOfDay(UtilManager.getJavaDateFromSeconds(slackDndInfo.snooze_endtime));
-        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "slack-new.svg", SWITCH_ON_DND_ID);
+        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "notifications-off.svg", SWITCH_ON_DND_ID);
     }
 
     public static MetricTreeNode getSetAwayPresenceNode() {
-        return new MetricTreeNode("Set presence to away", "slack-new.svg", SET_PRESENCE_AWAY_ID);
+        return new MetricTreeNode("Set presence to away", "presence.svg", SET_PRESENCE_AWAY_ID);
     }
 
     public static MetricTreeNode getSetActivePresenceNode() {
-        return new MetricTreeNode("Set presence to active", "slack-new.svg", SET_PRESENCE_ACTIVE_ID);
+        return new MetricTreeNode("Set presence to active", "presence.svg", SET_PRESENCE_ACTIVE_ID);
     }
 
     public static MetricTreeNode buildSlackWorkspacesNode() {
         MetricTreeNode node = new MetricTreeNode("Slack workspaces", null, SLACK_WORKSPACES_NODE_ID);
         List<Integration> workspaces = SlackManager.getSlackWorkspaces();
         workspaces.forEach(workspace -> {
-            node.add(new MetricTreeNode(workspace.team_domain, "slack-new.svg", workspace.authId));
+            node.add(new MetricTreeNode(workspace.team_domain, "slack.svg", workspace.authId));
         });
         // add the add new workspace button
         node.add(getAddSlackWorkspaceNode());
