@@ -1,11 +1,11 @@
 package com.softwareco.intellij.plugin.managers;
 
 import com.intellij.openapi.project.Project;
-import com.softwareco.intellij.plugin.SoftwareCo;
-import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.models.CommitChangeStats;
 import com.softwareco.intellij.plugin.repo.GitUtil;
+import swdc.java.ops.manager.FileUtilManager;
+import swdc.java.ops.manager.UtilManager;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -25,23 +25,13 @@ public class ReportManager {
     private static final SimpleDateFormat formatDayTime = new SimpleDateFormat("EEE, MMM d h:mma");
     private static final SimpleDateFormat formatDayYear = new SimpleDateFormat("MMM d, YYYY");
 
-    public static String getProjectContributorSummaryFile() {
-        String file = SoftwareCoSessionManager.getSoftwareDir(true);
-        if (SoftwareCoUtils.isWindows()) {
-            file += "\\ProjectContributorCodeSummary.txt";
-        } else {
-            file += "/ProjectContributorCodeSummary.txt";
-        }
-        return file;
-    }
-
     public static void displayProjectContributorSummaryDashboard(String identifier) {
         StringBuffer sb = new StringBuffer();
-        String file = getProjectContributorSummaryFile();
+        String file = FileUtilManager.getProjectContributorSummaryFile();
 
         Project p = SoftwareCoUtils.getFirstActiveProject();
         if (p != null) {
-            SoftwareCoUtils.TimesData timesData = SoftwareCoUtils.getTimesData();
+            UtilManager.TimesData timesData = UtilManager.getTimesData();
             String email = GitUtil.getUsersEmail(p.getBasePath());
             CommitChangeStats usersTodaysCommits = GitUtil.getTodaysCommits(p.getBasePath(), email);
             CommitChangeStats contribTodaysCommits = GitUtil.getTodaysCommits(p.getBasePath(), null);
@@ -106,8 +96,8 @@ public class ReportManager {
     }
 
     private static String getRowNumberData(String title, long userStat, long contribStat) {
-        String userStatStr = SoftwareCoUtils.humanizeLongNumbers(userStat);
-        String contribStatStr = SoftwareCoUtils.humanizeLongNumbers(contribStat);
+        String userStatStr = UtilManager.humanizeLongNumbers(userStat);
+        String contribStatStr = UtilManager.humanizeLongNumbers(contribStat);
         List<String> labels = Arrays.asList(title, userStatStr, contribStatStr);
         return getRowLabels(labels);
     }

@@ -1,7 +1,6 @@
 package com.softwareco.intellij.plugin.tree;
 
 import javax.swing.tree.*;
-import java.util.Enumeration;
 
 public class MetricTreeNode extends DefaultMutableTreeNode {
 
@@ -17,10 +16,6 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
     public MetricTreeNode(boolean isSeparator) {
         this.separator = isSeparator;
         this.init("", null, "separator");
-    }
-
-    public MetricTreeNode(String label, String id) {
-        this.init(label, null, id);
     }
 
     public MetricTreeNode(String label, String iconName, String id) {

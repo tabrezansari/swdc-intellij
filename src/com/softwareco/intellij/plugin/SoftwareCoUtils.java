@@ -4,13 +4,12 @@
  */
 package com.softwareco.intellij.plugin;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -20,27 +19,20 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.IconLoader;
-import com.intellij.openapi.util.SystemInfo;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.util.PlatformUtils;
 import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.SystemUtils;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.impl.client.HttpClientBuilder;
+import swdc.java.ops.http.OpsHttpClient;
+import swdc.java.ops.manager.FileUtilManager;
+import swdc.java.ops.manager.UtilManager;
 
 import javax.swing.*;
 import java.io.*;
@@ -48,34 +40,25 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.NumberFormat;
-import java.text.SimpleDateFormat;
-import java.time.*;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class SoftwareCoUtils {
-
-    public static final Logger LOG = Logger.getLogger("SoftwareCoUtils");
 
     // set the api endpoint to use
     public final static String api_endpoint = "https://api.software.com";
     // set the launch url to use
     public final static String launch_url = "https://app.software.com";
 
+    public static String IDE_NAME = "";
+    public static String IDE_VERSION = "";
+
     // Unnamed project name
     public final static String unnamed_project_name = "Unnamed";
     // Untitled file name or directory
     public final static String untitled_file_name = "Untitled";
-
-    public static HttpClient httpClient;
 
     private static final Gson gson = new Gson();
 
@@ -88,28 +71,20 @@ public class SoftwareCoUtils {
 
     private final static int EOF = -1;
     private static boolean showStatusText = true;
-
-    private static final int lastDayOfMonth = 0;
-
     private static final int DASHBOARD_LABEL_WIDTH = 25;
     private static final int DASHBOARD_VALUE_WIDTH = 25;
 
     private static final String SERVICE_NOT_AVAIL =
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
-
-    private static final long DAYS_IN_SECONDS = 60 * 60 * 24;
-
     private static String workspace_name = null;
 
     static {
-        // initialize the HttpClient
-        RequestConfig config = RequestConfig.custom()
-                .setConnectTimeout(8000)
-                .setConnectionRequestTimeout(8000)
-                .setSocketTimeout(8000)
-                .build();
-
-        httpClient = HttpClientBuilder.create().setDefaultRequestConfig(config).build();
+        try {
+            IDE_NAME = PlatformUtils.getPlatformPrefix();
+            IDE_VERSION = ApplicationInfo.getInstance().getFullVersion();
+        } catch (Exception e) {
+            System.out.println("Unable to retrieve IDE name and version info: " + e.getMessage());
+        }
     }
 
     public static String getVersion() {
@@ -130,7 +105,7 @@ public class SoftwareCoUtils {
             if (pluginDescriptor != null) {
                 SoftwareCoUtils.pluginName = pluginDescriptor.getName();
             } else {
-                return "Code Time";
+                return "codetime";
             }
         }
         return SoftwareCoUtils.pluginName;
@@ -158,18 +133,6 @@ public class SoftwareCoUtils {
     public static String generateToken() {
         String uuid = UUID.randomUUID().toString();
         return uuid.replace("-", "");
-    }
-
-    public static boolean isLoggedIn() {
-        String name = FileManager.getItem("name");
-        return name != null && !name.equals("");
-    }
-
-    public static String getHostname() {
-        List<String> cmd = new ArrayList<String>();
-        cmd.add("hostname");
-        String hostname = getSingleLineResult(cmd, 1);
-        return hostname;
     }
 
     public static Project getFirstActiveProject() {
@@ -261,165 +224,6 @@ public class SoftwareCoUtils {
                 }
             }
         }
-    }
-
-    public static String getUserHomeDir() {
-        return System.getProperty("user.home");
-    }
-
-    public static String getOs() {
-        String osName = SystemUtils.OS_NAME;
-        String osVersion = SystemUtils.OS_VERSION;
-        String osArch = SystemUtils.OS_ARCH;
-
-        String osInfo = "";
-        if (osArch != null) {
-            osInfo += osArch;
-        }
-        if (osInfo.length() > 0) {
-            osInfo += "_";
-        }
-        if (osVersion != null) {
-            osInfo += osVersion;
-        }
-        if (osInfo.length() > 0) {
-            osInfo += "_";
-        }
-        if (osName != null) {
-            osInfo += osName;
-        }
-
-        return osInfo;
-    }
-
-    public static boolean isLinux() {
-        return !isWindows() && !isMac();
-    }
-
-    public static boolean isWindows() {
-        return SystemInfo.isWindows;
-    }
-
-    public static boolean isMac() {
-        return SystemInfo.isMac;
-    }
-
-    public static SoftwareResponse makeApiCall(String api, String httpMethodName, String payload) {
-        return makeApiCall(api, httpMethodName, payload, null);
-    }
-
-    public static SoftwareResponse makeApiCall(String api, String httpMethodName, String payload, String overridingJwt) {
-
-        SoftwareResponse softwareResponse = new SoftwareResponse();
-
-        SoftwareHttpManager httpTask = new SoftwareHttpManager(api, httpMethodName, payload, overridingJwt, httpClient);
-
-        Future<HttpResponse> response = EXECUTOR_SERVICE.submit(httpTask);
-
-        //
-        // Handle the Future if it exist
-        //
-        if (response != null) {
-            try {
-                HttpResponse httpResponse = response.get();
-                if (httpResponse != null) {
-                    int statusCode = httpResponse.getStatusLine().getStatusCode();
-                    if (statusCode < 300) {
-                        softwareResponse.setIsOk(true);
-                    }
-                    softwareResponse.setCode(statusCode);
-                    HttpEntity entity = httpResponse.getEntity();
-                    JsonObject jsonObj = null;
-                    if (entity != null) {
-                        try {
-                            ContentType contentType = ContentType.getOrDefault(entity);
-                            String mimeType = contentType.getMimeType();
-                            String jsonStr = getStringRepresentation(entity);
-                            softwareResponse.setJsonStr(jsonStr);
-                            // LOG.log(Level.INFO, "Code Time: API response {0}", jsonStr);
-                            if (jsonStr != null && mimeType.indexOf("text/plain") == -1) {
-                                JsonElement jsonEl = readAsJsonElement(jsonStr);
-                                if (jsonEl != null) {
-                                    try {
-                                        JsonElement el = jsonEl;
-                                        if (el.isJsonPrimitive()) {
-                                            if (statusCode < 300) {
-                                                softwareResponse.setDataMessage(el.getAsString());
-                                            } else {
-                                                softwareResponse.setErrorMessage(el.getAsString());
-                                            }
-                                        } else {
-                                            jsonObj = jsonEl.getAsJsonObject();
-                                            softwareResponse.setJsonObj(jsonObj);
-                                        }
-                                    } catch (Exception e) {
-                                        LOG.log(Level.WARNING, "Unable to parse response data: {0}", e.getMessage());
-                                    }
-                                }
-                            }
-                        } catch (IOException e) {
-                            String errorMessage = getPluginName() + ": Unable to get the response from the http request, error: " + e.getMessage();
-                            softwareResponse.setErrorMessage(errorMessage);
-                            LOG.log(Level.WARNING, errorMessage);
-                        }
-                    }
-
-                    if (statusCode >= 400 && statusCode < 500 && jsonObj != null) {
-                        if (jsonObj.has("code")) {
-                            String code = jsonObj.get("code").getAsString();
-                            if (code != null && code.equals("DEACTIVATED")) {
-                                softwareResponse.setDeactivated(true);
-                            }
-                        }
-                    }
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                String errorMessage = getPluginName() + ": Unable to get the response from the http request, error: " + e.getMessage();
-                softwareResponse.setErrorMessage(errorMessage);
-                LOG.log(Level.WARNING, errorMessage);
-            }
-        }
-
-        return softwareResponse;
-    }
-
-    private static String getStringRepresentation(HttpEntity res) throws IOException {
-        if (res == null) {
-            return null;
-        }
-
-        ContentType contentType = ContentType.getOrDefault(res);
-        String mimeType = contentType.getMimeType();
-        boolean isPlainText = mimeType.indexOf("text/plain") != -1;
-
-        InputStream inputStream = res.getContent();
-
-        // Timing information--- verified that the data is still streaming
-        // when we are called (this interval is about 2s for a large response.)
-        // So in theory we should be able to do somewhat better by interleaving
-        // parsing and reading, but experiments didn't show any improvement.
-        //
-
-        StringBuffer sb = new StringBuffer();
-        InputStreamReader reader;
-        reader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-
-        BufferedReader br = new BufferedReader(reader);
-        boolean done = false;
-        while (!done) {
-            String aLine = br.readLine();
-            if (aLine != null) {
-                sb.append(aLine);
-                if (isPlainText) {
-                    sb.append("\n");
-                }
-            } else {
-                done = true;
-            }
-        }
-        br.close();
-
-        return sb.toString();
     }
 
     public static boolean showingStatusText() {
@@ -523,73 +327,10 @@ public class SoftwareCoUtils {
         return iconWidget;
     }
 
-    public static String humanizeMinutes(long minutes) {
-        String str = "";
-        if (minutes == 60) {
-            str = "1 hr";
-        } else if (minutes > 60) {
-            float hours = (float)minutes / 60;
-            try {
-                str = String.format("%.1f", hours) + " hrs";
-            } catch (Exception e) {
-                str = String.format("%s hrs", Math.round(hours));
-            }
-        } else if (minutes == 1) {
-            str = "1 min";
-        } else {
-            str = minutes + " min";
-        }
-        return str;
-    }
-
-    public static String humanizeDoubleNumbers(double number) {
-        NumberFormat nf = NumberFormat.getInstance();
-        nf.setMinimumFractionDigits(2);
-        return nf.format(number);
-    }
-
-    public static String humanizeLongNumbers(long number) {
-        NumberFormat nf = NumberFormat.getInstance();
-        return nf.format(number);
-    }
-
-    public static String runCommand(String[] args) {
-        return runCommand(args, null);
-    }
-
-    /**
-     * Execute the args
-     * @param args
-     * @return
-     */
-    public static String runCommand(String[] args, String dir) {
-        // use process builder as it allows to run the command from a specified dir
-        ProcessBuilder builder = new ProcessBuilder();
-
-        try {
-            builder.command(args);
-            if (StringUtils.isNotBlank(dir)) {
-                // change to the directory to run the command
-                builder.directory(new File(dir));
-            }
-            Process process = builder.start();
-
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-            InputStream is = process.getInputStream();
-            copyLarge(is, baos, new byte[4096]);
-            return baos.toString().trim();
-
-        } catch (Exception e) {
-            Thread.currentThread().interrupt();
-            return null;
-        }
-    }
-
     public static List<String> getResultsForCommandArgs(String[] args, String dir) {
         List<String> results = new ArrayList<>();
         try {
-            String result = runCommand(args, dir);
+            String result = UtilManager.runCommand(args, dir);
             if (result == null || result.trim().length() == 0) {
                 return results;
             }
@@ -635,12 +376,12 @@ public class SoftwareCoUtils {
     }
 
     public static void buildCodeTimeMetricsDashboard() {
-        String summaryInfoFile = SoftwareCoSessionManager.getSummaryInfoFile(true);
-        String dashboardFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
+        String summaryInfoFile = FileUtilManager.getSummaryInfoFile();
+        String dashboardFile = FileUtilManager.getCodeTimeDashboardFile();
 
         Writer writer = null;
-        String api = "/dashboard?linux=" + SoftwareCoUtils.isLinux() + "&showToday=true";
-        String dashboardSummary = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null).getJsonStr();
+        String api = "/dashboard?linux=" + UtilManager.isLinux() + "&showToday=true";
+        String dashboardSummary = OpsHttpClient.softwareGet(api, FileUtilManager.getItem("jwt")).getJsonStr();
         if (dashboardSummary == null || dashboardSummary.trim().isEmpty()) {
             dashboardSummary = SERVICE_NOT_AVAIL;
         }
@@ -660,13 +401,13 @@ public class SoftwareCoUtils {
         String dashboardContent = "";
 
         // append the summary content
-        String infoFileContent = FileManager.getFileContent(summaryInfoFile);
+        String infoFileContent = FileUtilManager.getFileContent(summaryInfoFile);
         if (infoFileContent != null) {
             dashboardContent += infoFileContent;
         }
 
         // write the dashboard content to the dashboard file
-        FileManager.saveFileContent(dashboardFile, dashboardContent);
+        FileUtilManager.saveFileContent(dashboardFile, dashboardContent);
 
     }
 
@@ -684,7 +425,7 @@ public class SoftwareCoUtils {
     public static void launchCodeTimeMetricsDashboard(UIInteractionType interactionType) {
         buildCodeTimeMetricsDashboard();
 
-        String codeTimeFile = SoftwareCoSessionManager.getCodeTimeDashboardFile();
+        String codeTimeFile = FileUtilManager.getCodeTimeDashboardFile();
         launchFile(codeTimeFile);
 
         UIElementEntity elementEntity = new UIElementEntity();
@@ -694,201 +435,6 @@ public class SoftwareCoUtils {
         elementEntity.cta_text = "View summary";
         elementEntity.icon_name = interactionType == UIInteractionType.click ? "guage" : null;
         EventTrackerManager.getInstance().trackUIInteraction(interactionType, elementEntity);
-    }
-
-    private static String getSingleLineResult(List<String> cmd, int maxLen) {
-        String result = null;
-        String[] cmdArgs = Arrays.copyOf(cmd.toArray(), cmd.size(), String[].class);
-        String content = SoftwareCoUtils.runCommand(cmdArgs, null);
-
-        // for now just get the 1st one found
-        if (content != null) {
-            String[] contentList = content.split("\n");
-            if (contentList != null && contentList.length > 0) {
-                int len = (maxLen != -1) ? Math.min(maxLen, contentList.length) : contentList.length;
-                for (int i = 0; i < len; i++) {
-                    String line = contentList[i];
-                    if (line != null && line.trim().length() > 0) {
-                        result = line.trim();
-                        break;
-                    }
-                }
-            }
-        }
-        return result;
-    }
-
-    public static String getOsUsername() {
-        String username = System.getProperty("user.name");
-        if (username == null || username.trim().equals("")) {
-            try {
-                List<String> cmd = new ArrayList<String>();
-                if (SoftwareCoUtils.isWindows()) {
-                    cmd.add("cmd");
-                    cmd.add("/c");
-                    cmd.add("whoami");
-                } else {
-                    cmd.add("/bin/sh");
-                    cmd.add("-c");
-                    cmd.add("whoami");
-                }
-                username = getSingleLineResult(cmd, -1);
-            } catch (Exception e) {
-                //
-            }
-        }
-        return username;
-    }
-
-    public static String createAnonymousUser(boolean ignoreJwt) {
-        // make sure we've fetched the app jwt
-        String jwt = FileManager.getItem("jwt");
-
-        if (StringUtils.isBlank(jwt) || ignoreJwt) {
-            String timezone = TimeZone.getDefault().getID();
-
-            String plugin_uuid = FileManager.getPluginUuid();
-            String auth_callback_state = FileManager.getAuthCallbackState();
-
-            if (StringUtils.isBlank(auth_callback_state)) {
-                auth_callback_state = UUID.randomUUID().toString();
-                FileManager.setAuthCallbackState(auth_callback_state);
-            }
-
-            JsonObject payload = new JsonObject();
-            payload.addProperty("username", getOsUsername());
-            payload.addProperty("timezone", timezone);
-            payload.addProperty("hostname", getHostname());
-            payload.addProperty("auth_callback_state", auth_callback_state);
-            payload.addProperty("plugin_uuid", plugin_uuid);
-
-            String api = "/plugins/onboard";
-            SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpPost.METHOD_NAME, payload.toString());
-            if (resp.isOk()) {
-                // check if we have the data and jwt
-                // resp.data.jwt and resp.data.user
-                // then update the session.json for the jwt
-                JsonObject data = resp.getJsonObj();
-                // check if we have any data
-                if (data != null && data.has("jwt")) {
-                    String dataJwt = data.get("jwt").getAsString();
-                    FileManager.setItem("jwt", dataJwt);
-                    FileManager.setBooleanItem("switching_account", false);
-                    FileManager.setAuthCallbackState(null);
-                    return dataJwt;
-                }
-            }
-        }
-        return null;
-    }
-
-    private static JsonObject getUser() {
-        String jwt = FileManager.getItem("jwt");
-        String api = "/users/me";
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
-        if (resp.isOk()) {
-            // check if we have the data and jwt
-            // resp.data.jwt and resp.data.user
-            // then update the session.json for the jwt
-            JsonObject obj = resp.getJsonObj();
-            if (obj != null && obj.has("data")) {
-                return obj.get("data").getAsJsonObject();
-            }
-        }
-        return null;
-    }
-
-    private static final String regex = "^\\S+@\\S+\\.\\S+$";
-    private static final Pattern pattern = Pattern.compile(regex);
-
-    private static boolean validateEmail(String email) {
-        return pattern.matcher(email).matches();
-    }
-
-    public static boolean getUserLoginState() {
-        String name = FileManager.getItem("name");
-        boolean switching_account = FileManager.getBooleanItem("switching_account");
-
-        if (StringUtils.isNotBlank(name) && !switching_account) {
-            return true;
-        }
-
-        String authType = FileManager.getItem("authType");
-        if (StringUtils.isBlank(authType)) {
-            authType = "software";
-        }
-        String jwt = FileManager.getItem("jwt");
-        String auth_callback_state = FileManager.getAuthCallbackState();
-        String token = (StringUtils.isNotBlank(auth_callback_state)) ? auth_callback_state : jwt;
-        String api = "/users/plugin/state";
-        SoftwareResponse resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, token);
-
-        boolean foundUser = (resp.isOk() && resp.getJsonObj() != null && resp.getJsonObj().has("user"));
-        String state = (foundUser) ? resp.getJsonObj().get("state").getAsString() : "UNKNOWN";
-        boolean isEmailLogin = (authType.equals("software") || authType.equals("email"));
-        if (!state.equals("OK") && isEmailLogin) {
-            // check using the jwt
-            resp = SoftwareCoUtils.makeApiCall(api, HttpGet.METHOD_NAME, null, jwt);
-            foundUser = (resp.isOk() && resp.getJsonObj() != null && resp.getJsonObj().has("user"));
-        }
-
-        if (foundUser) {
-            JsonObject user = resp.getJsonObj().get("user").getAsJsonObject();
-
-            int registered = user.get("registered").getAsInt();
-            updateJwt(user.get("plugin_jwt").getAsString());
-            if (registered == 1) {
-                FileManager.setItem("name", user.get("email").getAsString());
-            } else {
-                FileManager.setItem("name", null);
-            }
-
-            String currentAuthType = FileManager.getItem("authType");
-            if (StringUtils.isBlank(currentAuthType)) {
-                FileManager.setItem("authType", "software");
-            }
-
-            FileManager.setBooleanItem("switching_account", false);
-            FileManager.setAuthCallbackState(null);
-
-            // if we need the user it's "resp.data.user"
-            return (registered == 1);
-        }
-
-        return false;
-    }
-
-    private static void updateJwt(String newJwt) {
-        if (StringUtils.isBlank(newJwt)) {
-            return;
-        }
-
-        String currentJwtId = getDecodedUserIdFromJwt(FileManager.getItem("jwt"));
-        String newJwtId = getDecodedUserIdFromJwt(newJwt);
-        if (!currentJwtId.equals(newJwtId)) {
-            FileManager.setItem("jwt", newJwt);
-        }
-    }
-
-    public static String getDecodedUserIdFromJwt(String jwt) {
-        String stippedDownJwt = jwt.indexOf("JWT ") != -1 ? jwt.substring("JWT ".length()) : jwt;
-        try {
-            String[] split_string = stippedDownJwt.split("\\.");
-            String base64EncodedBody = split_string[1];
-
-            org.apache.commons.codec.binary.Base64 base64Url = new Base64(true);
-            String body = new String(base64Url.decode(base64EncodedBody));
-            Map<String, String> jsonMap;
-
-            ObjectMapper mapper = new ObjectMapper();
-            // convert JSON string to Map
-            jsonMap = mapper.readValue(body,
-                    new TypeReference<Map<String, String>>() {
-                    });
-            Object idVal = jsonMap.getOrDefault("id", "");
-            return idVal.toString();
-        } catch (Exception ex) {}
-        return "";
     }
 
     public static void showOfflinePrompt(boolean isTenMinuteReconnect) {
@@ -902,94 +448,6 @@ public class SoftwareCoUtils {
                 Messages.showInfoMessage(infoMsg, getPluginName());
             }
         });
-    }
-
-    public static Date atStartOfWeek(long local_now) {
-        // find out how many days to go back
-        int daysBack = 0;
-        Calendar cal = Calendar.getInstance();
-        if (cal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
-            int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
-            while (dayOfWeek != Calendar.SUNDAY) {
-                daysBack++;
-                dayOfWeek -= 1;
-            }
-        } else {
-            daysBack = 7;
-        }
-
-        long startOfDayInSec = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
-        long startOfWeekInSec = startOfDayInSec - (DAYS_IN_SECONDS * daysBack);
-
-        return new Date(startOfWeekInSec * 1000);
-    }
-
-    public static Date atStartOfDay(Date date) {
-        LocalDateTime localDateTime = dateToLocalDateTime(date);
-        LocalDateTime startOfDay = localDateTime.with(LocalTime.MIN);
-        return localDateTimeToDate(startOfDay);
-    }
-
-    public static Date atEndOfDay(Date date) {
-        LocalDateTime localDateTime = dateToLocalDateTime(date);
-        LocalDateTime endOfDay = localDateTime.with(LocalTime.MAX);
-        return localDateTimeToDate(endOfDay);
-    }
-
-    private static LocalDateTime dateToLocalDateTime(Date date) {
-        return LocalDateTime.ofInstant(date.toInstant(), ZoneId.systemDefault());
-    }
-
-    private static Date localDateTimeToDate(LocalDateTime localDateTime) {
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-    }
-
-    // the timestamps are all in seconds
-    public static class TimesData {
-        public Integer offset;
-        public long now;
-        public long local_now;
-        public String timezone;
-        public long local_start_day;
-        public long local_start_yesterday;
-        public Date local_start_of_week_date;
-        public Date local_start_of_yesterday_date;
-        public Date local_start_today_date;
-        public long local_start_of_week;
-        public long local_end_day;
-        public long utc_end_day;
-
-        public TimesData() {
-            offset = ZonedDateTime.now().getOffset().getTotalSeconds();
-            now = System.currentTimeMillis() / 1000;
-            local_now = now + offset;
-            timezone = TimeZone.getDefault().getID();
-            local_start_day = atStartOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
-            local_start_yesterday = local_start_day - DAYS_IN_SECONDS;
-            local_start_of_week_date = atStartOfWeek(local_now);
-            local_start_of_yesterday_date = new Date(local_start_yesterday * 1000);
-            local_start_today_date = new Date(local_start_day * 1000);
-            local_start_of_week = local_start_of_week_date.toInstant().getEpochSecond();
-            local_end_day = atEndOfDay(new Date(local_now * 1000)).toInstant().getEpochSecond();
-            utc_end_day = atEndOfDay(new Date(now * 1000)).toInstant().getEpochSecond();
-        }
-    }
-
-    public static TimesData getTimesData() {
-        TimesData timesData = new TimesData();
-        return timesData;
-    }
-
-    public static String getTodayInStandardFormat() {
-        SimpleDateFormat formatDay = new SimpleDateFormat("YYYY-MM-dd");
-        String day = formatDay.format(new Date());
-        return day;
-    }
-
-    public static boolean isNewDay() {
-        String currentDay = FileManager.getItem("currentDay", "");
-        String day = SoftwareCoUtils.getTodayInStandardFormat();
-        return !day.equals(currentDay);
     }
 
     public static String getDashboardRow(String label, String value) {

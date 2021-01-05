@@ -3,10 +3,9 @@ package com.softwareco.intellij.plugin;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.util.Consumer;
-import com.softwareco.intellij.plugin.managers.FileManager;
-import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import swdc.java.ops.manager.FileUtilManager;
 
 import java.awt.event.MouseEvent;
 import java.util.logging.Logger;
@@ -41,7 +40,7 @@ public class SoftwareCoStatusBarKpmTextWidget implements StatusBarWidget {
     }
 
     public void setTooltip(String tooltip) {
-        String name = FileManager.getItem("name");
+        String name = FileUtilManager.getItem("name");
 
         if (tooltip == null) {
             tooltip = "Code time today. Click to see more from Code Time.";
