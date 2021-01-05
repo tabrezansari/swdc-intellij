@@ -9,6 +9,7 @@ import com.google.gson.stream.JsonReader;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.ide.plugins.IdeaPluginDescriptor;
 import com.intellij.ide.plugins.PluginManager;
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -22,6 +23,7 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.WindowManager;
+import com.intellij.util.PlatformUtils;
 import com.softwareco.intellij.plugin.managers.*;
 import com.softwareco.intellij.plugin.models.FileDetails;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
@@ -50,6 +52,9 @@ public class SoftwareCoUtils {
     // set the launch url to use
     public final static String launch_url = "https://app.software.com";
 
+    public static String IDE_NAME = "";
+    public static String IDE_VERSION = "";
+
     // Unnamed project name
     public final static String unnamed_project_name = "Unnamed";
     // Untitled file name or directory
@@ -73,6 +78,14 @@ public class SoftwareCoUtils {
             "Our service is temporarily unavailable.\n\nPlease try again later.\n";
     private static String workspace_name = null;
 
+    static {
+        try {
+            IDE_NAME = PlatformUtils.getPlatformPrefix();
+            IDE_VERSION = ApplicationInfo.getInstance().getFullVersion();
+        } catch (Exception e) {
+            System.out.println("Unable to retrieve IDE name and version info: " + e.getMessage());
+        }
+    }
 
     public static String getVersion() {
         if (VERSION == null) {
@@ -92,7 +105,7 @@ public class SoftwareCoUtils {
             if (pluginDescriptor != null) {
                 SoftwareCoUtils.pluginName = pluginDescriptor.getName();
             } else {
-                return "Code Time";
+                return "codetime";
             }
         }
         return SoftwareCoUtils.pluginName;

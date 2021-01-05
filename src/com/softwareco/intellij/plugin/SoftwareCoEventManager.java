@@ -218,7 +218,9 @@ public class SoftwareCoEventManager {
         }
         fileInfo.close = fileInfo.close + 1;
         LOG.info("Code Time: file closed: " + fileName);
-        tracker.trackEditorAction("file", "close", fileName);
+        if (tracker != null) {
+            tracker.trackEditorAction("file", "close", fileName);
+        }
     }
 
     /**

@@ -10,7 +10,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
-import com.softwareco.intellij.plugin.managers.SwitchAccountManager;
+import com.softwareco.intellij.plugin.managers.AuthPromptManager;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindowFactory;
 import com.swdc.snowplow.tracker.entities.UIElementEntity;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
@@ -183,7 +183,7 @@ public class SoftwareCoSessionManager {
                         JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
                 if (choice == 0) {
-                    SwitchAccountManager.initiateSignupFlow();
+                    AuthPromptManager.initiateSignupFlow();
                 }
             });
             return;

@@ -49,7 +49,14 @@ public class SoftwareCo implements ApplicationComponent {
 
     public void initComponent() {
         // initialize the swdc ops config
-        ConfigManager.init(SoftwareCoUtils.api_endpoint, SoftwareCoUtils.launch_url, SoftwareCoUtils.pluginId, SoftwareCoUtils.getPluginName(), SoftwareCoUtils.getVersion());
+        ConfigManager.init(
+                SoftwareCoUtils.api_endpoint,
+                SoftwareCoUtils.launch_url,
+                SoftwareCoUtils.pluginId,
+                SoftwareCoUtils.getPluginName(),
+                SoftwareCoUtils.getVersion(),
+                SoftwareCoUtils.IDE_NAME,
+                SoftwareCoUtils.IDE_VERSION);
 
         String jwt = FileUtilManager.getItem("jwt");
         if (StringUtils.isBlank(jwt)) {

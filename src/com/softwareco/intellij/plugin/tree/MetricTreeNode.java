@@ -18,10 +18,6 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
         this.init("", null, "separator");
     }
 
-    public MetricTreeNode(String label, String id) {
-        this.init(label, null, id);
-    }
-
     public MetricTreeNode(String label, String iconName, String id) {
         this.init(label, iconName, id);
     }
