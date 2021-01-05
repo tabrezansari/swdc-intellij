@@ -132,7 +132,7 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode buildViewWebDashboardButton() {
-        return new MetricTreeNode("More data at Software.com", "paw-grey.svg", ADVANCED_METRICS_ID);
+        return new MetricTreeNode("More data at Software.com", "paw.svg", ADVANCED_METRICS_ID);
     }
 
     public static List<MetricTreeNode> buildTreeFlowNodes() {
@@ -176,12 +176,12 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode getPauseNotificationsNode() {
-        return new MetricTreeNode("Pause notifications", "notifications-on.svg", SWITCH_OFF_DND_ID);
+        return new MetricTreeNode("Pause notifications", "notifications-off.svg", SWITCH_OFF_DND_ID);
     }
 
     public static MetricTreeNode getUnPausenotificationsNode(SlackDndInfo slackDndInfo) {
         String endTimeOfDay = UtilManager.getTimeOfDay(UtilManager.getJavaDateFromSeconds(slackDndInfo.snooze_endtime));
-        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "notifications-off.svg", SWITCH_ON_DND_ID);
+        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "notifications-on.svg", SWITCH_ON_DND_ID);
     }
 
     public static MetricTreeNode getSetAwayPresenceNode() {
