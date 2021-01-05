@@ -74,6 +74,7 @@ public class TreeHelper {
             list.add(new MetricTreeNode("Log in", "paw.svg", LOG_IN_ID));
         } else {
             list.add(buildLoggedInNode());
+            list.add(buildSwitchAccountNode());
         }
         return list;
     }
@@ -105,9 +106,11 @@ public class TreeHelper {
             iconName = "github.svg";
         }
 
-        MetricTreeNode node = new MetricTreeNode(name, iconName, LOGGED_IN_ID);
-        node.add(new MetricTreeNode("Switch account", "paw.svg", SWITCH_ACCOUNT_ID));
-        return node;
+        return new MetricTreeNode(name, iconName, LOGGED_IN_ID);
+    }
+
+    public static MetricTreeNode buildSwitchAccountNode() {
+        return new MetricTreeNode("Switch account", "paw.svg", SWITCH_ACCOUNT_ID);
     }
 
     public static List<MetricTreeNode> buildMenuNodes() {
@@ -258,9 +261,6 @@ public class TreeHelper {
                 break;
             case EMAIL_SIGNUP_ID:
                 SoftwareCoSessionManager.launchLogin("email", UIInteractionType.click, false);
-                break;
-            case LOGGED_IN_ID:
-                CodeTimeToolWindow.expandCollapse(LOGGED_IN_ID);
                 break;
             case SWITCH_ACCOUNT_ID:
                 AuthPromptManager.initiateSwitchAccountFlow();

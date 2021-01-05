@@ -32,9 +32,6 @@ public class CodeTimeToolWindow {
 
     private static CodeTimeToolWindow win;
 
-    private static boolean expandInitialized = false;
-    private static Map<String, MetricTreeNode> nodeMap = new HashMap<>();
-
     public CodeTimeToolWindow(ToolWindow toolWindow) {
         codetimeWindowContent.setFocusable(true);
 
@@ -98,22 +95,6 @@ public class CodeTimeToolWindow {
      */
     private synchronized void init() {
         metricTree = buildCodeTimeTreeView();
-
-        if (!expandInitialized) {
-            int activeCodeTimeParentRow = findParentNodeRowById(TreeHelper.ACTIVE_CODETIME_PARENT_ID);
-            if (activeCodeTimeParentRow != -1) {
-                metricTree.expandRow(activeCodeTimeParentRow);
-            }
-            int codeTimeParentRow = findParentNodeRowById(TreeHelper.CODETIME_PARENT_ID);
-            if (codeTimeParentRow != -1) {
-                metricTree.expandRow(codeTimeParentRow);
-            }
-            int loggedInParentRow = findParentNodeRowById(TreeHelper.LOGGED_IN_ID);
-            if (loggedInParentRow != -1) {
-                metricTree.expandRow(loggedInParentRow);
-            }
-            expandInitialized = true;
-        }
 
         scrollPane.setViewportView(metricTree);
         scrollPane.setVisible(true);
@@ -361,8 +342,8 @@ public class CodeTimeToolWindow {
             removeNodeById(TreeHelper.SIGN_UP_ID);
             if (loggedInNode == null) {
                 // make sure the loggedin node is showing
-                loggedInNode = TreeHelper.buildLoggedInNode();
-                ((DefaultMutableTreeNode)metricTree.getModel().getRoot()).insert(loggedInNode, 0);
+                ((DefaultMutableTreeNode)metricTree.getModel().getRoot()).insert(TreeHelper.buildLoggedInNode(), 0);
+                ((DefaultMutableTreeNode)metricTree.getModel().getRoot()).insert(TreeHelper.buildSwitchAccountNode(), 1);
             } else {
                 // update the logged in node in case the user switched accounts
                 String authType = FileUtilManager.getItem("authType");
