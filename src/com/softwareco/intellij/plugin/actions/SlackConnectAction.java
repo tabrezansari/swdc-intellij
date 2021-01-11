@@ -10,6 +10,6 @@ public class SlackConnectAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-        SlackManager.connectSlackWorkspace(() -> { CodeTimeToolWindow.rebuildTree();});
+        SlackManager.connectSlackWorkspace(() -> { CodeTimeToolWindow.refresh();});
     }
 }

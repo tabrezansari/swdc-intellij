@@ -10,7 +10,7 @@ public class SlackDisconnectAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-        SlackManager.disconnectSlackWorkspace(() -> { CodeTimeToolWindow.rebuildTree();});
+        SlackManager.disconnectSlackWorkspace(() -> { CodeTimeToolWindow.refresh();});
     }
 
     @Override

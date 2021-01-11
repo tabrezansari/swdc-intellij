@@ -8,14 +8,13 @@ import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.manager.*;
-import swdc.java.ops.model.Integration;
-import swdc.java.ops.model.MetricLabel;
-import swdc.java.ops.model.SlackDndInfo;
-import swdc.java.ops.model.SlackUserPresence;
+import swdc.java.ops.model.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.SimpleDateFormat;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -38,6 +37,7 @@ public class TreeHelper {
     public static final String ACTIVE_CODETIME_TODAY_ID = "active_codetime_today";
     public static final String ACTIVE_CODETIME_AVG_TODAY_ID = "active_codetime_avg_today";
     public static final String ACTIVE_CODETIME_GLOBAL_AVG_TODAY_ID = "active_codetime_global_avg_today";
+    public static final String TODAY_VS_AVG_ID = "today_vs_average";
 
     public static final String LINES_ADDED_TODAY_ID = "lines_added_today";
     public static final String LINES_ADDED_AVG_TODAY_ID = "lines_added_avg_today";
@@ -63,15 +63,14 @@ public class TreeHelper {
     public static final String ADD_WORKSPACE_ID = "add_workspace";
     public static final String SET_PRESENCE_AWAY_ID = "set_presence_away";
     public static final String SET_PRESENCE_ACTIVE_ID = "set_presence_active";
-
-    private static final SimpleDateFormat formatDay = new SimpleDateFormat("EEE");
+    public static final String SET_SLACK_STATUS_ID = "set_slack_status";
 
     public static List<MetricTreeNode> buildSignupNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
         String name = FileUtilManager.getItem("name");
         if (StringUtils.isBlank(name)) {
-            list.add(new MetricTreeNode("Sign up", "signup.svg", SIGN_UP_ID));
-            list.add(new MetricTreeNode("Log in", "paw.svg", LOG_IN_ID));
+            list.add(new MetricTreeNode("Sign up", "signup.png", SIGN_UP_ID));
+            list.add(new MetricTreeNode("Log in", "paw.png", LOG_IN_ID));
         } else {
             list.add(buildLoggedInNode());
             list.add(buildSwitchAccountNode());
@@ -80,15 +79,15 @@ public class TreeHelper {
     }
 
     private static MetricTreeNode buildSignupNode(String type) {
-        String iconName = "email.svg";
+        String iconName = "email.png";
         String text = "Sign up with email";
         String id = EMAIL_SIGNUP_ID;
         if (type.equals("google")) {
-            iconName = "google.svg";
+            iconName = "google.png";
             text = "Sign up with Google";
             id = GOOGLE_SIGNUP_ID;
         } else if (type.equals("github")) {
-            iconName = "github.svg";
+            iconName = "github.png";
             text = "Sign up with GitHub";
             id = GITHUB_SIGNUP_ID;
         }
@@ -99,18 +98,18 @@ public class TreeHelper {
     public static MetricTreeNode buildLoggedInNode() {
         String authType = FileUtilManager.getItem("authType");
         String name = FileUtilManager.getItem("name");
-        String iconName = "email.svg";
+        String iconName = "email.png";
         if ("google".equals(authType)) {
-            iconName = "google.svg";
+            iconName = "google.png";
         } else if ("github".equals(authType)) {
-            iconName = "github.svg";
+            iconName = "github.png";
         }
 
         return new MetricTreeNode(name, iconName, LOGGED_IN_ID);
     }
 
     public static MetricTreeNode buildSwitchAccountNode() {
-        return new MetricTreeNode("Switch account", "paw.svg", SWITCH_ACCOUNT_ID);
+        return new MetricTreeNode("Switch account", "paw.png", SWITCH_ACCOUNT_ID);
     }
 
     public static List<MetricTreeNode> buildMenuNodes() {
@@ -121,9 +120,9 @@ public class TreeHelper {
             toggleText = "Show status bar metrics";
         }
 
-        list.add(new MetricTreeNode("Learn more", "readme.svg", LEARN_MORE_ID));
-        list.add(new MetricTreeNode("Submit feedback", "message.svg", SEND_FEEDBACK_ID));
-        list.add(new MetricTreeNode(toggleText, "visible.svg", TOGGLE_METRICS_ID));
+        list.add(new MetricTreeNode("Learn more", "readme.png", LEARN_MORE_ID));
+        list.add(new MetricTreeNode("Submit feedback", "message.png", SEND_FEEDBACK_ID));
+        list.add(new MetricTreeNode(toggleText, "visible.png", TOGGLE_METRICS_ID));
 
         list.add(buildSlackWorkspacesNode());
 
@@ -131,15 +130,17 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode buildSummaryButton() {
-        return new MetricTreeNode("Dashboard", "dashboard.svg", VIEW_SUMMARY_ID);
+        return new MetricTreeNode("Dashboard", "dashboard.png", VIEW_SUMMARY_ID);
     }
 
     public static MetricTreeNode buildViewWebDashboardButton() {
-        return new MetricTreeNode("More data at Software.com", "paw.svg", ADVANCED_METRICS_ID);
+        return new MetricTreeNode("More data at Software.com", "paw.png", ADVANCED_METRICS_ID);
     }
 
     public static List<MetricTreeNode> buildTreeFlowNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
+
+        list.add(getSetSlackStatusNode());
 
         SlackDndInfo slackDndInfo = SlackManager.getSlackDnDInfo();
 
@@ -164,42 +165,48 @@ public class TreeHelper {
                 list.add(getSwitchOnDarkModeNode());
             }
 
-            list.add(new MetricTreeNode("Toggle dock position", "position.svg", TOGGLE_DOCK_POSITION_ID));
+            list.add(new MetricTreeNode("Toggle dock position", "position.png", TOGGLE_DOCK_POSITION_ID));
         }
 
         return list;
     }
 
+    public static MetricTreeNode getSetSlackStatusNode() {
+        SlackUserProfile userProfile = SlackManager.getSlackStatus();
+        String status = (userProfile != null && StringUtils.isNotBlank(userProfile.status_text)) ? " (" + userProfile.status_text + ")" : "";
+        return new MetricTreeNode("Update profile status" + status, "profile.png", SET_SLACK_STATUS_ID);
+    }
+
     public static MetricTreeNode getSwitchOffDarkModeNode() {
-        return new MetricTreeNode("Turn off dark mode", "adjust.svg", SWITCH_OFF_DARK_MODE_ID);
+        return new MetricTreeNode("Turn off dark mode", "adjust.png", SWITCH_OFF_DARK_MODE_ID);
     }
 
     public static MetricTreeNode getSwitchOnDarkModeNode() {
-        return new MetricTreeNode("Turn on dark mode", "adjust.svg", SWITCH_ON_DARK_MODE_ID);
+        return new MetricTreeNode("Turn on dark mode", "adjust.png", SWITCH_ON_DARK_MODE_ID);
     }
 
     public static MetricTreeNode getPauseNotificationsNode() {
-        return new MetricTreeNode("Pause notifications", "notifications-off.svg", SWITCH_OFF_DND_ID);
+        return new MetricTreeNode("Pause notifications", "notifications-off.png", SWITCH_OFF_DND_ID);
     }
 
     public static MetricTreeNode getUnPausenotificationsNode(SlackDndInfo slackDndInfo) {
         String endTimeOfDay = UtilManager.getTimeOfDay(UtilManager.getJavaDateFromSeconds(slackDndInfo.snooze_endtime));
-        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "notifications-on.svg", SWITCH_ON_DND_ID);
+        return new MetricTreeNode("Turn on notifications (ends at " + endTimeOfDay + ")", "notifications-on.png", SWITCH_ON_DND_ID);
     }
 
     public static MetricTreeNode getSetAwayPresenceNode() {
-        return new MetricTreeNode("Set presence to away", "presence.svg", SET_PRESENCE_AWAY_ID);
+        return new MetricTreeNode("Set presence to away", "presence.png", SET_PRESENCE_AWAY_ID);
     }
 
     public static MetricTreeNode getSetActivePresenceNode() {
-        return new MetricTreeNode("Set presence to active", "presence.svg", SET_PRESENCE_ACTIVE_ID);
+        return new MetricTreeNode("Set presence to active", "presence.png", SET_PRESENCE_ACTIVE_ID);
     }
 
     public static MetricTreeNode buildSlackWorkspacesNode() {
         MetricTreeNode node = new MetricTreeNode("Slack workspaces", null, SLACK_WORKSPACES_NODE_ID);
         List<Integration> workspaces = SlackManager.getSlackWorkspaces(false);
         workspaces.forEach(workspace -> {
-            node.add(new MetricTreeNode(workspace.team_domain, "slack.svg", workspace.authId));
+            node.add(new MetricTreeNode(workspace.team_domain, "slack.png", workspace.authId));
         });
         // add the add new workspace button
         node.add(getAddSlackWorkspaceNode());
@@ -207,7 +214,13 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode getAddSlackWorkspaceNode() {
-        return new MetricTreeNode("Add workspace", "add.svg", ADD_WORKSPACE_ID);
+        return new MetricTreeNode("Add workspace", "add.png", ADD_WORKSPACE_ID);
+    }
+
+    public static MetricTreeNode buildTodayVsAverageNode() {
+        String refClass = FileUtilManager.getItem("reference-class", "user");
+        String labelExt = refClass.equals("user") ? " your daily average" : " the global daily average";
+        return new MetricTreeNode("Today vs." + labelExt, "today.png", TODAY_VS_AVG_ID);
     }
 
     public static MetricTreeNode buildActiveCodeTimeTree(MetricLabel mLabels) {
@@ -215,7 +228,7 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode buildCodeTimeTree(MetricLabel mLabels) {
-        return new MetricTreeNode(mLabels.codeTime, "rocket.svg", CODETIME_TODAY_ID);
+        return new MetricTreeNode(mLabels.codeTime, "rocket.png", CODETIME_TODAY_ID);
     }
 
     public static MetricTreeNode buildLinesAddedTree(MetricLabel mLabels) {
@@ -242,6 +255,17 @@ public class TreeHelper {
 
                 UtilManager.launchUrl(url);
             }
+        }
+    }
+
+    public static void handleRightClickEvent(MetricTreeNode node, MouseEvent e) {
+        String parentId = node.getParent() != null ? ((MetricTreeNode)node.getParent()).getId() : null;
+        // handle the slack workspace selection
+        if (parentId != null
+                && parentId.equals(SLACK_WORKSPACES_NODE_ID)
+                && !node.getId().equals(ADD_WORKSPACE_ID)) {
+            JPopupMenu popupMenu = buildWorkspaceMenu(node.getId());
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
         }
     }
 
@@ -283,26 +307,44 @@ public class TreeHelper {
                 break;
             case CONNECT_SLACK_ID:
             case ADD_WORKSPACE_ID:
-                SlackManager.connectSlackWorkspace(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.connectSlackWorkspace(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_OFF_DARK_MODE_ID:
             case SWITCH_ON_DARK_MODE_ID:
-                AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.rebuildTree();});
+                AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_OFF_DND_ID:
-                SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_ON_DND_ID:
-                SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SET_PRESENCE_ACTIVE_ID:
-                SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.refresh();});
                 break;
             case SET_PRESENCE_AWAY_ID:
-                SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.refresh();});
                 break;
             case TOGGLE_DOCK_POSITION_ID:
                 AppleScriptManager.toggleDock();
+                break;
+            case SET_SLACK_STATUS_ID:
+                SlackManager.setProfileStatus(() -> {CodeTimeToolWindow.refresh();});
+                break;
+            case SLACK_WORKSPACES_NODE_ID:
+                // expand/collapse
+                CodeTimeToolWindow.expandCollapse(SLACK_WORKSPACES_NODE_ID);
+                break;
+            case TODAY_VS_AVG_ID:
+                // refresh and change the reference class
+                String refClass = FileUtilManager.getItem("reference-class", "user");
+                if (refClass.equals("user")) {
+                    refClass = "global";
+                } else {
+                    refClass = "user";
+                }
+                FileUtilManager.setItem("reference-class", refClass);
+                CodeTimeToolWindow.refresh();
                 break;
         }
     }
@@ -312,6 +354,19 @@ public class TreeHelper {
         separator.setAlignmentY(0.0f);
         separator.setForeground(new Color(58, 86, 187));
         return separator;
+    }
+
+    public static JPopupMenu buildWorkspaceMenu(String authId) {
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem removeWorkspaceItem = new JMenuItem("Remove workspace");
+        removeWorkspaceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SlackManager.disconnectSlackAuth(authId, () -> { CodeTimeToolWindow.refresh();});
+            }
+        });
+        menu.add(removeWorkspaceItem);
+        return menu;
     }
 
 }
