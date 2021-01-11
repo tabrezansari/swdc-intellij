@@ -17,8 +17,11 @@ import com.softwareco.intellij.plugin.managers.EventTrackerManager;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.WallClockManager;
+import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
+import swdc.java.ops.event.SlackStateChangeModel;
+import swdc.java.ops.event.SlackStateChangeObserver;
 import swdc.java.ops.event.UserStateChangeModel;
 import swdc.java.ops.event.UserStateChangeObserver;
 import swdc.java.ops.manager.AccountManager;
@@ -42,6 +45,7 @@ public class SoftwareCo implements ApplicationComponent {
 
     private final AsyncManager asyncManager = AsyncManager.getInstance();
     private UserStateChangeObserver userStateChangeObserver;
+    private SlackStateChangeObserver slackStateChangeObserver;
 
     public SoftwareCo() {
         // constructor
@@ -143,6 +147,11 @@ public class SoftwareCo implements ApplicationComponent {
         if (userStateChangeObserver == null) {
             userStateChangeObserver = new UserStateChangeObserver(new UserStateChangeModel(), () -> {
                 SessionDataManager.refreshSessionDataAndTree();
+            });
+        }
+        if (slackStateChangeObserver == null) {
+            slackStateChangeObserver = new SlackStateChangeObserver(new SlackStateChangeModel(), () -> {
+                CodeTimeToolWindow.refresh();
             });
         }
     }

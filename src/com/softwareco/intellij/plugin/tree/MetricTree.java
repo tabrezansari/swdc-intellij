@@ -24,6 +24,7 @@ public class MetricTree extends JTree {
         this.setScrollsOnExpand(true);
 
         this.addMouseListener(new MouseAdapter() {
+
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e != null && e instanceof MouseEvent && e.getSource() != null && e.getSource() instanceof MetricTree) {
@@ -32,18 +33,30 @@ public class MetricTree extends JTree {
                         if (tree != null) {
 
                             DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
-
+                            if (node == null) {
+                                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                                if (path != null) {
+                                    try {
+                                        node = (DefaultMutableTreeNode) path.getLastPathComponent();
+                                    } catch (Exception e1) {}
+                                }
+                            }
                             if (node == null) {
                                 return;
                             }
 
                             if (node instanceof MetricTreeNode) {
-                                TreeHelper.handleClickEvent((MetricTreeNode) node);
+                                if (e.getButton() == 3) {
+                                    // right click event
+                                    TreeHelper.handleRightClickEvent((MetricTreeNode) node, e);
+                                } else {
+                                    TreeHelper.handleClickEvent((MetricTreeNode) node);
+                                }
                             }
 
                             SwingUtilities.invokeLater(() -> {
                                 try {
-                                    Thread.sleep(750);
+                                    Thread.sleep(500);
                                     if (tree != null) {
                                         tree.clearSelection();
                                     }

@@ -59,6 +59,10 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
         this.setModel(parentNodeModel);
     }
 
+    public DefaultTreeModel getModel() {
+        return this.model;
+    }
+
     public void setModel(DefaultTreeModel model) {
         this.model = model;
     }

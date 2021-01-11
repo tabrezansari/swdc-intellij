@@ -8,14 +8,13 @@ import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.manager.*;
-import swdc.java.ops.model.Integration;
-import swdc.java.ops.model.MetricLabel;
-import swdc.java.ops.model.SlackDndInfo;
-import swdc.java.ops.model.SlackUserPresence;
+import swdc.java.ops.model.*;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.SimpleDateFormat;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 
@@ -63,8 +62,7 @@ public class TreeHelper {
     public static final String ADD_WORKSPACE_ID = "add_workspace";
     public static final String SET_PRESENCE_AWAY_ID = "set_presence_away";
     public static final String SET_PRESENCE_ACTIVE_ID = "set_presence_active";
-
-    private static final SimpleDateFormat formatDay = new SimpleDateFormat("EEE");
+    public static final String SET_SLACK_STATUS_ID = "set_slack_status";
 
     public static List<MetricTreeNode> buildSignupNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
@@ -141,6 +139,8 @@ public class TreeHelper {
     public static List<MetricTreeNode> buildTreeFlowNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
 
+        list.add(getSetSlackStatusNode());
+
         SlackDndInfo slackDndInfo = SlackManager.getSlackDnDInfo();
 
         // snooze node
@@ -168,6 +168,12 @@ public class TreeHelper {
         }
 
         return list;
+    }
+
+    public static MetricTreeNode getSetSlackStatusNode() {
+        SlackUserProfile userProfile = SlackManager.getSlackStatus();
+        String status = (userProfile != null && StringUtils.isNotBlank(userProfile.status_text)) ? " (" + userProfile.status_text + ")" : "";
+        return new MetricTreeNode("Update profile status" + status, "profile.svg", SET_SLACK_STATUS_ID);
     }
 
     public static MetricTreeNode getSwitchOffDarkModeNode() {
@@ -203,6 +209,8 @@ public class TreeHelper {
         });
         // add the add new workspace button
         node.add(getAddSlackWorkspaceNode());
+        boolean isExpanded = CodeTimeToolWindow.isExpanded(SLACK_WORKSPACES_NODE_ID);
+        node.setExpanded(isExpanded);
         return node;
     }
 
@@ -245,6 +253,17 @@ public class TreeHelper {
         }
     }
 
+    public static void handleRightClickEvent(MetricTreeNode node, MouseEvent e) {
+        String parentId = node.getParent() != null ? ((MetricTreeNode)node.getParent()).getId() : null;
+        // handle the slack workspace selection
+        if (parentId != null
+                && parentId.equals(SLACK_WORKSPACES_NODE_ID)
+                && !node.getId().equals(ADD_WORKSPACE_ID)) {
+            JPopupMenu popupMenu = buildWorkspaceMenu(node.getId());
+            popupMenu.show(e.getComponent(), e.getX(), e.getY());
+        }
+    }
+
     public static void handleClickEvent(MetricTreeNode node) {
         switch (node.getId()) {
             case SIGN_UP_ID:
@@ -283,26 +302,33 @@ public class TreeHelper {
                 break;
             case CONNECT_SLACK_ID:
             case ADD_WORKSPACE_ID:
-                SlackManager.connectSlackWorkspace(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.connectSlackWorkspace(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_OFF_DARK_MODE_ID:
             case SWITCH_ON_DARK_MODE_ID:
-                AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.rebuildTree();});
+                AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_OFF_DND_ID:
-                SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SWITCH_ON_DND_ID:
-                SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
                 break;
             case SET_PRESENCE_ACTIVE_ID:
-                SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.refresh();});
                 break;
             case SET_PRESENCE_AWAY_ID:
-                SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.rebuildTree();});
+                SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.refresh();});
                 break;
             case TOGGLE_DOCK_POSITION_ID:
                 AppleScriptManager.toggleDock();
+                break;
+            case SET_SLACK_STATUS_ID:
+                SlackManager.setProfileStatus(() -> {CodeTimeToolWindow.refresh();});
+                break;
+            case SLACK_WORKSPACES_NODE_ID:
+                // expand/collapse
+                CodeTimeToolWindow.expandCollapse(SLACK_WORKSPACES_NODE_ID);
                 break;
         }
     }
@@ -312,6 +338,19 @@ public class TreeHelper {
         separator.setAlignmentY(0.0f);
         separator.setForeground(new Color(58, 86, 187));
         return separator;
+    }
+
+    public static JPopupMenu buildWorkspaceMenu(String authId) {
+        JPopupMenu menu = new JPopupMenu();
+        JMenuItem removeWorkspaceItem = new JMenuItem("Remove workspace");
+        removeWorkspaceItem.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                SlackManager.disconnectSlackAuth(authId, () -> { CodeTimeToolWindow.refresh();});
+            }
+        });
+        menu.add(removeWorkspaceItem);
+        return menu;
     }
 
 }

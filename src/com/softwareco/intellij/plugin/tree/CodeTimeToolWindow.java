@@ -29,6 +29,7 @@ public class CodeTimeToolWindow {
     private static MetricTree metricTree;
     private JPanel dataPanel;
     private static boolean refreshingTree = false;
+    private static Map<String, Boolean> expandedMap = new HashMap<>();
 
     private static CodeTimeToolWindow win;
 
@@ -50,42 +51,22 @@ public class CodeTimeToolWindow {
 
     public static void refresh() {
         if (win != null && !refreshingTree) {
-            refreshingTree = true;
-            try {
-                ApplicationManager.getApplication().invokeLater(new Runnable() {
-                    public void run() {
-                        try {
-                            win.rebuildTreeView();
-                        } catch (Exception e) {
-                            //
-                        } finally {
-                            refreshingTree = false;
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                refreshingTree = false;
-            }
-        }
-    }
 
-    public static void rebuildTree() {
-        if (win != null && !refreshingTree) {
-            refreshingTree = true;
             try {
                 ApplicationManager.getApplication().invokeLater(new Runnable() {
                     public void run() {
+                        refreshingTree = true;
                         try {
                             win.init();
                         } catch (Exception e) {
-                            //
+                            LOG.log(Level.WARNING, "Rebuild tree error: {0}", e.toString());
                         } finally {
                             refreshingTree = false;
                         }
                     }
                 });
             } catch (Exception e) {
-                refreshingTree = false;
+                //
             }
         }
     }
@@ -99,19 +80,16 @@ public class CodeTimeToolWindow {
         scrollPane.setViewportView(metricTree);
         scrollPane.setVisible(true);
 
+        // expand nodes that were previously expanded
+        for (String key : expandedMap.keySet()) {
+            boolean isExpanded = expandedMap.get(key).booleanValue();
+            if (isExpanded) {
+                expandNode(key);
+            }
+        }
+
         codetimeWindowContent.updateUI();
         codetimeWindowContent.setVisible(true);
-    }
-
-    public static void rebuildTreeView() {
-        rebuildMenuNodes();
-
-        rebuildFlowNodes();
-
-        CodeTimeSummary codeTimeSummary = TimeDataManager.getCodeTimeSummary();
-        SessionSummary sessionSummary = SessionDataManager.getSessionSummaryData();
-
-        updateMetrics(codeTimeSummary, sessionSummary);
     }
 
     public JPanel getContent() {
@@ -120,7 +98,6 @@ public class CodeTimeToolWindow {
 
     private MetricTree buildCodeTimeTreeView() {
         MetricTree tree = new MetricTree(makeCodetimeTreeModel());
-
         tree.setCellRenderer(new IconTreeCellRenderer());
         tree.setRootVisible(false);
         tree.setShowsRootHandles(false);
@@ -210,6 +187,33 @@ public class CodeTimeToolWindow {
         }
     }
 
+    public static void expandNode(String id) {
+        int row = 0;
+        try {
+            DefaultTreeModel model = (DefaultTreeModel) metricTree.getModel();
+
+            DefaultMutableTreeNode treeNode = (DefaultMutableTreeNode) model.getRoot();
+
+            if (treeNode != null) {
+                Enumeration<TreeNode> nodes = treeNode.children();
+                if (nodes != null) {
+                    while (nodes.hasMoreElements()) {
+                        MetricTreeNode node = (MetricTreeNode) nodes.nextElement();
+                        if (node != null && node.getId().equals(id)) {
+                            metricTree.expandRow(row);
+                            node.setExpanded(true);
+                            expandedMap.put(id, true);
+                            break;
+                        }
+                        row++;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.log(Level.INFO, "Find node by ID error: {0}", e.toString());
+        }
+    }
+
     public static void expandCollapse(String id) {
         int row = 0;
         try {
@@ -226,9 +230,11 @@ public class CodeTimeToolWindow {
                             if (!node.isExpanded()) {
                                 metricTree.expandRow(row);
                                 node.setExpanded(true);
+                                expandedMap.put(id, true);
                             } else {
                                 metricTree.collapseRow(row);
                                 node.setExpanded(false);
+                                expandedMap.put(id, false);
                             }
                             break;
                         }
@@ -239,6 +245,10 @@ public class CodeTimeToolWindow {
         } catch (Exception e) {
             LOG.log(Level.INFO, "Find node by ID error: {0}", e.toString());
         }
+    }
+
+    public static boolean isExpanded(String id) {
+        return (expandedMap.containsKey(id)) ? expandedMap.get(id).booleanValue() : false;
     }
 
     private static int findParentNodeRowById(String id) {
