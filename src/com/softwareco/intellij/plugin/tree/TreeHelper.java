@@ -228,7 +228,7 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode buildCodeTimeTree(MetricLabel mLabels) {
-        return new MetricTreeNode(mLabels.codeTime, "rocket.png", CODETIME_TODAY_ID);
+        return new MetricTreeNode(mLabels.codeTime, mLabels.codeTimeIcon, CODETIME_TODAY_ID);
     }
 
     public static MetricTreeNode buildLinesAddedTree(MetricLabel mLabels) {
