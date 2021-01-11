@@ -134,6 +134,7 @@ public class CodeTimeToolWindow {
         MetricLabel mLabels = new MetricLabel();
         mLabels.updateLabels(codeTimeSummary, sessionSummary);
 
+        root.add(TreeHelper.buildTodayVsAverageNode());
         root.add(TreeHelper.buildCodeTimeTree(mLabels));
         root.add(TreeHelper.buildActiveCodeTimeTree(mLabels));
         root.add(TreeHelper.buildLinesAddedTree(mLabels));
