@@ -14,7 +14,7 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
 
     public MetricTreeNode(boolean isSeparator) {
         if (isSeparator) {
-            this.init("-------------------------------------------", "", "separator");
+            this.init("", "separator.png", "separator");
         } else {
             this.init("", "", "");
         }
