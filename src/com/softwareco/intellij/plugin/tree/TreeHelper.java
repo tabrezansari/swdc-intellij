@@ -307,29 +307,47 @@ public class TreeHelper {
                 break;
             case CONNECT_SLACK_ID:
             case ADD_WORKSPACE_ID:
-                SlackManager.connectSlackWorkspace(() -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.connectSlackWorkspace(() -> {
+                        CodeTimeToolWindow.refresh();
+                    });
+                });
                 break;
             case SWITCH_OFF_DARK_MODE_ID:
             case SWITCH_ON_DARK_MODE_ID:
-                AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    AppleScriptManager.toggleDarkMode(() -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case SWITCH_OFF_DND_ID:
-                SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.pauseSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case SWITCH_ON_DND_ID:
-                SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.enableSlackNotifications(() -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case SET_PRESENCE_ACTIVE_ID:
-                SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.toggleSlackPresence("auto", () -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case SET_PRESENCE_AWAY_ID:
-                SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.toggleSlackPresence("away", () -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case TOGGLE_DOCK_POSITION_ID:
-                AppleScriptManager.toggleDock();
+                SwingUtilities.invokeLater(() -> {
+                    AppleScriptManager.toggleDock();
+                });
                 break;
             case SET_SLACK_STATUS_ID:
-                SlackManager.setProfileStatus(() -> {CodeTimeToolWindow.refresh();});
+                SwingUtilities.invokeLater(() -> {
+                    SlackManager.setProfileStatus(() -> {CodeTimeToolWindow.refresh();});
+                });
                 break;
             case SLACK_WORKSPACES_NODE_ID:
                 // expand/collapse
