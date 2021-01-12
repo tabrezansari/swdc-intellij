@@ -3,6 +3,7 @@ package com.softwareco.intellij.plugin.tree;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.uiDesigner.core.GridConstraints;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
@@ -15,6 +16,7 @@ import swdc.java.ops.model.SessionSummary;
 
 import javax.swing.*;
 import javax.swing.tree.*;
+import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -387,6 +389,22 @@ public class CodeTimeToolWindow {
                 removeNodeById(TreeHelper.CONNECT_SLACK_ID);
             }
         }
+    }
+
+    private GridConstraints gridConstraints(int row, int vSize, int hSize, int anchor, int fill, int indent) {
+        GridConstraints constraints = new GridConstraints();
+        constraints.setRow(row);
+        constraints.setColumn(0);
+        constraints.setRowSpan(1);
+        constraints.setColSpan(1);
+        constraints.setVSizePolicy(vSize);
+        constraints.setHSizePolicy(hSize);
+        constraints.setAnchor(anchor);
+        constraints.setFill(fill);
+        constraints.setIndent(indent);
+        constraints.setUseParentLayout(false);
+
+        return constraints;
     }
 
 }

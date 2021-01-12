@@ -10,12 +10,14 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
     private String iconName;
     private Object data;
     private boolean expanded = false;
-    private boolean separator = false;
     private String label;
 
     public MetricTreeNode(boolean isSeparator) {
-        this.separator = isSeparator;
-        this.init("", null, "separator");
+        if (isSeparator) {
+            this.init("-------------------------------------------", "", "separator");
+        } else {
+            this.init("", "", "");
+        }
     }
 
     public MetricTreeNode(String label, String iconName, String id) {
@@ -36,10 +38,6 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
 
     public void updateIconName(String iconName) {
         this.iconName = iconName;
-    }
-
-    public boolean isSeparator() {
-        return separator;
     }
 
     public boolean isExpanded() {
@@ -91,9 +89,6 @@ public class MetricTreeNode extends DefaultMutableTreeNode {
     }
 
     public String getIconName() {
-        if (isSeparator()) {
-            return "blue-line.png";
-        }
         return iconName;
     }
 

@@ -41,14 +41,6 @@ public class IconTreeCellRenderer extends DefaultTreeCellRenderer {
         return comp;
     }
 
-//    public Icon createImageIcon(String iconName) {
-//        try {
-//            return IconLoader.getIcon("/com/softwareco/intellij/plugin/assets/" + iconName);
-//        } catch (Exception e) {
-//            System.err.println("Couldn't find file: /com/softwareco/intellij/plugin/assets/" + iconName);
-//            return null;
-//        }
-//    }
     public ImageIcon createImageIcon(String iconName, String description) {
         URL imgURL = getClass().getResource("/com/softwareco/intellij/plugin/assets/" + iconName);
         if (imgURL != null) {
