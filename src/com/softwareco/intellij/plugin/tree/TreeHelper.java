@@ -4,6 +4,7 @@ import com.softwareco.intellij.plugin.SoftwareCoSessionManager;
 import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.FileManager;
 import com.softwareco.intellij.plugin.managers.AuthPromptManager;
+import com.softwareco.intellij.plugin.managers.ScreenManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
@@ -55,8 +56,9 @@ public class TreeHelper {
 
     public static final String SLACK_WORKSPACES_NODE_ID = "slack_workspaces_node";
     public static final String SWITCH_OFF_DARK_MODE_ID = "switch_off_dark_mode";
-    public static final String SWITCH_ON_DARK_MODE_ID = "switch_ON_dark_mode";
+    public static final String SWITCH_ON_DARK_MODE_ID = "switch_on_dark_mode";
     public static final String TOGGLE_DOCK_POSITION_ID = "toggle_dock_position";
+    public static final String TOGGLE_FULL_SCREEN_MODE_ID = "toggle_full_screen_mode";
     public static final String SWITCH_OFF_DND_ID = "switch_off_dnd";
     public static final String SWITCH_ON_DND_ID = "switch_on_dnd";
     public static final String CONNECT_SLACK_ID = "connect_slack";
@@ -140,6 +142,10 @@ public class TreeHelper {
     public static List<MetricTreeNode> buildTreeFlowNodes() {
         List<MetricTreeNode> list = new ArrayList<>();
 
+        // full screen toggle node
+        list.add(getToggleFullScreenNode());
+
+        // change slack status
         list.add(getSetSlackStatusNode());
 
         SlackDndInfo slackDndInfo = SlackManager.getSlackDnDInfo();
@@ -200,6 +206,16 @@ public class TreeHelper {
 
     public static MetricTreeNode getSetActivePresenceNode() {
         return new MetricTreeNode("Set presence to active", "presence.png", SET_PRESENCE_ACTIVE_ID);
+    }
+
+    public static MetricTreeNode getToggleFullScreenNode() {
+        String label = "Enter full screen";
+        String icon = "expand.png";
+        if (ScreenManager.isFullScreen()) {
+            label = "Exit full screen";
+            icon = "compress.png";
+        }
+        return new MetricTreeNode(label, icon, TOGGLE_FULL_SCREEN_MODE_ID);
     }
 
     public static MetricTreeNode buildSlackWorkspacesNode() {
@@ -363,6 +379,11 @@ public class TreeHelper {
                 }
                 FileUtilManager.setItem("reference-class", refClass);
                 CodeTimeToolWindow.refresh();
+                break;
+            case TOGGLE_FULL_SCREEN_MODE_ID:
+                SwingUtilities.invokeLater(() -> {
+                    ScreenManager.toggleFullScreenMode();
+                });
                 break;
         }
     }
