@@ -310,7 +310,9 @@ public class TreeHelper {
                 break;
             case TOGGLE_METRICS_ID:
                 SoftwareCoUtils.toggleStatusBar(UIInteractionType.click);
-                CodeTimeToolWindow.updateMetrics(null, null);
+                SwingUtilities.invokeLater(() -> {
+                    CodeTimeToolWindow.updateMetrics(null, null);
+                });
                 break;
             case ADVANCED_METRICS_ID:
                 SoftwareCoSessionManager.launchWebDashboard(UIInteractionType.click);
@@ -319,7 +321,9 @@ public class TreeHelper {
                 SoftwareCoUtils.submitFeedback(UIInteractionType.click);
                 break;
             case LEARN_MORE_ID:
-                FileManager.openReadmeFile(UIInteractionType.click);
+                SwingUtilities.invokeLater(() -> {
+                    FileManager.openReadmeFile(UIInteractionType.click);
+                });
                 break;
             case CONNECT_SLACK_ID:
             case ADD_WORKSPACE_ID:
@@ -366,8 +370,10 @@ public class TreeHelper {
                 });
                 break;
             case SLACK_WORKSPACES_NODE_ID:
-                // expand/collapse
-                CodeTimeToolWindow.expandCollapse(SLACK_WORKSPACES_NODE_ID);
+                SwingUtilities.invokeLater(() -> {
+                    // expand/collapse
+                    CodeTimeToolWindow.expandCollapse(SLACK_WORKSPACES_NODE_ID);
+                });
                 break;
             case TODAY_VS_AVG_ID:
                 // refresh and change the reference class
