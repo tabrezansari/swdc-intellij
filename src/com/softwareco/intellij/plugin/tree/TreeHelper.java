@@ -71,7 +71,7 @@ public class TreeHelper {
         List<MetricTreeNode> list = new ArrayList<>();
         String name = FileUtilManager.getItem("name");
         if (StringUtils.isBlank(name)) {
-            list.add(new MetricTreeNode("Sign up", "signup.png", SIGN_UP_ID));
+            list.add(new MetricTreeNode("Sign up", "paw.png", SIGN_UP_ID));
             list.add(new MetricTreeNode("Log in", "paw.png", LOG_IN_ID));
         } else {
             list.add(buildLoggedInNode());
@@ -219,10 +219,11 @@ public class TreeHelper {
     }
 
     public static MetricTreeNode buildSlackWorkspacesNode() {
-        MetricTreeNode node = new MetricTreeNode("Slack workspaces", null, SLACK_WORKSPACES_NODE_ID);
+        MetricTreeNode node = new MetricTreeNode("Slack workspaces", "slack.png", SLACK_WORKSPACES_NODE_ID);
         List<Integration> workspaces = SlackManager.getSlackWorkspaces(false);
         workspaces.forEach(workspace -> {
-            node.add(new MetricTreeNode(workspace.team_domain, "slack.png", workspace.authId));
+            String label = workspace.team_domain + " (" + workspace.team_name + ")";
+            node.add(new MetricTreeNode(label, "", workspace.authId));
         });
         // add the add new workspace button
         node.add(getAddSlackWorkspaceNode());
