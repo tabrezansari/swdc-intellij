@@ -17,6 +17,7 @@ import swdc.java.ops.model.SessionSummary;
 import javax.swing.*;
 import javax.swing.tree.*;
 import java.awt.*;
+import java.net.URL;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
@@ -100,6 +101,15 @@ public class CodeTimeToolWindow {
 
     private MetricTree buildCodeTimeTreeView() {
         MetricTree tree = new MetricTree(makeCodetimeTreeModel());
+
+        DefaultTreeCellRenderer renderer = (DefaultTreeCellRenderer)tree.getCellRenderer();
+        renderer.setClosedIcon(null);
+        renderer.setOpenIcon(null);
+        Icon closeIcon = buildImageIcon("collapsed.png");
+        Icon openIcon = buildImageIcon("expanded.png");
+        UIManager.put("Tree.openIcon", openIcon);
+        UIManager.put("Tree.closedIcon", closeIcon);
+
         tree.setCellRenderer(new IconTreeCellRenderer());
         tree.setRootVisible(false);
         tree.setShowsRootHandles(false);
@@ -342,6 +352,16 @@ public class CodeTimeToolWindow {
         }
 
         return null;
+    }
+
+    public ImageIcon buildImageIcon(String iconName) {
+        URL imgURL = getClass().getResource("/com/softwareco/intellij/plugin/assets/" + iconName);
+        if (imgURL != null) {
+            return new ImageIcon(imgURL, "");
+        } else {
+            System.err.println("Couldn't find file: /com/softwareco/intellij/plugin/assets/" + iconName);
+            return null;
+        }
     }
 
 }
