@@ -36,6 +36,46 @@ public class ScreenManager {
         return false;
     }
 
+    public static boolean enterFullScreen() {
+        IdeFrameImpl win = getIdeWindow();
+        if (win == null) {
+            return false;
+        }
+        int extendedState = win.getExtendedState();
+        if (extendedState != JFrame.MAXIMIZED_BOTH) {
+            SwingUtilities.invokeLater(() -> {
+                win.setExtendedState(JFrame.NORMAL);
+                win.setBounds(win.getGraphicsConfiguration().getBounds());
+                win.setVisible(true);
+
+                AsyncManager.getInstance().executeOnceInSeconds(
+                        () -> {CodeTimeToolWindow.refresh();}, 1);
+            });
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean exitFullScreen() {
+        IdeFrameImpl win = getIdeWindow();
+        if (win == null) {
+            return false;
+        }
+        int extendedState = win.getExtendedState();
+        if (extendedState == JFrame.MAXIMIZED_BOTH) {
+            SwingUtilities.invokeLater(() -> {
+                win.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                win.setBounds(win.getGraphicsConfiguration().getBounds());
+                win.setVisible(true);
+
+                AsyncManager.getInstance().executeOnceInSeconds(
+                        () -> {CodeTimeToolWindow.refresh();}, 1);
+            });
+            return true;
+        }
+        return false;
+    }
+
     public static void toggleFullScreenMode() {
         IdeFrameImpl win = getIdeWindow();
         if (win == null) {
