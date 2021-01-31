@@ -3,20 +3,14 @@ package com.softwareco.intellij.plugin.tree;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.uiDesigner.core.GridConstraints;
-import com.softwareco.intellij.plugin.SoftwareCoUtils;
 import com.softwareco.intellij.plugin.managers.SessionDataManager;
 import com.softwareco.intellij.plugin.managers.TimeDataManager;
-import org.apache.commons.lang.StringUtils;
-import swdc.java.ops.manager.FileUtilManager;
-import swdc.java.ops.manager.SlackManager;
 import swdc.java.ops.model.CodeTimeSummary;
 import swdc.java.ops.model.MetricLabel;
 import swdc.java.ops.model.SessionSummary;
 
 import javax.swing.*;
 import javax.swing.tree.*;
-import java.awt.*;
 import java.net.URL;
 import java.util.*;
 import java.util.List;

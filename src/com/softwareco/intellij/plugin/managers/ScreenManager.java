@@ -9,7 +9,6 @@ import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import swdc.java.ops.manager.AsyncManager;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowStateListener;
 import java.util.logging.Logger;

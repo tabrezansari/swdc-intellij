@@ -18,12 +18,10 @@ import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.http.ClientResponse;
 import swdc.java.ops.http.OpsHttpClient;
 import swdc.java.ops.manager.*;
-import swdc.java.ops.model.Integration;
 import swdc.java.ops.model.UserState;
 
 import javax.swing.*;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.logging.Logger;
 
@@ -97,7 +95,6 @@ public class SoftwareCoSessionManager {
             // clear the auth callback state
             FileUtilManager.setBooleanItem("switching_account", false);
             FileUtilManager.setAuthCallbackState(null);
-
 
             // pull in the users slack integrations
             SlackManager.getSlackAuth(userState.user);

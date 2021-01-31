@@ -3,7 +3,6 @@ package com.softwareco.intellij.plugin.managers;
 import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import org.apache.commons.lang.StringUtils;
 import swdc.java.ops.manager.ConfigManager;
-import swdc.java.ops.manager.FileUtilManager;
 import swdc.java.ops.manager.SlackManager;
 import swdc.java.ops.model.ConfigSettings;
 import swdc.java.ops.model.SlackDndInfo;

@@ -9,7 +9,6 @@ import com.softwareco.intellij.plugin.managers.ScreenManager;
 import com.softwareco.intellij.plugin.models.FileChangeInfo;
 import com.swdc.snowplow.tracker.events.UIInteractionType;
 import org.apache.commons.lang.StringUtils;
-import org.ini4j.Config;
 import swdc.java.ops.manager.*;
 import swdc.java.ops.model.*;
 
