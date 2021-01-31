@@ -98,8 +98,6 @@ public class SoftwareCoSessionManager {
             FileUtilManager.setBooleanItem("switching_account", false);
             FileUtilManager.setAuthCallbackState(null);
 
-            // clear the previous integrations
-            FileUtilManager.syncIntegrations(new ArrayList<Integration>());
 
             // pull in the users slack integrations
             SlackManager.getSlackAuth(userState.user);

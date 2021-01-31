@@ -9,8 +9,19 @@ import com.softwareco.intellij.plugin.tree.CodeTimeToolWindow;
 import swdc.java.ops.manager.AsyncManager;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+import java.util.logging.Logger;
 
 public class ScreenManager {
+
+    public static final Logger log = Logger.getLogger("ScreenManager");
+
+    private static IdeFrameImpl ideFrame = null;
+    private static double fullScreenHeight = 0;
+    private static double fullScreenWidth = 0;
+    protected static boolean checkingToDisableFlow = false;
 
     private static IdeFrameImpl getIdeWindow() {
         // Retrieve the AWT window
@@ -20,47 +31,82 @@ public class ScreenManager {
         }
 
         IdeRootPane rootPane = (IdeRootPane) WindowManager.getInstance().getFrame(p).getRootPane();
-        IdeFrameImpl ideWindow = null;
-        try{
-            ideWindow = (IdeFrameImpl) rootPane.getParent();
-        } catch (Exception e) {}
+        if (rootPane != null && ideFrame == null) {
+            ideFrame = (IdeFrameImpl) rootPane.getParent();
+            ideFrame.addWindowStateListener(new WindowStateListener() {
+                @Override
+                public void windowStateChanged(WindowEvent e) {
+                    SwingUtilities.invokeLater(() -> {
+                        FlowManager.checkToDisableFlow();
+                    });
+                }
+            });
+        }
 
-        return ideWindow;
+        return ideFrame;
     }
 
     public static boolean isFullScreen() {
         IdeFrameImpl win = getIdeWindow();
+
         if (win != null) {
-            return (win.getExtendedState() == JFrame.MAXIMIZED_BOTH);
+
+            // maximized both is actually maximized screen, which we
+            // consider full screen as well
+            if (win.getExtendedState() == JFrame.MAXIMIZED_BOTH || win.getState() == JFrame.MAXIMIZED_BOTH) {
+                fullScreenHeight = win.getBounds().getHeight();
+                fullScreenWidth = win.getBounds().getWidth();
+                return true;
+            } else if (win.getX() > 0) {
+                return false;
+            }
+
+            // it may be full screen
+            if (win.getBounds().getHeight() >= fullScreenHeight && win.getBounds().getWidth() >= fullScreenWidth) {
+                return true;
+            }
         }
         return false;
     }
 
-    public static void toggleFullScreenMode() {
+    public static boolean enterFullScreen() {
         IdeFrameImpl win = getIdeWindow();
         if (win == null) {
-            return;
+            return false;
         }
-
-        int extendedState = win.getExtendedState();
-        if (extendedState == JFrame.MAXIMIZED_BOTH) {
+        if (!isFullScreen()) {
             SwingUtilities.invokeLater(() -> {
-                win.setExtendedState(JFrame.NORMAL);
-                win.setBounds(win.getGraphicsConfiguration().getBounds());
-                win.setVisible(true);
+                try {
+                    win.setExtendedState(JFrame.MAXIMIZED_BOTH);
+                    win.setBounds(win.getGraphicsConfiguration().getBounds());
+                    win.setVisible(true);
+                } catch (Exception e) {}
 
                 AsyncManager.getInstance().executeOnceInSeconds(
                         () -> {CodeTimeToolWindow.refresh();}, 1);
             });
-        } else {
-            SwingUtilities.invokeLater(() -> {
-                win.setExtendedState(JFrame.MAXIMIZED_BOTH);
-                win.setBounds(win.getGraphicsConfiguration().getBounds());
-                win.setVisible(true);
+            return true;
+        }
+        return false;
+    }
 
+    public static boolean exitFullScreen() {
+        IdeFrameImpl win = getIdeWindow();
+        if (win == null) {
+            return false;
+        }
+        if (isFullScreen()) {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    win.setExtendedState(JFrame.NORMAL);
+                    win.setBounds(win.getGraphicsConfiguration().getBounds());
+                    win.setVisible(true);
+                } catch (Exception e) {}
                 AsyncManager.getInstance().executeOnceInSeconds(
                         () -> {CodeTimeToolWindow.refresh();}, 1);
             });
+            return true;
         }
+        return false;
     }
 }
