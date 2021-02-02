@@ -46,6 +46,7 @@ public class SoftwareCo implements ApplicationComponent {
     private final AsyncManager asyncManager = AsyncManager.getInstance();
     private UserStateChangeObserver userStateChangeObserver;
     private SlackStateChangeObserver slackStateChangeObserver;
+    private Timer listenerActivateTimer = null;
 
     public SoftwareCo() {
         // constructor
@@ -95,13 +96,14 @@ public class SoftwareCo implements ApplicationComponent {
     private void initializeUserInfoWhenProjectsReady(boolean initializedUser) {
         Project p = SoftwareCoUtils.getOpenProject();
         if (p == null) {
-            // try again in 5 seconds
-            new Timer().schedule(new TimerTask() {
+            // try again in 6 seconds
+            listenerActivateTimer = new Timer();
+            listenerActivateTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     initializeUserInfoWhenProjectsReady(initializedUser);
                 }
-            }, 5000);
+            }, 6000);
         } else {
             // init user info
             initializeUserInfo(initializedUser);
@@ -166,36 +168,34 @@ public class SoftwareCo implements ApplicationComponent {
                     p.getMessageBus().connect().subscribe(
                             FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
                 } catch (Exception e) {
+                    // error trying to subscribe to the message bus, try again later
                     tryAgain = true;
                 }
             } else {
                 // try again later
                 tryAgain = true;
             }
+
             WallClockManager.getInstance();
 
             if (tryAgain) {
                 // try again later
-                new Timer().schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        initializeProjectListenerWhenReady();
-                    }
-                }, 15000);
+                initializeProjectListenerWhenReady();
             }
         });
     }
 
     private void initializeProjectListenerWhenReady() {
         Project p = SoftwareCoUtils.getOpenProject();
-        if (p == null) {
-            // try again in 15 seconds
-            new Timer().schedule(new TimerTask() {
+        if (p == null || p.isDisposed()) {
+            // try again in a minute
+            listenerActivateTimer = new Timer();
+            listenerActivateTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     initializeProjectListenerWhenReady();
                 }
-            }, 15000);
+            }, 1000 * 60);
         } else {
             // setup the doc listeners
             setupFileEditorEventListeners(p);
@@ -205,6 +205,11 @@ public class SoftwareCo implements ApplicationComponent {
     public void disposeComponent() {
         // store the activate event
         EventTrackerManager.getInstance().trackEditorAction("editor", "deactivate");
+
+        // cancel the listener timer if its still active
+        if (listenerActivateTimer != null) {
+            listenerActivateTimer.cancel();
+        }
 
         try {
             if (connection != null) {
