@@ -159,12 +159,39 @@ public class SoftwareCo implements ApplicationComponent {
     // add the file selection change event listener
     private void setupFileEditorEventListeners(Project p) {
         ApplicationManager.getApplication().invokeLater(() -> {
-            // file open,close,selection listener
-            p.getMessageBus().connect().subscribe(
-                    FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
-
+            if (p != null && !p.isDisposed()) {
+                try {
+                    // file open,close,selection listener
+                    p.getMessageBus().connect().subscribe(
+                            FileEditorManagerListener.FILE_EDITOR_MANAGER, new SoftwareCoFileEditorListener());
+                } catch (Exception e) {
+                    // try again later
+                    new Timer().schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            initializeProjectListenerWhenReady();
+                        }
+                    }, 15000);
+                }
+            }
             WallClockManager.getInstance();
         });
+    }
+
+    private void initializeProjectListenerWhenReady() {
+        Project p = SoftwareCoUtils.getOpenProject();
+        if (p == null) {
+            // try again in 15 seconds
+            new Timer().schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    initializeProjectListenerWhenReady();
+                }
+            }, 15000);
+        } else {
+            // setup the doc listeners
+            setupFileEditorEventListeners(p);
+        }
     }
 
     public void disposeComponent() {
