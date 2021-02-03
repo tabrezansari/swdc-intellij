@@ -45,8 +45,7 @@ public class SessionDataManager {
     public static void treeDataUpdateCheck(boolean isNewUser) {
         String day = UtilManager.getTodayInStandardFormat();
         String currentDay = FileUtilManager.getItem("updatedTreeDate", "");
-        SessionSummary existingSummary = SessionDataManager.getSessionSummaryData();
-        if (!currentDay.equals(day) || existingSummary.getGlobalAverageDailyMinutes() == 0 || isNewUser) {
+        if (!currentDay.equals(day) || isNewUser) {
             updateSessionSummaryFromServer();
             FileUtilManager.setItem("updatedTreeDate", day);
         }
@@ -56,7 +55,7 @@ public class SessionDataManager {
         SessionSummary summary = SessionDataManager.getSessionSummaryData();
 
         String jwt = FileUtilManager.getItem("jwt");
-        String api = "/sessions/summary?refresh=true";
+        String api = "/sessions/summary";
         ClientResponse resp = OpsHttpClient.softwareGet(api, jwt);
         if (resp.isOk()) {
             JsonObject jsonObj = resp.getJsonObj();
